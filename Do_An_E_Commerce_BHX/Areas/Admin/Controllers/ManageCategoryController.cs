@@ -6,7 +6,7 @@ using System.Web.Mvc;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    public class AdminCategoryController : Controller
+    public class ManageCategoryController : Controller
     {
         // GET: AdminCategory
         public ActionResult Index()

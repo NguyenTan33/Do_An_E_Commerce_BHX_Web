@@ -1,0 +1,114 @@
+﻿@{
+    // Lấy controller/action hiện tại để tô sáng mục menu đang chọn
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool IsActive(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+
+    string ActiveClass(string controller) => IsActive(controller) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} — Admin" : "Admin — Bảng điều khiển")</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/Content/CSS/Admin.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+
+    <!-- ============ SIDEBAR (dùng chung cho mọi trang admin) ============ -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">Q</div>
+            <div class="brand-text">
+                <b>Quản trị cửa hàng</b>
+                <span>admin.shop</span>
+            </div>
+        </div>
+
+        <div class="nav-group-label">Vận hành</div>
+        <ul class="nav">
+            <li>
+                <a asp-controller="Products" asp-action="Index" class="@ActiveClass("Products")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M3 8l9 5 9-5" /></svg>
+                    Quản lý sản phẩm
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Categories" asp-action="Index" class="@ActiveClass("Categories")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Danh mục
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Coupons" asp-action="Index" class="@ActiveClass("Coupons")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.58z" /><circle cx="7.5" cy="7.5" r="1.2" /></svg>
+                    Mã giảm giá
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Reviews" asp-action="Index" class="@ActiveClass("Reviews")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.3l-6.16 3.24 1.18-6.88L2 8.72l6.92-1L12 1.5l3.08 6.22 6.92 1-5.02 4.94 1.18 6.88z" /></svg>
+                    Đánh giá sản phẩm
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-group-label">Con người & Dòng tiền</div>
+        <ul class="nav">
+            <li>
+                <a asp-controller="Users" asp-action="Index" class="@ActiveClass("Users")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="10" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    Quản lý người dùng
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Reports" asp-action="Revenue" class="@ActiveClass("Reports")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>
+                    Báo cáo doanh thu
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Orders" asp-action="History" class="@ActiveClass("Orders")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                    Lịch sử giao dịch mua hàng
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="admin-chip">
+                <div class="avatar">@(User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name) ? User.Identity.Name.Substring(0, Math.Min(2, User.Identity.Name.Length)).ToUpper() : "AD")</div>
+                <div>
+                    <div style="font-size:13.5px;font-weight:600;">@(ViewBag.FullName ?? "Quản trị viên")</div>
+                    <small>Quản trị viên</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="main">
+        <div class="topbar">
+            <div class="page-title">
+                @(ViewData["Title"] ?? "Bảng điều khiển")
+                @if (ViewData["Subtitle"] != null)
+                {
+                    <span>@ViewData["Subtitle"]</span>
+                }
+            </div>
+        </div>
+
+        <div class="content">
+            @RenderBody()
+        </div>
+    </div>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

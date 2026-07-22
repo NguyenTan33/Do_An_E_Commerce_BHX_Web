@@ -171,7 +171,7 @@
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Areas\Admin\Controllers\AdminCategoryController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageCategoryController.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminDashboardController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageProductController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
@@ -190,6 +190,14 @@
     <Compile Include="Migrations\202607220950269_Initial.cs" />
     <Compile Include="Migrations\202607220950269_Initial.Designer.cs">
       <DependentUpon>202607220950269_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607221636220_UpdateModel.cs" />
+    <Compile Include="Migrations\202607221636220_UpdateModel.Designer.cs">
+      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607221701006_UpdateModel1.cs" />
+    <Compile Include="Migrations\202607221701006_UpdateModel1.Designer.cs">
+      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -240,6 +248,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\CSS\Admin.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
@@ -251,13 +260,11 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Areas\Admin\Views\web.config" />
     <Content Include="Areas\Admin\Views\_ViewStart.cshtml" />
-    <Content Include="Areas\Admin\Views\Shared\_Layout.cshtml" />
     <Content Include="Areas\Admin\Views\Shared\View.cshtml" />
+    <Content Include="Areas\Admin\Views\Shared\_LayoutAdmin.cshtml" />
     <Content Include="Areas\Admin\Views\ManageProduct\Index.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Create.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Delete.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Detail.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageProduct\ThemSP.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageProduct\SuaSP.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -309,6 +316,7 @@
     <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Areas\Admin\Views\AdminCategory\" />
     <Folder Include="Areas\Admin\Views\AdminDashboard\" />
+    <Folder Include="Areas\Admin\Views\Default\" />
     <Folder Include="Areas\Admin\Views\ManagePromotion\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
     <Folder Include="Areas\Admin\Views\ManageUser\" />
@@ -347,6 +355,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202607220950269_Initial.resx">
       <DependentUpon>202607220950269_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607221636220_UpdateModel.resx">
+      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607221701006_UpdateModel1.resx">
+      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
