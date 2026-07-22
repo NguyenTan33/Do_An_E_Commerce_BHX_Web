@@ -46,6 +46,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -158,9 +161,6 @@
     <Reference Include="Microsoft.Owin.Security.OAuth">
       <HintPath>..\packages\Microsoft.Owin.Security.OAuth.4.2.2\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
@@ -177,6 +177,7 @@
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageReviewController.cs" />
     <Compile Include="Controllers\CartController.cs" />
+    <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
@@ -216,6 +217,7 @@
     <Compile Include="Services\Implementations\CartService.cs" />
     <Compile Include="Services\Implementations\OrderService.cs" />
     <Compile Include="Services\Implementations\PaymentService.cs" />
+    <Compile Include="Services\Implementations\ProductService.cs" />
     <Compile Include="Services\Interfaces\ICartServices.cs" />
     <Compile Include="Services\Interfaces\IOrderServices.cs" />
     <Compile Include="Services\Interfaces\IPaymentService.cs" />
@@ -305,6 +307,7 @@
     <Folder Include="Areas\Admin\Views\ManageUser\" />
     <Folder Include="Areas\Admin\Views\Shared\" />
     <Folder Include="Views\Cart\" />
+    <Folder Include="Views\Default\" />
     <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
   </ItemGroup>

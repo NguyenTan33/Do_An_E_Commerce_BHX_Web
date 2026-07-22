@@ -14,7 +14,8 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [Required, StringLength(50)]
         public string Code { get; set; }
 
-        public double DiscountValue { get; set; }
+        public decimal DiscountValue { get; set; }
+        public decimal percentDiscount { get; set; }
         public DateTime DateCreated { get; private set; } = DateTime.Now;
         public DateTime EffectiveDate { get; set; }
         public DateTime ExpiryDate { get; set; }

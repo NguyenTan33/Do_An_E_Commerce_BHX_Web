@@ -10,7 +10,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
     public class Product
     {
         [Key]
-        public int Id { get; private set; }
+        public int Id { get;  set; }
 
         [Required, StringLength(20)]
         public string Barcode { get; set; }
@@ -19,7 +19,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         public string Name { get; set; }
 
         [Required, Range(0, 10000000)]
-        public double Price { get; set; }
+        public decimal Price { get; set; }
 
         [Required]
         public int Quantity { get; set; }

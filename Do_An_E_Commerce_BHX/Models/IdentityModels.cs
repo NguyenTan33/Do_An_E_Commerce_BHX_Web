@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using Do_An_E_Commerce_BHX.Models.Entities;
+using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -14,6 +15,12 @@ namespace Do_An_E_Commerce_BHX.Models
         public virtual ICollection<Entities.UserAddress> UserAddresses { get; set; }
 
         public int LoyaltyPoints { get; set; } = 0;
+
+        public Cart Cart { get; set; }
+        public List<Order> Orders { get; set; } = new List<Order>();
+
+
+
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
