@@ -169,7 +169,10 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageRoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
+    <Compile Include="Areas\Admin\Services\DashboardService.cs" />
+    <Compile Include="Areas\Admin\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageCategoryController.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminDashboardController.cs" />
@@ -267,6 +270,16 @@
     <Content Include="Areas\Admin\Views\ManageProduct\SuaSP.cshtml" />
     <Content Include="Areas\Admin\Views\ManageCategory\Index.cshtml" />
     <Content Include="Areas\Admin\Views\ManageCategory\SuaDanhMuc.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\ThemUser.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\SuaUser.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\ThemRole.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\SuaRole.cshtml" />
+    <Content Include="Areas\Admin\Views\AdminDashboard\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\ThemPromotion.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\SuaPromotion.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -316,12 +329,8 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Data\" />
-    <Folder Include="Areas\Admin\Views\AdminCategory\" />
-    <Folder Include="Areas\Admin\Views\AdminDashboard\" />
-    <Folder Include="Areas\Admin\Views\Default\" />
-    <Folder Include="Areas\Admin\Views\ManagePromotion\" />
+    <Folder Include="Areas\Admin\Views\AuthorizeAdmin\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
-    <Folder Include="Areas\Admin\Views\ManageUser\" />
     <Folder Include="Views\Cart\" />
     <Folder Include="Views\Default\" />
     <Folder Include="Views\Order\" />

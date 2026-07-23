@@ -1,0 +1,156 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Promotion
+
+@{
+    ViewData["Title"] = "Sửa khuyến mãi";
+    ViewData["Subtitle"] = $"Chỉnh sửa mã: {Model.Code}";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --ink: #22262E;
+            --red: #C4453A;
+            --paper: #FAF8F4;
+        }
+
+        .form-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px 36px;
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 12px rgba(15,26,48,0.05);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--navy-deep);
+                margin-bottom: 8px;
+            }
+
+        .form-control {
+            height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 0 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--navy);
+            }
+
+        .text-danger {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 6px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--navy);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-back {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+}
+
+<div class="form-container">
+    <div style="margin-bottom: 20px;">
+        <a href="@Url.Action("Index", "ManagePromotion")" class="btn-back">&larr; Quay lại danh sách</a>
+    </div>
+
+    <div class="form-card">
+        @using (Html.BeginForm("SuaPromotion", "ManagePromotion", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                <label>Mã khuyến mãi (Code) (*)</label>
+                @Html.TextBoxFor(m => m.Code, new { @class = "form-control", required = "required", style = "text-transform: uppercase; font-family:'JetBrains Mono'; font-weight:bold;" })
+                @Html.ValidationMessageFor(m => m.Code, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mức giảm (VNĐ)</label>
+                    @Html.TextBoxFor(m => m.DiscountValue, new { @class = "form-control", type = "number" })
+                </div>
+                <div class="form-group">
+                    <label>Giảm theo phần trăm (%)</label>
+                    @Html.TextBoxFor(m => m.percentDiscount, new { @class = "form-control", type = "number", step = "0.01" })
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Hiệu lực từ ngày (*)</label>
+                    @Html.TextBoxFor(m => m.EffectiveDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local", required = "required" })
+                </div>
+                <div class="form-group">
+                    <label>Hết hạn vào ngày (*)</label>
+                    @Html.TextBoxFor(m => m.ExpiryDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local", required = "required" })
+                </div>
+            </div>
+
+            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                <label style="margin: 0;">Trạng thái kích hoạt:</label>
+                @Html.CheckBoxFor(m => m.IsActive, new { style = "width: 20px; height: 20px; cursor: pointer;" })
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">💾 Cập nhật thay đổi</button>
+            </div>
+        }
+    </div>
+</div>

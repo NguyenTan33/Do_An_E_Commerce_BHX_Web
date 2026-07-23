@@ -20,10 +20,7 @@
             --red: #C4453A;
         }
 
-        /* Tự động bung full width khớp với Layout Admin */
-        .header,
-        .filter-container,
-        .table-wrap {
+        .header, .filter-container, .table-wrap {
             width: 100%;
             max-width: 100% !important;
             margin-left: 0 !important;
@@ -88,9 +85,9 @@
             transition: opacity 0.15s ease;
         }
 
-        .btn-add:hover {
-            opacity: 0.9;
-        }
+            .btn-add:hover {
+                opacity: 0.9;
+            }
 
         /* Filter Panel */
         .filter-container {
@@ -112,9 +109,9 @@
             flex-wrap: wrap;
         }
 
-        .filter-row:last-child {
-            margin-bottom: 0;
-        }
+            .filter-row:last-child {
+                margin-bottom: 0;
+            }
 
         .filter-group {
             display: flex;
@@ -123,29 +120,27 @@
             flex: 1;
         }
 
-        .filter-group label {
-            font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 6px;
-            color: var(--navy-deep);
-        }
+            .filter-group label {
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 6px;
+                color: var(--navy-deep);
+            }
 
-        .filter-group input,
-        .filter-group select {
-            height: 40px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            padding: 0 12px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
+            .filter-group input, .filter-group select {
+                height: 40px;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 0 12px;
+                font-family: 'Inter', sans-serif;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.15s ease;
+            }
 
-        .filter-group input:focus,
-        .filter-group select:focus {
-            border-color: var(--navy);
-        }
+                .filter-group input:focus, .filter-group select:focus {
+                    border-color: var(--navy);
+                }
 
         .filter-button {
             display: flex;
@@ -168,9 +163,9 @@
             transition: opacity 0.15s ease;
         }
 
-        .btn-search:hover {
-            opacity: 0.9;
-        }
+            .btn-search:hover {
+                opacity: 0.9;
+            }
 
         .btn-reset {
             height: 40px;
@@ -189,9 +184,9 @@
             transition: background 0.15s ease;
         }
 
-        .btn-reset:hover {
-            background: #d4cebe;
-        }
+            .btn-reset:hover {
+                background: #d4cebe;
+            }
 
         /* Table Area */
         .table-wrap {
@@ -254,19 +249,19 @@
             white-space: nowrap;
         }
 
-        .barcode-cell::before {
-            content: "";
-            display: inline-block;
-            width: 3px;
-            height: 14px;
-            background: var(--ink);
-            margin-right: 3px;
-            box-shadow: 4px 0 0 var(--ink), 9px 0 0 var(--ink), 12px 0 0 var(--ink), 18px 0 0 var(--ink);
-        }
+            .barcode-cell::before {
+                content: "";
+                display: inline-block;
+                width: 3px;
+                height: 14px;
+                background: var(--ink);
+                margin-right: 3px;
+                box-shadow: 4px 0 0 var(--ink), 9px 0 0 var(--ink), 12px 0 0 var(--ink), 18px 0 0 var(--ink);
+            }
 
-        .barcode-cell .code-num {
-            margin-left: 26px;
-        }
+            .barcode-cell .code-num {
+                margin-left: 26px;
+            }
 
         .stock-cell {
             display: flex;
@@ -308,10 +303,10 @@
             text-align: right;
         }
 
-        .action-cell form {
-            display: inline-block;
-            margin: 0;
-        }
+            .action-cell form {
+                display: inline-block;
+                margin: 0;
+            }
 
         .icon-btn {
             display: inline-flex;
@@ -328,19 +323,37 @@
             transition: border-color 0.15s ease, background 0.15s ease;
         }
 
-        .icon-btn svg {
-            width: 15px;
-            height: 15px;
-        }
+            .icon-btn svg {
+                width: 15px;
+                height: 15px;
+            }
 
-        .icon-btn.view { color: var(--navy); }
-        .icon-btn.view:hover { border-color: var(--navy); background: #EEF1F6; }
+            .icon-btn.view {
+                color: var(--navy);
+            }
 
-        .icon-btn.edit { color: var(--navy); }
-        .icon-btn.edit:hover { border-color: var(--navy); background: #EEF1F6; }
+                .icon-btn.view:hover {
+                    border-color: var(--navy);
+                    background: #EEF1F6;
+                }
 
-        .icon-btn.delete { color: var(--red); }
-        .icon-btn.delete:hover { border-color: var(--red); background: #FBEAE8; }
+            .icon-btn.edit {
+                color: var(--navy);
+            }
+
+                .icon-btn.edit:hover {
+                    border-color: var(--navy);
+                    background: #EEF1F6;
+                }
+
+            .icon-btn.delete {
+                color: var(--red);
+            }
+
+                .icon-btn.delete:hover {
+                    border-color: var(--red);
+                    background: #FBEAE8;
+                }
 
         .empty-state {
             text-align: center;
@@ -359,11 +372,10 @@
             z-index: 1000;
         }
 
-        .modal-overlay.active {
-            display: flex;
-        }
+            .modal-overlay.active {
+                display: flex;
+            }
 
-        /* Modal Xóa */
         .modal-box {
             background: #fff;
             border-radius: 6px;
@@ -373,24 +385,24 @@
             box-shadow: 0 20px 50px rgba(15,26,48,0.3);
         }
 
-        .modal-box h3 {
-            font-family: 'Oswald', sans-serif;
-            font-size: 18px;
-            text-transform: uppercase;
-            color: var(--navy-deep);
-            margin: 0 0 10px;
-        }
+            .modal-box h3 {
+                font-family: 'Oswald', sans-serif;
+                font-size: 18px;
+                text-transform: uppercase;
+                color: var(--navy-deep);
+                margin: 0 0 10px;
+            }
 
-        .modal-box p {
-            font-size: 14px;
-            color: var(--muted);
-            margin: 0 0 22px;
-            line-height: 1.5;
-        }
+            .modal-box p {
+                font-size: 14px;
+                color: var(--muted);
+                margin: 0 0 22px;
+                line-height: 1.5;
+            }
 
-        .modal-box p strong {
-            color: var(--ink);
-        }
+                .modal-box p strong {
+                    color: var(--ink);
+                }
 
         .modal-actions {
             display: flex;
@@ -398,17 +410,17 @@
             gap: 10px;
         }
 
-        .modal-actions button {
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            padding: 10px 18px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-        }
+            .modal-actions button {
+                font-family: 'Oswald', sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 10px 18px;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+            }
 
         .modal-cancel {
             background: transparent;
@@ -416,28 +428,24 @@
             color: var(--muted);
         }
 
-        .modal-cancel:hover {
-            border-color: var(--muted) !important;
-            color: var(--ink);
-        }
+            .modal-cancel:hover {
+                border-color: var(--muted) !important;
+                color: var(--ink);
+            }
 
         .modal-confirm {
             background: var(--red);
             color: #fff;
         }
 
-        .modal-confirm:hover {
-            opacity: 0.9;
-        }
+            .modal-confirm:hover {
+                opacity: 0.9;
+            }
 
         /* Modal Xem Chi Tiết */
         .detail-modal-box {
-            background: #fff;
-            border-radius: 8px;
-            padding: 28px;
             max-width: 580px;
             width: 92%;
-            box-shadow: 0 20px 50px rgba(15,26,48,0.3);
         }
 
         .detail-header {
@@ -449,13 +457,13 @@
             margin-bottom: 20px;
         }
 
-        .detail-header h3 {
-            font-family: 'Oswald', sans-serif;
-            font-size: 20px;
-            color: var(--navy-deep);
-            margin: 0;
-            text-transform: uppercase;
-        }
+            .detail-header h3 {
+                font-family: 'Oswald', sans-serif;
+                font-size: 20px;
+                color: var(--navy-deep);
+                margin: 0;
+                text-transform: uppercase;
+            }
 
         .detail-body {
             display: grid;
@@ -486,8 +494,15 @@
             padding-bottom: 4px;
         }
 
-        .detail-info-label { font-weight: 600; color: var(--muted); }
-        .detail-info-val { font-weight: 600; color: var(--navy-deep); }
+        .detail-info-label {
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .detail-info-val {
+            font-weight: 600;
+            color: var(--navy-deep);
+        }
 
         .badge-tag {
             display: inline-block;
@@ -497,10 +512,27 @@
             font-weight: 600;
             margin-right: 4px;
         }
-        .bg-hot { background: #FDE8E8; color: var(--red); }
-        .bg-bestseller { background: #FEF3C7; color: var(--amber); }
-        .bg-available { background: #DEF7EC; color: var(--green); }
-        .bg-lock { background: #E5E7EB; color: var(--muted); }
+
+        .bg-hot {
+            background: #FDE8E8;
+            color: var(--red);
+        }
+
+        .bg-bestseller {
+            background: #FEF3C7;
+            color: var(--amber);
+        }
+
+        .bg-available {
+            background: #DEF7EC;
+            color: var(--green);
+        }
+
+        .bg-lock {
+            background: #E5E7EB;
+            color: var(--muted);
+            text-decoration: line-through;
+        }
 
         .detail-desc {
             grid-column: span 2;
@@ -512,16 +544,6 @@
             line-height: 1.5;
             max-height: 120px;
             overflow-y: auto;
-        }
-
-        @@media print {
-            .filter-container, .btn-add, .action-cell {
-                display: none;
-            }
-
-            thead th {
-                position: static;
-            }
         }
     </style>
 }
@@ -542,54 +564,72 @@
     @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
     {
         <div class="filter-panel">
+            <!-- Hàng 1: Tìm kiếm cơ bản & Giá -->
             <div class="filter-row">
                 <div class="filter-group">
                     <label>Từ khóa</label>
-                    <input type="text"
-                           name="TuKhoa"
-                           value="@Request["TuKhoa"]"
-                           placeholder="Tên sản phẩm..." />
+                    <input type="text" name="TuKhoa" value="@Request["TuKhoa"]" placeholder="Tên sản phẩm..." />
                 </div>
-
                 <div class="filter-group">
                     <label>Danh mục</label>
-                    @Html.DropDownList(
-                                  "CategoryId",
-                                  ViewBag.Category as SelectList,
-                                  "-- Tất cả --",
-                                  new { @class = "form-control" })
+                    @Html.DropDownList("CategoryId", ViewBag.Category as SelectList, "-- Tất cả --", new { @class = "form-control" })
                 </div>
-
                 <div class="filter-group">
                     <label>Giá từ</label>
-                    <input type="number"
-                           name="GiaTu"
-                           value="@Request["GiaTu"]" />
+                    <input type="number" name="GiaTu" value="@Request["GiaTu"]" />
                 </div>
-
                 <div class="filter-group">
                     <label>Giá đến</label>
-                    <input type="number"
-                           name="GiaDen"
-                           value="@Request["GiaDen"]" />
+                    <input type="number" name="GiaDen" value="@Request["GiaDen"]" />
                 </div>
             </div>
 
+            <!-- Hàng 2: Trạng thái kinh doanh & Tồn kho -->
             <div class="filter-row">
                 <div class="filter-group">
                     <label>Tồn từ</label>
-                    <input type="number"
-                           name="TonTu"
-                           value="@Request["TonTu"]" />
+                    <input type="number" name="TonTu" value="@Request["TonTu"]" />
                 </div>
-
                 <div class="filter-group">
                     <label>Tồn đến</label>
-                    <input type="number"
-                           name="TonDen"
-                           value="@Request["TonDen"]" />
+                    <input type="number" name="TonDen" value="@Request["TonDen"]" />
                 </div>
+                <div class="filter-group">
+                    <label>Kinh doanh</label>
+                    <select name="isAvailable">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isAvailable"] == "true" ? "selected" : "")>Đang bán</option>
+                        <option value="false" @(Request["isAvailable"] == "false" ? "selected" : "")>Ngừng bán</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Trạng thái Khóa</label>
+                    <select name="isLock">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isLock"] == "true" ? "selected" : "")>Bị khóa</option>
+                        <option value="false" @(Request["isLock"] == "false" ? "selected" : "")>Đang mở</option>
+                    </select>
+                </div>
+            </div>
 
+            <!-- Hàng 3: Sắp xếp, Nổi bật, Bán chạy -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Sản phẩm Nổi bật (Hot)</label>
+                    <select name="isHot">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isHot"] == "true" ? "selected" : "")>Có</option>
+                        <option value="false" @(Request["isHot"] == "false" ? "selected" : "")>Không</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Bán chạy (Best Seller)</label>
+                    <select name="isBestSeller">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isBestSeller"] == "true" ? "selected" : "")>Có</option>
+                        <option value="false" @(Request["isBestSeller"] == "false" ? "selected" : "")>Không</option>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label>Sắp xếp</label>
                     <select name="SortBy">
@@ -602,15 +642,9 @@
                         <option value="qtyDesc" @(Request["SortBy"] == "qtyDesc" ? "selected" : "")>Tồn giảm</option>
                     </select>
                 </div>
-
-                <div class="filter-button">
-                    <button type="submit" class="btn-search">
-                        🔍 Tìm kiếm
-                    </button>
-
-                    <a href="@Url.Action("Index")" class="btn-reset">
-                        Đặt lại
-                    </a>
+                <div class="filter-button" style="flex: 1; justify-content: flex-end;">
+                    <button type="submit" class="btn-search">🔍 Tìm kiếm</button>
+                    <a href="@Url.Action("Index")" class="btn-reset">Đặt lại</a>
                 </div>
             </div>
         </div>
@@ -643,7 +677,19 @@
 
                     <tr>
                         <td class="id-cell">#@item.Id</td>
-                        <td class="name-cell">@item.Name</td>
+                        <td class="name-cell">
+                            @item.Name
+                            <div style="margin-top: 4px;">
+                                @if (item.IsHot)
+                                {<span class="badge-tag bg-hot">HOT</span>}
+                                @if (item.IsBestSeller)
+                                {<span class="badge-tag bg-bestseller">BEST SELLER</span>}
+                                @if (!item.IsAvailable)
+                                {<span class="badge-tag bg-lock">Ngừng bán</span>}
+                                @if (item.IsLock)
+                                {<span class="badge-tag bg-lock">Bị khóa</span>}
+                            </div>
+                        </td>
                         <td class="barcode-cell"><span class="code-num">@item.Barcode</span></td>
                         <td>
                             <div class="stock-cell">
@@ -655,7 +701,7 @@
                         </td>
                         <td class="price-cell">@item.Price.ToString("N0") ₫</td>
                         <td class="action-cell">
-                            <!-- Nút Xem Chi Tiết (Con mắt) -->
+                            <!-- Nút Xem Chi Tiết -->
                             <button type="button" class="icon-btn view" title="Xem chi tiết"
                                     onclick="openDetailModal({
                                         id: '@item.Id',
@@ -715,7 +761,7 @@
 
 <!-- Modal Xem Chi Tiết -->
 <div class="modal-overlay" id="detailModal">
-    <div class="detail-modal-box">
+    <div class="modal-box detail-modal-box">
         <div class="detail-header">
             <h3>Chi tiết sản phẩm <span id="dtId" style="color:var(--amber);"></span></h3>
             <button type="button" class="modal-cancel" onclick="closeDetailModal()" style="padding: 4px 10px;">✕</button>
