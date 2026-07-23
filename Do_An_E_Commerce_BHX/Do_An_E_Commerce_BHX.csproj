@@ -180,7 +180,6 @@
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageReviewController.cs" />
     <Compile Include="Controllers\CartController.cs" />
-    <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
@@ -218,6 +217,7 @@
     <Compile Include="Models\Entities\Waranty.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
+    <Compile Include="Models\ViewModels\HomeIndexViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\Implementations\GenericRepository.cs" />
     <Compile Include="Repositories\Implementations\OrderRepository.cs" />
