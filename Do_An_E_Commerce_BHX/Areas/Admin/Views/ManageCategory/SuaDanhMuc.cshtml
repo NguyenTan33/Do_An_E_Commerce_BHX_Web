@@ -1,0 +1,148 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Category
+
+@{
+    ViewData["Title"] = "Chỉnh sửa danh mục";
+    ViewData["Subtitle"] = $"Sửa thông tin danh mục #{Model.Id}";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --paper: #FAF8F4;
+            --ink: #22262E;
+            --muted: #6B7280;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --green: #2F8F5B;
+            --red: #C4453A;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 28px 32px;
+            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+            border: 1px solid var(--line);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--navy-deep);
+                margin-bottom: 6px;
+            }
+
+        .form-control {
+            height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 0 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--navy);
+                box-shadow: 0 0 0 3px rgba(22,35,63,0.08);
+            }
+
+        .text-danger {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 4px;
+        }
+
+        .form-actions {
+            margin-top: 28px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--navy);
+            color: #fff;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+            .btn-submit:hover {
+                opacity: 0.9;
+            }
+
+        .btn-back {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+        }
+
+            .btn-back:hover {
+                background: #d4cebe;
+            }
+    </style>
+}
+
+<div class="form-container">
+    <div style="margin-bottom: 20px;">
+        <a href="@Url.Action("Index", "ManageCategory")" class="btn-back">
+            &larr; Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="form-card">
+        @using (Html.BeginForm( "SuaDanhMuc", "ManageCategory",new { area = "Admin" }, FormMethod.Post, null))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+
+            <div class="form-group">
+                <label>Mã danh mục</label>
+                <input type="text" class="form-control" value="#@Model.Id" disabled style="background: var(--paper); font-weight:600; color: var(--muted);" />
+            </div>
+
+            <div class="form-group">
+                <label>Tên danh mục (*)</label>
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập tên danh mục...", autofocus = "autofocus" })
+                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-actions">
+                <a href="@Url.Action("Index", "ManageCategory")" class="btn-back">Hủy bỏ</a>
+                <button type="submit" class="btn-submit">💾 Lưu thay đổi</button>
+            </div>
+        }
+    </div>
+</div>

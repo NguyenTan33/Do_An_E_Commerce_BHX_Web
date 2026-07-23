@@ -12,6 +12,7 @@ using System.Data.Entity;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ManageProductController : Controller
     {
         private readonly ApplicationDbContext _db = new ApplicationDbContext();

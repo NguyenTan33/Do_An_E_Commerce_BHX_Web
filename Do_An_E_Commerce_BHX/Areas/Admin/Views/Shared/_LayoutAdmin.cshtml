@@ -34,26 +34,26 @@
         <div class="nav-group-label">Vận hành</div>
         <ul class="nav">
             <li>
-                <a asp-controller="Products" asp-action="Index" class="@ActiveClass("Products")">
+                <a href="@Url.Action("Index", "ManageProduct")" class="@ActiveClass("ManageProduct")">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M3 8l9 5 9-5" /></svg>
                     Quản lý sản phẩm
                 </a>
             </li>
             <li>
-                <a asp-controller="Categories" asp-action="Index" class="@ActiveClass("Categories")">
+                <a href="@Url.Action("Index", "ManageCategory")" class="@ActiveClass("ManageCategory")">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                     Danh mục
                 </a>
             </li>
             <li>
-                <a asp-controller="Coupons" asp-action="Index" class="@ActiveClass("Coupons")">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.58z" /><circle cx="7.5" cy="7.5" r="1.2" /></svg>
-                    Mã giảm giá
+                <a href="@Url.Action("Index", "ManagePromotion")" class="@ActiveClass("ManagePromotion")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Mã Giảm Giá
                 </a>
             </li>
             <li>
-                <a asp-controller="Reviews" asp-action="Index" class="@ActiveClass("Reviews")">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.3l-6.16 3.24 1.18-6.88L2 8.72l6.92-1L12 1.5l3.08 6.22 6.92 1-5.02 4.94 1.18 6.88z" /></svg>
+                <a href="@Url.Action("Index", "ManageReview")" class="@ActiveClass("ManageReview")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                     Đánh giá sản phẩm
                 </a>
             </li>
@@ -62,9 +62,15 @@
         <div class="nav-group-label">Con người & Dòng tiền</div>
         <ul class="nav">
             <li>
-                <a asp-controller="Users" asp-action="Index" class="@ActiveClass("Users")">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="10" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                <a href="@Url.Action("Index", "ManageUser")" class="@ActiveClass("ManageUser")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                     Quản lý người dùng
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "ManageRole")" class="@ActiveClass("ManageRole")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Roles & Quyền hạn
                 </a>
             </li>
             <li>

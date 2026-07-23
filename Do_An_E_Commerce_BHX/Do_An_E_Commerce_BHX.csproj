@@ -265,6 +265,8 @@
     <Content Include="Areas\Admin\Views\ManageProduct\Index.cshtml" />
     <Content Include="Areas\Admin\Views\ManageProduct\ThemSP.cshtml" />
     <Content Include="Areas\Admin\Views\ManageProduct\SuaSP.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageCategory\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageCategory\SuaDanhMuc.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />

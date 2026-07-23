@@ -6,13 +6,7 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <title>Danh sách sản phẩm</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+@section Styles {
     <style>
         :root {
             --navy: #16233F;
@@ -26,26 +20,21 @@
             --red: #C4453A;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 40px 32px 60px;
-            background: var(--paper);
-            background-image: radial-gradient(circle at 1px 1px, rgba(22,35,63,0.06) 1px, transparent 0);
-            background-size: 22px 22px;
-            font-family: 'Inter', Arial, sans-serif;
-            color: var(--ink);
+        /* Tự động bung full width khớp với Layout Admin */
+        .header,
+        .filter-container,
+        .table-wrap {
+            width: 100%;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
 
         .header {
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
-            max-width: 1180px;
-            margin: 0 auto 24px;
+            margin-bottom: 24px;
             border-bottom: 3px solid var(--navy);
             padding-bottom: 16px;
         }
@@ -105,8 +94,7 @@
 
         /* Filter Panel */
         .filter-container {
-            max-width: 1180px;
-            margin: 0 auto 20px;
+            margin-bottom: 20px;
         }
 
         .filter-panel {
@@ -114,6 +102,7 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            border: 1px solid var(--line);
         }
 
         .filter-row {
@@ -206,12 +195,11 @@
 
         /* Table Area */
         .table-wrap {
-            max-width: 1180px;
-            margin: 0 auto;
             background: #fff;
             border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+            border: 1px solid var(--line);
         }
 
         table {
@@ -345,32 +333,14 @@
             height: 15px;
         }
 
-        .icon-btn.view {
-            color: var(--navy);
-        }
+        .icon-btn.view { color: var(--navy); }
+        .icon-btn.view:hover { border-color: var(--navy); background: #EEF1F6; }
 
-        .icon-btn.view:hover {
-            border-color: var(--navy);
-            background: #EEF1F6;
-        }
+        .icon-btn.edit { color: var(--navy); }
+        .icon-btn.edit:hover { border-color: var(--navy); background: #EEF1F6; }
 
-        .icon-btn.edit {
-            color: var(--navy);
-        }
-
-        .icon-btn.edit:hover {
-            border-color: var(--navy);
-            background: #EEF1F6;
-        }
-
-        .icon-btn.delete {
-            color: var(--red);
-        }
-
-        .icon-btn.delete:hover {
-            border-color: var(--red);
-            background: #FBEAE8;
-        }
+        .icon-btn.delete { color: var(--red); }
+        .icon-btn.delete:hover { border-color: var(--red); background: #FBEAE8; }
 
         .empty-state {
             text-align: center;
@@ -386,7 +356,7 @@
             background: rgba(15,26,48,0.55);
             align-items: center;
             justify-content: center;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .modal-overlay.active {
@@ -545,11 +515,6 @@
         }
 
         @@media print {
-            body {
-                background: #fff;
-                padding: 0;
-            }
-
             .filter-container, .btn-add, .action-cell {
                 display: none;
             }
@@ -559,260 +524,247 @@
             }
         }
     </style>
-</head>
-<body>
+}
 
-    <div class="header">
-        <div>
-            <p class="eyebrow">Quản lý kho &middot; Bán lẻ</p>
-            <h2>Danh sách sản phẩm</h2>
-        </div>
-        <div class="header-right">
-            <span class="count-badge">@(Model?.Count() ?? 0) SP</span>
-            @Html.ActionLink("+ Thêm sản phẩm", "ThemSP", "ManageProduct", null, new { @class = "btn-add" })
-        </div>
+<div class="header">
+    <div>
+        <p class="eyebrow">Quản lý kho &middot; Bán lẻ</p>
+        <h2>Danh sách sản phẩm</h2>
     </div>
+    <div class="header-right">
+        <span class="count-badge">@(Model?.Count() ?? 0) SP</span>
+        @Html.ActionLink("+ Thêm sản phẩm", "ThemSP", "ManageProduct", null, new { @class = "btn-add" })
+    </div>
+</div>
 
-    <!-- Bộ lọc tìm kiếm & sắp xếp (Server-side) -->
-    <div class="filter-container">
-        @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
-        {
-            <div class="filter-panel">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Từ khóa</label>
-                        <input type="text"
-                               name="TuKhoa"
-                               value="@Request["TuKhoa"]"
-                               placeholder="Tên sản phẩm..." />
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Danh mục</label>
-                        @Html.DropDownList(
-                                      "CategoryId",
-                                      ViewBag.Category as SelectList,
-                                      "-- Tất cả --",
-                                      new { @class = "form-control" })
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Giá từ</label>
-                        <input type="number"
-                               name="GiaTu"
-                               value="@Request["GiaTu"]" />
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Giá đến</label>
-                        <input type="number"
-                               name="GiaDen"
-                               value="@Request["GiaDen"]" />
-                    </div>
+<!-- Bộ lọc tìm kiếm & sắp xếp (Server-side) -->
+<div class="filter-container">
+    @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
+    {
+        <div class="filter-panel">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Từ khóa</label>
+                    <input type="text"
+                           name="TuKhoa"
+                           value="@Request["TuKhoa"]"
+                           placeholder="Tên sản phẩm..." />
                 </div>
 
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Tồn từ</label>
-                        <input type="number"
-                               name="TonTu"
-                               value="@Request["TonTu"]" />
-                    </div>
+                <div class="filter-group">
+                    <label>Danh mục</label>
+                    @Html.DropDownList(
+                                  "CategoryId",
+                                  ViewBag.Category as SelectList,
+                                  "-- Tất cả --",
+                                  new { @class = "form-control" })
+                </div>
 
-                    <div class="filter-group">
-                        <label>Tồn đến</label>
-                        <input type="number"
-                               name="TonDen"
-                               value="@Request["TonDen"]" />
-                    </div>
+                <div class="filter-group">
+                    <label>Giá từ</label>
+                    <input type="number"
+                           name="GiaTu"
+                           value="@Request["GiaTu"]" />
+                </div>
 
-                    <div class="filter-group">
-                        <label>Sắp xếp</label>
-                        <select name="SortBy">
-                            <option value="">Mặc định</option>
-                            <option value="nameAsc" @(Request["SortBy"] == "nameAsc" ? "selected" : "")>Tên A-Z</option>
-                            <option value="nameDesc" @(Request["SortBy"] == "nameDesc" ? "selected" : "")>Tên Z-A</option>
-                            <option value="priceAsc" @(Request["SortBy"] == "priceAsc" ? "selected" : "")>Giá tăng</option>
-                            <option value="priceDesc" @(Request["SortBy"] == "priceDesc" ? "selected" : "")>Giá giảm</option>
-                            <option value="qtyAsc" @(Request["SortBy"] == "qtyAsc" ? "selected" : "")>Tồn tăng</option>
-                            <option value="qtyDesc" @(Request["SortBy"] == "qtyDesc" ? "selected" : "")>Tồn giảm</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-button">
-                        <button type="submit" class="btn-search">
-                            🔍 Tìm kiếm
-                        </button>
-
-                        <a href="@Url.Action("Index")" class="btn-reset">
-                            Đặt lại
-                        </a>
-                    </div>
+                <div class="filter-group">
+                    <label>Giá đến</label>
+                    <input type="number"
+                           name="GiaDen"
+                           value="@Request["GiaDen"]" />
                 </div>
             </div>
-        }
-    </div>
 
-    <!-- Bảng danh sách sản phẩm -->
-    <div class="table-wrap">
-        <table id="productTable">
-            <thead>
-                <tr>
-                    <th>Mã SP</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Mã vạch</th>
-                    <th>Tồn kho</th>
-                    <th style="text-align:right;">Giá bán</th>
-                    <th style="text-align:right;">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Tồn từ</label>
+                    <input type="number"
+                           name="TonTu"
+                           value="@Request["TonTu"]" />
+                </div>
+
+                <div class="filter-group">
+                    <label>Tồn đến</label>
+                    <input type="number"
+                           name="TonDen"
+                           value="@Request["TonDen"]" />
+                </div>
+
+                <div class="filter-group">
+                    <label>Sắp xếp</label>
+                    <select name="SortBy">
+                        <option value="">Mặc định</option>
+                        <option value="nameAsc" @(Request["SortBy"] == "nameAsc" ? "selected" : "")>Tên A-Z</option>
+                        <option value="nameDesc" @(Request["SortBy"] == "nameDesc" ? "selected" : "")>Tên Z-A</option>
+                        <option value="priceAsc" @(Request["SortBy"] == "priceAsc" ? "selected" : "")>Giá tăng</option>
+                        <option value="priceDesc" @(Request["SortBy"] == "priceDesc" ? "selected" : "")>Giá giảm</option>
+                        <option value="qtyAsc" @(Request["SortBy"] == "qtyAsc" ? "selected" : "")>Tồn tăng</option>
+                        <option value="qtyDesc" @(Request["SortBy"] == "qtyDesc" ? "selected" : "")>Tồn giảm</option>
+                    </select>
+                </div>
+
+                <div class="filter-button">
+                    <button type="submit" class="btn-search">
+                        🔍 Tìm kiếm
+                    </button>
+
+                    <a href="@Url.Action("Index")" class="btn-reset">
+                        Đặt lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Bảng danh sách sản phẩm -->
+<div class="table-wrap">
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên sản phẩm</th>
+                <th>Mã vạch</th>
+                <th>Tồn kho</th>
+                <th style="text-align:right;">Giá bán</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                var maxQty = Model.Max(p => p.Quantity);
+                if (maxQty <= 0) { maxQty = 1; }
+
+                foreach (var item in Model)
                 {
-                    var maxQty = Model.Max(p => p.Quantity);
-                    if (maxQty <= 0) { maxQty = 1; }
+                    var pct = (int)Math.Min(100, (item.Quantity * 100.0) / maxQty);
+                    var stockColor = item.Quantity <= 5 ? "var(--red)" : (item.Quantity <= 20 ? "var(--amber)" : "var(--green)");
 
-                    foreach (var item in Model)
-                    {
-                        var pct = (int)Math.Min(100, (item.Quantity * 100.0) / maxQty);
-                        var stockColor = item.Quantity <= 5 ? "var(--red)" : (item.Quantity <= 20 ? "var(--amber)" : "var(--green)");
-
-                        <tr>
-                            <td class="id-cell">#@item.Id</td>
-                            <td class="name-cell">@item.Name</td>
-                            <td class="barcode-cell"><span class="code-num">@item.Barcode</span></td>
-                            <td>
-                                <div class="stock-cell">
-                                    <div class="stock-track">
-                                        <div class="stock-fill" style="width:@(pct)%; background:@stockColor;"></div>
-                                    </div>
-                                    <span class="stock-number">@item.Quantity</span>
+                    <tr>
+                        <td class="id-cell">#@item.Id</td>
+                        <td class="name-cell">@item.Name</td>
+                        <td class="barcode-cell"><span class="code-num">@item.Barcode</span></td>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-track">
+                                    <div class="stock-fill" style="width:@(pct)%; background:@stockColor;"></div>
                                 </div>
-                            </td>
-                            <td class="price-cell">@item.Price.ToString("N0") ₫</td>
-                            <td class="action-cell">
-                                <!-- Nút Xem Chi Tiết (Con mắt) -->
-                                <button type="button" class="icon-btn view" title="Xem chi tiết"
-                                        onclick="openDetailModal({
-                                            id: '@item.Id',
-                                            name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))',
-                                            barcode: '@item.Barcode',
-                                            category: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Category?.Name ?? "Chưa phân loại"))',
-                                            price: '@item.Price.ToString("N0") ₫',
-                                            quantity: '@item.Quantity',
-                                            image: '@(string.IsNullOrEmpty(item.URLImage) ? "https://via.placeholder.com/140?text=No+Img" : item.URLImage)',
-                                            desc: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Description ?? "Không có mô tả chi tiết."))',
-                                            isAvailable: @(item.IsAvailable ? "true" : "false"),
-                                            isHot: @(item.IsHot ? "true" : "false"),
-                                            isBestSeller: @(item.IsBestSeller ? "true" : "false"),
-                                            isLock: @(item.IsLock ? "true" : "false")
-                                        })">
+                                <span class="stock-number">@item.Quantity</span>
+                            </div>
+                        </td>
+                        <td class="price-cell">@item.Price.ToString("N0") ₫</td>
+                        <td class="action-cell">
+                            <!-- Nút Xem Chi Tiết (Con mắt) -->
+                            <button type="button" class="icon-btn view" title="Xem chi tiết"
+                                    onclick="openDetailModal({
+                                        id: '@item.Id',
+                                        name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))',
+                                        barcode: '@item.Barcode',
+                                        category: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Category?.Name ?? "Chưa phân loại"))',
+                                        price: '@item.Price.ToString("N0") ₫',
+                                        quantity: '@item.Quantity',
+                                        image: '@(string.IsNullOrEmpty(item.URLImage) ? "https://via.placeholder.com/140?text=No+Img" : item.URLImage)',
+                                        desc: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Description ?? "Không có mô tả chi tiết."))',
+                                        isAvailable: @(item.IsAvailable ? "true" : "false"),
+                                        isHot: @(item.IsHot ? "true" : "false"),
+                                        isBestSeller: @(item.IsBestSeller ? "true" : "false"),
+                                        isLock: @(item.IsLock ? "true" : "false")
+                                    })">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+
+                            <!-- Nút Sửa -->
+                            <a href="@Url.Action("SuaSP", "ManageProduct", new { id = item.Id })" class="icon-btn edit" title="Sửa">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+
+                            <!-- Nút Xóa -->
+                            @using (Html.BeginForm("XoaSP", "ManageProduct", FormMethod.Post, new { onsubmit = "return false;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@item.Id" />
+                                <button type="button" class="icon-btn delete" title="Xóa"
+                                        onclick="openDeleteModal(this, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                        <path d="M10 11v6"></path>
+                                        <path d="M14 11v6"></path>
+                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
                                     </svg>
                                 </button>
-
-                                <!-- Nút Sửa -->
-                                <a href="@Url.Action("SuaSP", "ManageProduct", new { id = item.Id })" class="icon-btn edit" title="Sửa">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-
-                                <!-- Nút Xóa -->
-                                @using (Html.BeginForm("XoaSP", "ManageProduct", FormMethod.Post, new { onsubmit = "return false;" }))
-                                {
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="Id" value="@item.Id" />
-                                    <button type="button" class="icon-btn delete" title="Xóa"
-                                            onclick="openDeleteModal(this, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                            <path d="M10 11v6"></path>
-                                            <path d="M14 11v6"></path>
-                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                                        </svg>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                    }
+                            }
+                        </td>
+                    </tr>
                 }
-                else
-                {
-                    <tr><td colspan="6" class="empty-state">Chưa có sản phẩm nào trong danh sách.</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+            else
+            {
+                <tr><td colspan="6" class="empty-state">Chưa có sản phẩm nào trong danh sách.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
 
-    <!-- Icon CSS Mask cho nút Sửa -->
-    <style>
-        .icon-btn.edit::before {
-            content: "";
-            width: 15px;
-            height: 15px;
-            display: inline-block;
-            background-color: var(--navy);
-            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>') no-repeat center / contain;
-            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>') no-repeat center / contain;
-        }
-    </style>
-
-    <!-- Modal Xem Chi Tiết -->
-    <div class="modal-overlay" id="detailModal">
-        <div class="detail-modal-box">
-            <div class="detail-header">
-                <h3>Chi tiết sản phẩm <span id="dtId" style="color:var(--amber);"></span></h3>
-                <button type="button" class="modal-cancel" onclick="closeDetailModal()" style="padding: 4px 10px;">✕</button>
-            </div>
-            <div class="detail-body">
-                <img id="dtImage" src="" class="detail-img" alt="Product Image" onerror="this.src='https://via.placeholder.com/140?text=No+Img';" />
-                <div class="detail-info">
-                    <div style="font-size: 16px; font-weight: 700; color: var(--navy);" id="dtName"></div>
-                    <div class="detail-info-row">
-                        <span class="detail-info-label">Danh mục:</span>
-                        <span class="detail-info-val" id="dtCategory"></span>
-                    </div>
-                    <div class="detail-info-row">
-                        <span class="detail-info-label">Giá bán:</span>
-                        <span class="detail-info-val" id="dtPrice" style="color:var(--amber);"></span>
-                    </div>
-                    <div class="detail-info-row">
-                        <span class="detail-info-label">Tồn kho:</span>
-                        <span class="detail-info-val" id="dtQuantity"></span>
-                    </div>
-                    <div class="detail-info-row">
-                        <span class="detail-info-label">Mã vạch:</span>
-                        <span class="detail-info-val" id="dtBarcode" style="font-family:'JetBrains Mono';"></span>
-                    </div>
-                    <div style="margin-top: 6px;" id="dtBadges"></div>
+<!-- Modal Xem Chi Tiết -->
+<div class="modal-overlay" id="detailModal">
+    <div class="detail-modal-box">
+        <div class="detail-header">
+            <h3>Chi tiết sản phẩm <span id="dtId" style="color:var(--amber);"></span></h3>
+            <button type="button" class="modal-cancel" onclick="closeDetailModal()" style="padding: 4px 10px;">✕</button>
+        </div>
+        <div class="detail-body">
+            <img id="dtImage" src="" class="detail-img" alt="Product Image" onerror="this.src='https://via.placeholder.com/140?text=No+Img';" />
+            <div class="detail-info">
+                <div style="font-size: 16px; font-weight: 700; color: var(--navy);" id="dtName"></div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Danh mục:</span>
+                    <span class="detail-info-val" id="dtCategory"></span>
                 </div>
-                <div class="detail-desc">
-                    <strong>Mô tả: </strong><span id="dtDesc"></span>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Giá bán:</span>
+                    <span class="detail-info-val" id="dtPrice" style="color:var(--amber);"></span>
                 </div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Tồn kho:</span>
+                    <span class="detail-info-val" id="dtQuantity"></span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Mã vạch:</span>
+                    <span class="detail-info-val" id="dtBarcode" style="font-family:'JetBrains Mono';"></span>
+                </div>
+                <div style="margin-top: 6px;" id="dtBadges"></div>
             </div>
-            <div class="modal-actions" style="margin-top:20px;">
-                <button type="button" class="modal-cancel" onclick="closeDetailModal()">Đóng</button>
+            <div class="detail-desc">
+                <strong>Mô tả: </strong><span id="dtDesc"></span>
             </div>
         </div>
-    </div>
-
-    <!-- Modal Xác Nhận Xóa -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal-box">
-            <h3>Xác nhận xóa</h3>
-            <p>Bạn có chắc muốn xóa sản phẩm <strong id="deleteProductName"></strong>? Hành động này không thể hoàn tác.</p>
-            <div class="modal-actions">
-                <button type="button" class="modal-cancel" onclick="closeDeleteModal()">Hủy</button>
-                <button type="button" class="modal-confirm" onclick="confirmDelete()">Xóa sản phẩm</button>
-            </div>
+        <div class="modal-actions" style="margin-top:20px;">
+            <button type="button" class="modal-cancel" onclick="closeDetailModal()">Đóng</button>
         </div>
     </div>
+</div>
 
+<!-- Modal Xác Nhận Xóa -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3>Xác nhận xóa</h3>
+        <p>Bạn có chắc muốn xóa sản phẩm <strong id="deleteProductName"></strong>? Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions">
+            <button type="button" class="modal-cancel" onclick="closeDeleteModal()">Hủy</button>
+            <button type="button" class="modal-confirm" onclick="confirmDelete()">Xóa sản phẩm</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
     <script>
         // --- JS Modal Chi Tiết ---
         function openDetailModal(data) {
@@ -868,8 +820,4 @@
             if (e.target === this) closeDeleteModal();
         });
     </script>
-
-</body>
-</html>
-
-```
+}

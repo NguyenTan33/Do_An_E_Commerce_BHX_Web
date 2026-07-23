@@ -1,0 +1,482 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Category>
+
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+    ViewData["Subtitle"] = "Danh sách danh mục sản phẩm trong cửa hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --paper: #FAF8F4;
+            --ink: #22262E;
+            --muted: #6B7280;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --green: #2F8F5B;
+            --red: #C4453A;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .count-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: var(--navy);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-add {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--amber);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .btn-add:hover {
+                opacity: 0.9;
+            }
+
+        /* Filter Panel */
+        .filter-panel {
+            background: #fff;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+            border: 1px solid var(--line);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 220px;
+            flex: 1;
+        }
+
+            .filter-group label {
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 6px;
+                color: var(--navy-deep);
+            }
+
+            .filter-group input,
+            .filter-group select {
+                height: 40px;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 0 12px;
+                font-family: 'Inter', sans-serif;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.15s ease;
+            }
+
+                .filter-group input:focus,
+                .filter-group select:focus {
+                    border-color: var(--navy);
+                }
+
+        .btn-search {
+            height: 40px;
+            padding: 0 20px;
+            border: none;
+            border-radius: 6px;
+            background: var(--navy);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .btn-reset {
+            height: 40px;
+            padding: 0 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #E5E1D8;
+            color: var(--ink);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Table */
+        .table-wrap {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(15,26,48,0.08);
+            border: 1px solid var(--line);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        thead th {
+            background: var(--navy);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 14px 18px;
+        }
+
+        tbody td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #F8F6F0;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .id-cell {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--muted);
+            font-size: 13px;
+            width: 90px;
+        }
+
+        .name-cell {
+            font-weight: 600;
+            color: var(--navy-deep);
+            font-size: 15px;
+        }
+
+        .action-cell {
+            white-space: nowrap;
+            text-align: right;
+            width: 120px;
+        }
+
+            .action-cell form {
+                display: inline-block;
+                margin: 0;
+            }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1.5px solid var(--line);
+            background: #fff;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 4px;
+            transition: all 0.15s ease;
+        }
+
+            .icon-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .icon-btn.edit {
+                color: var(--navy);
+            }
+
+                .icon-btn.edit:hover {
+                    border-color: var(--navy);
+                    background: #EEF1F6;
+                }
+
+            .icon-btn.delete {
+                color: var(--red);
+            }
+
+                .icon-btn.delete:hover {
+                    border-color: var(--red);
+                    background: #FBEAE8;
+                }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--muted);
+        }
+
+        /* Modal Base */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,26,48,0.55);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+            .modal-overlay.active {
+                display: flex;
+            }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px 28px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(15,26,48,0.25);
+        }
+
+            .modal-box h3 {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--navy-deep);
+                margin: 0 0 16px;
+                text-transform: uppercase;
+                border-bottom: 2px solid var(--navy);
+                padding-bottom: 8px;
+            }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-modal-cancel {
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 9px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-confirm {
+            background: var(--navy);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-delete {
+            background: var(--red);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+}
+
+<div class="header-actions">
+    <div>
+        <span class="count-badge">@(Model?.Count() ?? 0) Danh mục</span>
+    </div>
+    <button type="button" class="btn-add" onclick="openAddModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Thêm danh mục
+    </button>
+</div>
+
+<!-- Bộ lọc tìm kiếm & sắp xếp -->
+<div class="filter-panel">
+    @using (Html.BeginForm("Index", "ManageCategory", FormMethod.Get))
+    {
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>Từ khóa</label>
+                <input type="text" name="tuKhoa" value="@Request["tuKhoa"]" placeholder="Nhập tên danh mục..." />
+            </div>
+
+            <div class="filter-group">
+                <label>Sắp xếp</label>
+                <select name="sortBy">
+                    <option value="">Mặc định (Theo ID)</option>
+                    <option value="nameAsc" @(Request["sortBy"] == "nameAsc" ? "selected" : "")>Tên A-Z</option>
+                    <option value="nameDesc" @(Request["sortBy"] == "nameDesc" ? "selected" : "")>Tên Z-A</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn-search">🔍 Tìm kiếm</button>
+                <a href="@Url.Action("Index", "ManageCategory")" class="btn-reset">Đặt lại</a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Bảng danh sách Danh mục -->
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Mã DM</th>
+                <th>Tên danh mục</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="id-cell">#@item.Id</td>
+                        <td class="name-cell">@item.Name</td>
+                        <td class="action-cell">
+                            <!-- Nút Sửa (Chuyển trang SuaDanhMuc) -->
+                            <a href="@Url.Action("SuaDanhMuc", "ManageCategory", new { id = item.Id })" class="icon-btn edit" title="Sửa">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+
+                            <!-- Nút Xóa (Mở Modal Xác nhận) -->
+                            @using (Html.BeginForm("XoaDm", "ManageCategory", FormMethod.Post, new { id = "formDelete_" + item.Id }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="button" class="icon-btn delete" title="Xóa"
+                                        onclick="openDeleteModal(@item.Id, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                        <path d="M10 11v6"></path>
+                                        <path d="M14 11v6"></path>
+                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                    </svg>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="3" class="empty-state">Chưa có danh mục nào trong hệ thống.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ============ MODALS ============ -->
+<!-- Modal Thêm Danh Mục -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+        <h3>Thêm Danh Mục Mới</h3>
+        @using (Html.BeginForm("ThemDanhMuc", "ManageCategory", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="filter-group">
+                <label>Tên danh mục (*)</label>
+                <input type="text" name="Name" required placeholder="Nhập tên danh mục mới..." />
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('addModal')">Hủy</button>
+                <button type="submit" class="btn-modal-confirm">Thêm mới</button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal Xác Nhận Xóa -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3 style="color:var(--red); border-color:var(--red);">Xác nhận xóa</h3>
+        <p style="font-size:14px; color:var(--muted); margin-bottom:20px;">
+            Bạn có chắc muốn xóa danh mục <strong id="deleteCategoryName" style="color:var(--ink);"></strong>? Các sản phẩm thuộc danh mục này có thể bị ảnh hưởng.
+        </p>
+        <div class="modal-actions">
+            <button type="button" class="btn-modal-cancel" onclick="closeModal('deleteModal')">Hủy</button>
+            <button type="button" class="btn-modal-delete" onclick="confirmDelete()">Xóa danh mục</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let categoryIdToDelete = null;
+
+        // Modal Thêm
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        // Modal Xóa
+        function openDeleteModal(id, name) {
+            categoryIdToDelete = id;
+            document.getElementById('deleteCategoryName').textContent = name;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            if (categoryIdToDelete) {
+                document.getElementById('formDelete_' + categoryIdToDelete).submit();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Đóng modal khi click ngoài vùng overlay
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+}
