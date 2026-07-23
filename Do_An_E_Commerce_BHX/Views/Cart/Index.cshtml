@@ -1,0 +1,106 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Cart
+
+@{
+    ViewBag.Title = "Giỏ hàng của bạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>🛒 Giỏ hàng của bạn</h2>
+    <hr />
+
+    @if (Model == null || Model.CartDetails == null || !Model.CartDetails.Any())
+    {
+        <div class="alert alert-info">Giỏ hàng của m đang trống! <a href="@Url.Action("Index", "Home")">Đi mua sắm ngay</a></div>
+    }
+    else
+
+    {
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Đơn giá</th>
+                    <th style="width: 150px;">Số lượng</th>
+                    <th>Thành tiền</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.CartDetails)
+                {
+                    decimal itemTotal = item.Quantity * item.Product.Price;
+                    <tr id="row-@item.ProductId">
+                        <td>
+                            <strong>@item.Product.Name</strong>
+                        </td>
+                        <td>@item.Product.Price.ToString("N0") VNĐ</td>
+                        <td>
+                            <input type="number"
+                                   class="form-control quantity-input"
+                                   data-id="@item.ProductId"
+                                   value="@item.Quantity"
+                                   min="1" max="100" />
+                        </td>
+                        <td id="item-total-@item.ProductId">
+                            @itemTotal.ToString("N0") VNĐ
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger btn-remove" data-id="@item.ProductId">Xóa</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <h4>Tổng tiền: <span id="cart-total-price" class="text-danger">@(((decimal)ViewBag.TotalPrice).ToString("N0"))</span> VNĐ</h4>
+            <a href="@Url.Action("Checkout", "Order")" class="btn btn-success btn-lg">Tiến hành đặt hàng ➔</a>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+    $(document).ready(function () {
+        // 1. Đổi số lượng AJAX
+        $('.quantity-input').on('change', function () {
+            var productId = $(this).data('id');
+            var amount = parseInt($(this).val());
+
+            if (amount < 1) return;
+
+            $.ajax({
+                url: '@Url.Action("ChangeQuantity", "Cart")',
+                type: 'POST',
+                data: { productId: productId, amount: amount },
+                success: function (res) {
+                    if (res.success) {
+                        $('#cart-total-price').text(res.newTotal.toLocaleString('vi-VN'));
+                        location.reload(); // Hoặc update DOM trực tiếp nếu muốn
+                    }
+                }
+            });
+        });
+
+        // 2. Xóa sản phẩm AJAX
+        $('.btn-remove').on('click', function () {
+            var productId = $(this).data('id');
+
+            if (confirm("M chắc chắn muốn xóa món này khỏi giỏ?")) {
+                $.ajax({
+                    url: '@Url.Action("RemoveItem", "Cart")',
+                    type: 'POST',
+                    data: { productId: productId },
+                    success: function (res) {
+                        if (res.success) {
+                            $('#row-' + productId).remove();
+                            $('#cart-total-price').text(res.newTotal.toLocaleString('vi-VN'));
+                        }
+                    }
+                });
+            }
+        });
+    });
+    </script>
+}

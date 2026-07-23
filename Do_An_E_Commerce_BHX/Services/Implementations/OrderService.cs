@@ -11,17 +11,62 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
     {
         public ApplicationDbContext dbContext;
         public Calculate calculate;
-        public OrderService(ApplicationDbContext appDBContext, Calculate calculate)
+        public CartService cartService;
+        public OrderService(ApplicationDbContext appDBContext, Calculate calculate, CartService cartService)
         {
             this.dbContext = appDBContext;
             this.calculate = calculate;
+            this.cartService = cartService;
         }
-        //cái này là hàm tính tiền chưa Discount nha Tân - nếu null cart return 0
-        public decimal CalculatePrice(int userId)
+
+        //♥hàm tạo đơn thanh toán
+        public void CreateOrder(string userId, Promotion coupon = null)
+        {
+            // 1. Lấy Cart
+            var cart =cartService.GetCartByUserId(userId);
+            if (cart == null || !cart.CartDetails.Any()) return;
+
+            // 2. Tính tiền gốc & tiền sau giảm
+            decimal rawTotal = calculate.CalculatePrice(cart.CartDetails.ToList());
+            decimal finalTotal = calculate.applyCoupon(rawTotal, coupon);
+
+            // 3. Tạo Order
+            var order = new Order
+            {
+                UserId = userId,
+                OrderDate = DateTime.Now,
+                TotalAmount = finalTotal,
+                OrderStatus = 0,
+                OrderDetails = new List<OrderDetail>()
+            };
+
+            // 4. Map từ CartDetails sang OrderDetails (Chốt giá!)
+            foreach (var item in cart.CartDetails)
+            {
+                order.OrderDetails.Add(new OrderDetail
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Product.Price // ĐÓNG BĂNG GIÁ TẠI THỜI ĐIỂM MUA
+                });
+            }
+
+            dbContext.Order.Add(order);
+
+            // 5. Dọn sạch giỏ hàng sau khi đặt thành công
+            dbContext.CartDetail.RemoveRange(cart.CartDetails);
+
+            dbContext.SaveChanges();
+        }
+
+
+        //♥cái này là hàm tính tiền chưa Discount nha Tân - nếu null cart return 0
+        public decimal CalculatePrice(string userId)
         {
             //var cart = dbContext.Cart.FirstOrDefault(c => c.UserId == userId);
             var cart = dbContext.Cart
                 .Include(c => c.CartDetails)
+                .Include("CartDetails.Product") 
                 .FirstOrDefault(c => c.UserId == userId);
 
             if (cart == null) return 0;

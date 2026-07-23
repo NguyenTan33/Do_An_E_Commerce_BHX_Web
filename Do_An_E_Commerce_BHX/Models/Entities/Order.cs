@@ -20,9 +20,9 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         public int? ShipperId { get; set; }
 
         public DateTime OrderDate { get; set; } = DateTime.Now;
-        public double TotalAmount { get; set; }
-        public double DiscountAmount { get; set; }
-        public double ShippingFee { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal ShippingFee { get; set; }
 
         // --- THÔNG TIN GIAO HÀNG (Snapshot) ---
         [Required, StringLength(100)]

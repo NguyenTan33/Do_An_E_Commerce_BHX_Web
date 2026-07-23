@@ -11,7 +11,7 @@ using Do_An_E_Commerce_BHX.Controllers;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ManageController : Controller
     {
         private ApplicationSignInManager _signInManager;

@@ -16,7 +16,7 @@ namespace Do_An_E_Commerce_BHX.Models
 
         public int LoyaltyPoints { get; set; } = 0;
 
-        public Cart Cart { get; set; }
+        public Cart Cart { get; set; } = new Cart();
         public List<Order> Orders { get; set; } = new List<Order>();
 
 
@@ -34,7 +34,7 @@ namespace Do_An_E_Commerce_BHX.Models
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext()
-            : base("DefaultConnection", throwIfV1Schema: false)
+            : base("name=DefaultConnection", throwIfV1Schema: false)
         {
         }
         public DbSet<Entities.UserAddress> UserAddresses { get; set; }

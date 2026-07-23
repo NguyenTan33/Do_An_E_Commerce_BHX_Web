@@ -3,7 +3,7 @@
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class Initial : DbMigration
+    public partial class InitialCreate : DbMigration
     {
         public override void Up()
         {
@@ -12,7 +12,7 @@
                 c => new
                     {
                         Id = c.Int(nullable: false, identity: true),
-                        UserId = c.Int(nullable: false),
+                        UserId = c.String(),
                         CreatedDate = c.DateTime(nullable: false),
                     })
                 .PrimaryKey(t => t.Id);
@@ -25,7 +25,6 @@
                         CartId = c.Int(nullable: false),
                         ProductId = c.Int(nullable: false),
                         Quantity = c.Int(nullable: false),
-                        Price = c.Double(nullable: false),
                     })
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.Carts", t => t.CartId, cascadeDelete: true)
@@ -40,7 +39,7 @@
                         Id = c.Int(nullable: false, identity: true),
                         Barcode = c.String(nullable: false, maxLength: 20),
                         Name = c.String(nullable: false, maxLength: 250),
-                        Price = c.Double(nullable: false),
+                        Price = c.Decimal(nullable: false, precision: 18, scale: 2),
                         Quantity = c.Int(nullable: false),
                         Description = c.String(maxLength: 2000),
                         URLImage = c.String(maxLength: 50),
@@ -72,12 +71,15 @@
                         UserId = c.String(maxLength: 128),
                         ShipperId = c.Int(),
                         OrderDate = c.DateTime(nullable: false),
-                        TotalAmount = c.Double(nullable: false),
-                        DiscountAmount = c.Double(nullable: false),
-                        ShippingFee = c.Double(nullable: false),
+                        TotalAmount = c.Decimal(nullable: false, precision: 18, scale: 2),
+                        DiscountAmount = c.Decimal(nullable: false, precision: 18, scale: 2),
+                        ShippingFee = c.Decimal(nullable: false, precision: 18, scale: 2),
                         ReceiverName = c.String(nullable: false, maxLength: 100),
                         ReceiverPhone = c.String(nullable: false, maxLength: 15),
                         ShippingAddress = c.String(nullable: false, maxLength: 255),
+                        EarnedPoints = c.Int(nullable: false),
+                        UsedPoints = c.Int(nullable: false),
+                        PointDiscountAmount = c.Double(nullable: false),
                         Note = c.String(),
                         PaymentMethod = c.Int(nullable: false),
                         OrderStatus = c.Int(nullable: false),
@@ -95,7 +97,7 @@
                         OrderId = c.Int(nullable: false),
                         ProductId = c.Int(nullable: false),
                         Quantity = c.Int(nullable: false),
-                        Price = c.Double(nullable: false),
+                        Price = c.Decimal(nullable: false, precision: 18, scale: 2),
                     })
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.Orders", t => t.OrderId, cascadeDelete: true)
@@ -108,6 +110,7 @@
                 c => new
                     {
                         Id = c.String(nullable: false, maxLength: 128),
+                        LoyaltyPoints = c.Int(nullable: false),
                         Email = c.String(maxLength: 256),
                         EmailConfirmed = c.Boolean(nullable: false),
                         PasswordHash = c.String(),
@@ -119,9 +122,12 @@
                         LockoutEnabled = c.Boolean(nullable: false),
                         AccessFailedCount = c.Int(nullable: false),
                         UserName = c.String(nullable: false, maxLength: 256),
+                        Cart_Id = c.Int(),
                     })
                 .PrimaryKey(t => t.Id)
-                .Index(t => t.UserName, unique: true, name: "UserNameIndex");
+                .ForeignKey("dbo.Carts", t => t.Cart_Id)
+                .Index(t => t.UserName, unique: true, name: "UserNameIndex")
+                .Index(t => t.Cart_Id);
             
             CreateTable(
                 "dbo.AspNetUserClaims",
@@ -196,7 +202,8 @@
                     {
                         Id = c.Int(nullable: false, identity: true),
                         Code = c.String(nullable: false, maxLength: 50),
-                        DiscountValue = c.Double(nullable: false),
+                        DiscountValue = c.Decimal(nullable: false, precision: 18, scale: 2),
+                        percentDiscount = c.Decimal(nullable: false, precision: 18, scale: 2),
                         DateCreated = c.DateTime(nullable: false),
                         EffectiveDate = c.DateTime(nullable: false),
                         ExpiryDate = c.DateTime(nullable: false),
@@ -257,11 +264,12 @@
         public override void Down()
         {
             DropForeignKey("dbo.AspNetUserRoles", "RoleId", "dbo.AspNetRoles");
-            DropForeignKey("dbo.Orders", "UserId", "dbo.AspNetUsers");
             DropForeignKey("dbo.UserAddresses", "UserId", "dbo.AspNetUsers");
             DropForeignKey("dbo.AspNetUserRoles", "UserId", "dbo.AspNetUsers");
+            DropForeignKey("dbo.Orders", "UserId", "dbo.AspNetUsers");
             DropForeignKey("dbo.AspNetUserLogins", "UserId", "dbo.AspNetUsers");
             DropForeignKey("dbo.AspNetUserClaims", "UserId", "dbo.AspNetUsers");
+            DropForeignKey("dbo.AspNetUsers", "Cart_Id", "dbo.Carts");
             DropForeignKey("dbo.OrderDetails", "ProductId", "dbo.Products");
             DropForeignKey("dbo.OrderDetails", "OrderId", "dbo.Orders");
             DropForeignKey("dbo.CartDetails", "ProductId", "dbo.Products");
@@ -273,6 +281,7 @@
             DropIndex("dbo.AspNetUserRoles", new[] { "UserId" });
             DropIndex("dbo.AspNetUserLogins", new[] { "UserId" });
             DropIndex("dbo.AspNetUserClaims", new[] { "UserId" });
+            DropIndex("dbo.AspNetUsers", new[] { "Cart_Id" });
             DropIndex("dbo.AspNetUsers", "UserNameIndex");
             DropIndex("dbo.OrderDetails", new[] { "ProductId" });
             DropIndex("dbo.OrderDetails", new[] { "OrderId" });

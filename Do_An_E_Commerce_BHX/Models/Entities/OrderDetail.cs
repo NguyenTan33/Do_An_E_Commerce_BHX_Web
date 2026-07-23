@@ -23,6 +23,6 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [Required, Range(1, 120)]
         public int Quantity { get; set; }
 
-        public double Price { get; set; }
+        public decimal Price { get; set; }
     }
 }

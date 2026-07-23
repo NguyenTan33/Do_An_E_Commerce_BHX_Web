@@ -187,9 +187,9 @@
     </Compile>
     <Compile Include="Helpers\CurrencyHelper.cs" />
     <Compile Include="Helpers\StatusEnum.cs" />
-    <Compile Include="Migrations\202607220950269_Initial.cs" />
-    <Compile Include="Migrations\202607220950269_Initial.Designer.cs">
-      <DependentUpon>202607220950269_Initial.cs</DependentUpon>
+    <Compile Include="Migrations\202607221841302_InitialCreate.cs" />
+    <Compile Include="Migrations\202607221841302_InitialCreate.Designer.cs">
+      <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -303,6 +303,7 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\Cart\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -312,7 +313,6 @@
     <Folder Include="Areas\Admin\Views\ManagePromotion\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
     <Folder Include="Areas\Admin\Views\ManageUser\" />
-    <Folder Include="Views\Cart\" />
     <Folder Include="Views\Default\" />
     <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
@@ -345,8 +345,8 @@
     <Content Include="Scripts\jquery-3.7.0.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202607220950269_Initial.resx">
-      <DependentUpon>202607220950269_Initial.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202607221841302_InitialCreate.resx">
+      <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
