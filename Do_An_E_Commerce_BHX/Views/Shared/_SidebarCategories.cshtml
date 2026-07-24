@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Category>
+@* Đặt file này tại Views/Shared/_SidebarCategories.cshtml
+    Nếu tên thuộc tính của Category khác Id/Name thì chỉnh lại bên dưới cho khớp. *@
+@{
+    int? activeCategoryId = null;
+    int parsedId;
+    if (int.TryParse(Request.QueryString["categoryId"], out parsedId))
+    {
+        activeCategoryId = parsedId;
+    }
+}
+<ul class="sidebar-menu">
+    <li>
+        @Html.ActionLink("Tất cả sản phẩm", "Index", "Home", null,
+                 new { @class = "sidebar-link" + (activeCategoryId == null ? " is-active" : "") })
+    </li>
+    @if (Model != null)
+    {
+        foreach (var cat in Model)
+        {
+            <li>
+                @Html.ActionLink(cat.Name, "Index", "Home", new { categoryId = cat.Id },
+                         new { @class = "sidebar-link" + (activeCategoryId == cat.Id ? " is-active" : "") })
+            </li>
+        }
+    }
+</ul>

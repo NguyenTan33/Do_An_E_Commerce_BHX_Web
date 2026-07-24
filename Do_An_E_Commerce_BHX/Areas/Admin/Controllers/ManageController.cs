@@ -7,7 +7,6 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Controllers;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
@@ -33,9 +32,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
 
@@ -51,32 +50,64 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             }
         }
 
-        //
         // GET: /Manage/Index
         public async Task<ActionResult> Index(ManageMessageId? message)
         {
             ViewBag.StatusMessage =
-                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
-                : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
-                : message == ManageMessageId.SetTwoFactorSuccess ? "Your two-factor authentication provider has been set."
-                : message == ManageMessageId.Error ? "An error has occurred."
-                : message == ManageMessageId.AddPhoneSuccess ? "Your phone number was added."
-                : message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
+                message == ManageMessageId.ChangePasswordSuccess ? "Đổi mật khẩu thành công."
+                : message == ManageMessageId.SetPasswordSuccess ? "Đã tạo mật khẩu mới thành công."
+                : message == ManageMessageId.SetTwoFactorSuccess ? "Đã cài đặt bảo mật 2 lớp thành công."
+                : message == ManageMessageId.UpdateNameSuccess ? "Đã cập nhật họ tên thành công!"
+                : message == ManageMessageId.Error ? "Đã xảy ra lỗi."
+                : message == ManageMessageId.AddPhoneSuccess ? "Đã thêm số điện thoại."
+                : message == ManageMessageId.RemovePhoneSuccess ? "Đã xóa số điện thoại."
                 : "";
 
             var userId = User.Identity.GetUserId();
+            var user = await UserManager.FindByIdAsync(userId);
+
             var model = new IndexViewModel
             {
                 HasPassword = HasPassword(),
                 PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
                 TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
                 Logins = await UserManager.GetLoginsAsync(userId),
-                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
+                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId),
+
+                FullName = !string.IsNullOrWhiteSpace(user?.FullName) ? user.FullName : "Chưa cập nhật tên",
+                LoyaltyPoints = user != null ? user.LoyaltyPoints : 0
             };
+
             return View(model);
         }
 
-        //
+        // POST: /Manage/UpdateName
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> UpdateName(string FullName)
+        {
+            if (string.IsNullOrWhiteSpace(FullName))
+            {
+                return RedirectToAction("Index", new { Message = ManageMessageId.Error });
+            }
+
+            var userId = User.Identity.GetUserId();
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (user != null)
+            {
+                user.FullName = FullName.Trim();
+                var result = await UserManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", new { Message = ManageMessageId.UpdateNameSuccess });
+                }
+            }
+
+            return RedirectToAction("Index", new { Message = ManageMessageId.Error });
+        }
+
         // POST: /Manage/RemoveLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -100,14 +131,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("ManageLogins", new { Message = message });
         }
 
-        //
         // GET: /Manage/AddPhoneNumber
         public ActionResult AddPhoneNumber()
         {
             return View();
         }
 
-        //
         // POST: /Manage/AddPhoneNumber
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -117,7 +146,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             {
                 return View(model);
             }
-            // Generate the token and send it
             var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), model.Number);
             if (UserManager.SmsService != null)
             {
@@ -130,8 +158,34 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             }
             return RedirectToAction("VerifyPhoneNumber", new { PhoneNumber = model.Number });
         }
+        // POST: /Admin/Manage/UpdatePhone
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> UpdatePhone(string PhoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(PhoneNumber))
+            {
+                return RedirectToAction("Index", new { Message = ManageMessageId.Error });
+            }
 
-        //
+            var userId = User.Identity.GetUserId();
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (user != null)
+            {
+                user.PhoneNumber = PhoneNumber.Trim();
+                var result = await UserManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    // Cập nhật lại Identity Cookie để đồng bộ dữ liệu người dùng
+                    await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+                    return RedirectToAction("Index", new { Message = ManageMessageId.AddPhoneSuccess });
+                }
+            }
+
+            return RedirectToAction("Index", new { Message = ManageMessageId.Error });
+        }
         // POST: /Manage/EnableTwoFactorAuthentication
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -146,7 +200,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("Index", "Manage");
         }
 
-        //
         // POST: /Manage/DisableTwoFactorAuthentication
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -161,16 +214,13 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("Index", "Manage");
         }
 
-        //
         // GET: /Manage/VerifyPhoneNumber
         public async Task<ActionResult> VerifyPhoneNumber(string phoneNumber)
         {
             var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), phoneNumber);
-            // Send an SMS through the SMS provider to verify the phone number
             return phoneNumber == null ? View("Error") : View(new VerifyPhoneNumberViewModel { PhoneNumber = phoneNumber });
         }
 
-        //
         // POST: /Manage/VerifyPhoneNumber
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -190,12 +240,10 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
                 return RedirectToAction("Index", new { Message = ManageMessageId.AddPhoneSuccess });
             }
-            // If we got this far, something failed, redisplay form
             ModelState.AddModelError("", "Failed to verify phone");
             return View(model);
         }
 
-        //
         // POST: /Manage/RemovePhoneNumber
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -214,14 +262,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("Index", new { Message = ManageMessageId.RemovePhoneSuccess });
         }
 
-        //
         // GET: /Manage/ChangePassword
         public ActionResult ChangePassword()
         {
             return View();
         }
 
-        //
         // POST: /Manage/ChangePassword
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -245,14 +291,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return View(model);
         }
 
-        //
         // GET: /Manage/SetPassword
         public ActionResult SetPassword()
         {
             return View();
         }
 
-        //
         // POST: /Manage/SetPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -272,12 +316,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
                 AddErrors(result);
             }
-
-            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
-        //
         // GET: /Manage/ManageLogins
         public async Task<ActionResult> ManageLogins(ManageMessageId? message)
         {
@@ -300,18 +341,14 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             });
         }
 
-
-        //
         // POST: /Manage/LinkLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LinkLogin(string provider)
         {
-            // Request a redirect to the external login provider to link a login for the current user
-            return new AccountController.ChallengeResult(provider, Url.Action("LinkLoginCallback", "Manage"), User.Identity.GetUserId());
+            return new ChallengeResult(provider, Url.Action("LinkLoginCallback", "Manage"), User.Identity.GetUserId());
         }
 
-        //
         // GET: /Manage/LinkLoginCallback
         public async Task<ActionResult> LinkLoginCallback()
         {
@@ -335,8 +372,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             base.Dispose(disposing);
         }
 
-#region Helpers
-        // Used for XSRF protection when adding external logins
+        #region Helpers
         private const string XsrfKey = "XsrfId";
 
         private IAuthenticationManager AuthenticationManager
@@ -383,9 +419,34 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             SetPasswordSuccess,
             RemoveLoginSuccess,
             RemovePhoneSuccess,
+            UpdateNameSuccess,
             Error
         }
 
-#endregion
+        // Helper class required for LinkLogin
+        private class ChallengeResult : HttpUnauthorizedResult
+        {
+            public ChallengeResult(string provider, string redirectUri, string userId)
+            {
+                LoginProvider = provider;
+                RedirectUri = redirectUri;
+                UserId = userId;
+            }
+
+            public string LoginProvider { get; set; }
+            public string RedirectUri { get; set; }
+            public string UserId { get; set; }
+
+            public override void ExecuteResult(ControllerContext context)
+            {
+                var properties = new AuthenticationProperties { RedirectUri = RedirectUri };
+                if (UserId != null)
+                {
+                    properties.Dictionary[XsrfKey] = UserId;
+                }
+                context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
+            }
+        }
+        #endregion
     }
 }

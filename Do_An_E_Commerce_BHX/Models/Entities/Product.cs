@@ -27,7 +27,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [StringLength(2000)]
         public string Description { get; set; }
 
-        [StringLength(50)]
+        [StringLength(250)]
         public string URLImage { get; set; }
 
         [Required]

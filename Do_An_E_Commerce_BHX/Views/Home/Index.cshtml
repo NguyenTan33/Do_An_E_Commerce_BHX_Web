@@ -2,7 +2,7 @@
 
 @{
     ViewBag.Title = "Trang chủ";
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @helper ProductCard(Do_An_E_Commerce_BHX.Models.Entities.Product item)
@@ -33,68 +33,15 @@
     </div>
 }
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - Bách Hóa Xanh</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-
+@section styles {
     <style>
-        :root {
-            --forest: #163B2E;
-            --forest-deep: #0E2A20;
-            --leaf: #3F8F5C;
-            --leaf-dark: #1F6B3F;
-            --paper: #F7F4E9;
-            --card: #FFFFFF;
-            --ink: #1E2A22;
-            --muted: #737B6C;
-            --line: #DBD5C2;
-            --amber: #E2A33B;
-            --amber-dark: #A9711A;
-            --tomato: #C1432E;
-            --tomato-dark: #8F2E1E;
-        }
-
-        body {
-            background: var(--paper);
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            color: var(--ink);
-        }
-
-        h1, h2, h3, .display-face {
-            font-family: 'Anton', 'Inter', sans-serif;
-            letter-spacing: 0.02em;
-        }
-
-        a { text-decoration: none; }
-
-        .store-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
         /* ===== Hero / tìm kiếm ===== */
         .hero-band {
             background: var(--forest);
             background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 26px, transparent 26px 52px);
-            padding: 34px 0 46px;
-            margin-bottom: -28px;
-        }
-
-        .hero-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+            border-radius: 14px;
+            padding: 30px 28px;
+            margin-bottom: 18px;
         }
 
         .hero-eyebrow {
@@ -106,13 +53,13 @@
             margin: 0 0 8px;
         }
 
-        .hero-eyebrow::before {
-            content: "◆ ";
-            color: var(--amber);
-        }
+            .hero-eyebrow::before {
+                content: "◆ ";
+                color: var(--amber);
+            }
 
         .hero-title {
-            font-size: 32px;
+            font-size: 28px;
             color: #fff;
             margin: 0 0 18px;
             text-transform: uppercase;
@@ -128,73 +75,165 @@
             max-width: 640px;
         }
 
-        .search-form input[type="text"] {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            padding: 0 14px;
-            color: var(--ink);
+            .search-form input[type="text"] {
+                flex: 1;
+                border: none;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                font-size: 15px;
+                padding: 0 14px;
+                color: var(--ink);
+            }
+
+            .search-form button {
+                border: none;
+                background: var(--leaf-dark);
+                color: #fff;
+                font-weight: 700;
+                font-size: 14px;
+                padding: 0 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: background 0.15s ease;
+            }
+
+                .search-form button:hover {
+                    background: var(--forest-deep);
+                }
+
+        /* ===== Bộ lọc nâng cao ===== */
+        .filter-panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(14,42,32,0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
         }
 
-        .search-form button {
+        .filter-toggle {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: var(--forest-deep);
+        }
+
+            .filter-toggle::-webkit-details-marker {
+                display: none;
+            }
+
+            .filter-toggle .toggle-caret {
+                margin-left: auto;
+                transition: transform .2s ease;
+                color: var(--muted);
+            }
+
+        details[open] .filter-toggle .toggle-caret {
+            transform: rotate(180deg);
+        }
+
+        .filter-body {
+            padding: 4px 18px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 18px;
+            flex-wrap: wrap;
+            border-top: 1px solid var(--line);
+            padding-top: 16px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .filter-field label {
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: var(--muted);
+            }
+
+            .filter-field select,
+            .filter-field input {
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 9px 12px;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.875rem;
+                color: var(--ink);
+                outline: none;
+                background: #fff;
+            }
+
+                .filter-field select:focus,
+                .filter-field input:focus {
+                    border-color: var(--leaf);
+                }
+
+            .filter-field select {
+                min-width: 180px;
+            }
+
+        .price-range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .price-range-inputs input {
+                width: 110px;
+            }
+
+            .price-range-inputs span {
+                color: var(--muted);
+                font-size: 0.8125rem;
+            }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .btn-apply-filter {
             border: none;
             background: var(--leaf-dark);
             color: #fff;
             font-weight: 700;
-            font-size: 14px;
-            padding: 0 20px;
+            font-size: 0.875rem;
+            padding: 10px 18px;
             border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: background 0.15s ease;
         }
 
-        .search-form button:hover {
-            background: var(--forest-deep);
-        }
+            .btn-apply-filter:hover {
+                background: var(--forest-deep);
+            }
 
-        /* ===== Chip danh mục ===== */
-        .category-strip {
-            position: relative;
-            z-index: 2;
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            box-shadow: 0 10px 26px rgba(14,42,32,0.12);
-            padding: 14px 16px;
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-        }
-
-        .chip {
-            flex-shrink: 0;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
+        .btn-reset-filter {
+            font-size: 0.8125rem;
             font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--line);
-            color: var(--ink);
-            white-space: nowrap;
-            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            color: var(--tomato);
         }
 
-        .chip:hover {
-            border-color: var(--leaf);
-            color: var(--leaf-dark);
-        }
-
-        .chip.is-active {
-            background: var(--forest);
-            border-color: var(--forest);
-            color: #fff;
-        }
+            .btn-reset-filter:hover {
+                color: var(--tomato-dark);
+            }
 
         /* ===== Section heading ===== */
         .section-heading {
@@ -204,20 +243,20 @@
             margin: 0 0 18px;
         }
 
-        .section-heading .dot {
-            width: 10px;
-            height: 10px;
-            background: var(--leaf);
-            transform: rotate(45deg);
-            display: inline-block;
-        }
+            .section-heading .dot {
+                width: 10px;
+                height: 10px;
+                background: var(--leaf);
+                transform: rotate(45deg);
+                display: inline-block;
+            }
 
-        .section-heading h3 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--forest-deep);
-            text-transform: uppercase;
-        }
+            .section-heading h3 {
+                margin: 0;
+                font-size: 20px;
+                color: var(--forest-deep);
+                text-transform: uppercase;
+            }
 
         section.store-section {
             margin-bottom: 40px;
@@ -243,10 +282,10 @@
             gap: 14px;
         }
 
-        .flash-left i {
-            font-size: 26px;
-            color: #FFD98E;
-        }
+            .flash-left i {
+                font-size: 26px;
+                color: #FFD98E;
+            }
 
         .flash-title {
             font-family: 'Anton', sans-serif;
@@ -281,7 +320,7 @@
         /* ===== Grid sản phẩm ===== */
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 18px;
         }
 
@@ -295,10 +334,10 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 22px rgba(15,26,48,0.12);
-        }
+            .product-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 22px rgba(15,26,48,0.12);
+            }
 
         .product-media {
             position: relative;
@@ -306,12 +345,12 @@
             background: var(--paper);
         }
 
-        .product-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+            .product-media img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
 
         .badge-stack {
             position: absolute;
@@ -335,8 +374,13 @@
             width: fit-content;
         }
 
-        .badge-hot { background: var(--tomato); }
-        .badge-best { background: var(--amber-dark); }
+        .badge-hot {
+            background: var(--tomato);
+        }
+
+        .badge-best {
+            background: var(--amber-dark);
+        }
 
         .sold-out-layer {
             position: absolute;
@@ -347,16 +391,16 @@
             justify-content: center;
         }
 
-        .sold-out-layer span {
-            font-family: 'Anton', sans-serif;
-            color: #fff;
-            border: 2px solid #fff;
-            padding: 6px 14px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transform: rotate(-8deg);
-        }
+            .sold-out-layer span {
+                font-family: 'Anton', sans-serif;
+                color: #fff;
+                border: 2px solid #fff;
+                padding: 6px 14px;
+                border-radius: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                transform: rotate(-8deg);
+            }
 
         .product-body {
             padding: 12px 14px 14px;
@@ -404,15 +448,15 @@
             transition: background 0.15s ease;
         }
 
-        .btn-add-cart:hover:not([disabled]) {
-            background: var(--forest-deep);
-        }
+            .btn-add-cart:hover:not([disabled]) {
+                background: var(--forest-deep);
+            }
 
-        .btn-add-cart[disabled] {
-            background: #C9C4B4;
-            color: #6E7568;
-            cursor: not-allowed;
-        }
+            .btn-add-cart[disabled] {
+                background: #C9C4B4;
+                color: #6E7568;
+                cursor: not-allowed;
+            }
 
         .empty-state {
             text-align: center;
@@ -423,12 +467,12 @@
             border-radius: 10px;
         }
 
-        .empty-state i {
-            font-size: 34px;
-            color: var(--line);
-            margin-bottom: 10px;
-            display: block;
-        }
+            .empty-state i {
+                font-size: 34px;
+                color: var(--line);
+                margin-bottom: 10px;
+                display: block;
+            }
 
         /* ===== Phân trang ===== */
         .pagination-bar {
@@ -453,170 +497,216 @@
             font-size: 13px;
         }
 
-        .page-link:hover {
-            border-color: var(--leaf);
-            color: var(--leaf-dark);
-        }
+            .page-link:hover {
+                border-color: var(--leaf);
+                color: var(--leaf-dark);
+            }
 
-        .page-link.is-active {
-            background: var(--forest);
-            border-color: var(--forest);
-            color: #fff;
-        }
+            .page-link.is-active {
+                background: var(--forest);
+                border-color: var(--forest);
+                color: #fff;
+            }
 
-        .page-link.is-disabled {
-            opacity: 0.4;
-            pointer-events: none;
-        }
+            .page-link.is-disabled {
+                opacity: 0.4;
+                pointer-events: none;
+            }
 
         @@media (max-width: 640px) {
-            .hero-title { font-size: 24px; }
-            .flash-banner { flex-direction: column; align-items: flex-start; }
+            .hero-title {
+                font-size: 22px;
+            }
+
+            .flash-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-body {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-actions {
+                margin-left: 0;
+            }
         }
     </style>
-</head>
-<body>
+}
 
-    <div class="hero-band">
-        <div class="hero-inner">
-            <p class="hero-eyebrow">Bách Hóa Xanh &middot; Siêu thị trực tuyến</p>
-            <h1 class="hero-title">Hôm nay ăn gì, mua gì cũng có</h1>
-            @using (Html.BeginForm("Index", "Home", FormMethod.Get, new { @class = "search-form" }))
+@{
+    var activeSlot = Model.IsSlotActive ? Model.CurrentSlot : Model.NextSlot;
+    var targetEnd = activeSlot != null ? activeSlot.End : TimeSpan.Zero;
+}
+
+<!-- Hero / tìm kiếm nhanh -->
+<div class="hero-band">
+    <p class="hero-eyebrow">Bách Hóa Xanh &middot; Siêu thị trực tuyến</p>
+    <h1 class="hero-title">Hôm nay ăn gì, mua gì cũng có</h1>
+    @using (Html.BeginForm("Index", "Home", FormMethod.Get, new { @class = "search-form" }))
+    {
+        @Html.Hidden("categoryId", Model.CategoryId)
+        @Html.Hidden("minPrice", Model.MinPrice)
+        @Html.Hidden("maxPrice", Model.MaxPrice)
+        @Html.Hidden("sortBy", Model.SortBy)
+        <input type="text" name="searchTerm" placeholder="Tìm rau củ, thịt cá, sữa, gia vị..." value="@Model.SearchTerm" />
+        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+    }
+</div>
+
+<!-- Bộ lọc nâng cao: danh mục + khoảng giá + sắp xếp -->
+<details class="filter-panel" open>
+    <summary class="filter-toggle">
+        <i class="fa-solid fa-sliders"></i> Bộ lọc nâng cao
+        <i class="fa-solid fa-chevron-down toggle-caret"></i>
+    </summary>
+    <div class="filter-body">
+        @using (Html.BeginForm("Index", "Home", FormMethod.Get))
+        {
+            @Html.Hidden("searchTerm", Model.SearchTerm)
+            <div class="filter-field">
+                <label for="filterCategory">Danh mục</label>
+                <select name="categoryId" id="filterCategory">
+                    <option value="">Tất cả danh mục</option>
+                    @if (Model.Categories != null)
+                    {
+                        foreach (var cat in Model.Categories)
+                        {
+                            <option value="@cat.Id" selected="@(Model.CategoryId == cat.Id ? "selected" : null)">@cat.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Khoảng giá</label>
+                <div class="price-range-inputs">
+                    <input type="number" name="minPrice" placeholder="Từ" min="0" step="1000" value="@Model.MinPrice" />
+                    <span>&ndash;</span>
+                    <input type="number" name="maxPrice" placeholder="Đến" min="0" step="1000" value="@Model.MaxPrice" />
+                    <span>₫</span>
+                </div>
+            </div>
+            <div class="filter-field">
+                <label for="filterSort">Sắp xếp</label>
+                <select name="sortBy" id="filterSort">
+                    <option value="">Mặc định</option>
+                    <option value="price_asc" selected="@(Model.SortBy == "price_asc" ? "selected" : null)">Giá tăng dần</option>
+                    <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : null)">Giá giảm dần</option>
+                    <option value="name_asc" selected="@(Model.SortBy == "name_asc" ? "selected" : null)">Tên A-Z</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-apply-filter"><i class="fa-solid fa-check"></i> Áp dụng</button>
+                @Html.ActionLink("Xóa lọc", "Index", "Home", new { searchTerm = Model.SearchTerm }, new { @class = "btn-reset-filter" })
+            </div>
+        }
+    </div>
+</details>
+
+<!-- Khung giờ vàng / Flash sale -->
+@if (Model.HotProducts != null && Model.HotProducts.Any())
+{
+    <section class="store-section">
+        <div class="flash-banner" id="flashBanner"
+             data-active="@Model.IsSlotActive.ToString().ToLower()"
+             data-target-hour="@targetEnd.Hours"
+             data-target-minute="@targetEnd.Minutes">
+            <div class="flash-left">
+                <i class="fa-solid fa-bolt"></i>
+                <div>
+                    <p class="flash-title">Khung giờ vàng @(activeSlot != null ? "· " + activeSlot.Label : "")</p>
+                    <p class="flash-sub">
+                        @if (Model.IsSlotActive)
+                        {
+                            <text>Đang diễn ra &mdash; giá tốt kết thúc sau</text>
+                        }
+                        else
+                        {
+                            <text>Khung giờ vàng tiếp theo bắt đầu sau</text>
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="flash-timer-wrap">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span class="flash-timer">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="section-heading"><span class="dot"></span><h3>Sản phẩm HOT trong khung giờ này</h3></div>
+        <div class="product-grid">
+            @foreach (var item in Model.HotProducts)
             {
-                if (Model.CategoryId.HasValue)
-                {
-                    @Html.Hidden("categoryId", Model.CategoryId)
-                }
-                <input type="text" name="searchTerm" placeholder="Tìm rau củ, thịt cá, sữa, gia vị..." value="@Model.SearchTerm" />
-                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                @ProductCard(item)
             }
         </div>
-    </div>
+    </section>
+}
 
-    <div class="store-container">
-
-        <!-- Bộ lọc danh mục -->
-        <nav class="category-strip" aria-label="Lọc theo danh mục">
-            @Html.ActionLink("Tất cả", "Index", "Home", new { searchTerm = Model.SearchTerm }, new { @class = "chip" + (Model.CategoryId.HasValue ? "" : " is-active") })
-            @if (Model.Categories != null)
+<!-- Bán chạy nhất -->
+@if (Model.BestSellerProducts != null && Model.BestSellerProducts.Any())
+{
+    <section class="store-section">
+        <div class="section-heading"><span class="dot"></span><h3>Bán chạy nhất</h3></div>
+        <div class="product-grid">
+            @foreach (var item in Model.BestSellerProducts)
             {
-                foreach (var cat in Model.Categories)
-                {
-                    @Html.ActionLink(cat.Name, "Index", "Home", new { categoryId = cat.Id, searchTerm = Model.SearchTerm }, new { @class = "chip" + (Model.CategoryId == cat.Id ? " is-active" : "") })
-                }
+                @ProductCard(item)
             }
-        </nav>
+        </div>
+    </section>
+}
 
-        @{
-            var activeSlot = Model.IsSlotActive ? Model.CurrentSlot : Model.NextSlot;
-            var targetEnd = activeSlot != null ? activeSlot.End : TimeSpan.Zero;
-        }
-
-        <!-- Khung giờ vàng / Flash sale -->
-        @if (Model.HotProducts != null && Model.HotProducts.Any())
-        {
-            <section class="store-section">
-                <div class="flash-banner" id="flashBanner"
-                     data-active="@Model.IsSlotActive.ToString().ToLower()"
-                     data-target-hour="@targetEnd.Hours"
-                     data-target-minute="@targetEnd.Minutes">
-                    <div class="flash-left">
-                        <i class="fa-solid fa-bolt"></i>
-                        <div>
-                            <p class="flash-title">Khung giờ vàng @(activeSlot != null ? "· " + activeSlot.Label : "")</p>
-                            <p class="flash-sub">
-                                @if (Model.IsSlotActive)
-                                {
-                                    <text>Đang diễn ra &mdash; giá tốt kết thúc sau</text>
-                                }
-                                else
-                                {
-                                    <text>Khung giờ vàng tiếp theo bắt đầu sau</text>
-                                }
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flash-timer-wrap">
-                        <i class="fa-solid fa-hourglass-half"></i>
-                        <span class="flash-timer">00:00:00</span>
-                    </div>
-                </div>
-
-                <div class="section-heading"><span class="dot"></span><h3>Sản phẩm HOT trong khung giờ này</h3></div>
-                <div class="product-grid">
-                    @foreach (var item in Model.HotProducts)
-                    {
-                        @ProductCard(item)
-                    }
-                </div>
-            </section>
-        }
-
-        <!-- Bán chạy nhất -->
-        @if (Model.BestSellerProducts != null && Model.BestSellerProducts.Any())
-        {
-            <section class="store-section">
-                <div class="section-heading"><span class="dot"></span><h3>Bán chạy nhất</h3></div>
-                <div class="product-grid">
-                    @foreach (var item in Model.BestSellerProducts)
-                    {
-                        @ProductCard(item)
-                    }
-                </div>
-            </section>
-        }
-
-        <!-- Toàn bộ sản phẩm (đã áp bộ lọc) -->
-        <section class="store-section">
-            <div class="section-heading">
-                <span class="dot"></span>
-                <h3>
-                    @if (!string.IsNullOrEmpty(Model.SearchTerm))
-                    {
-                        <text>Kết quả cho "@Model.SearchTerm"</text>
-                    }
-                    else
-                    {
-                        <text>Tất cả sản phẩm</text>
-                    }
-                </h3>
-            </div>
-
-            @if (Model.Products != null && Model.Products.Any())
+<!-- Toàn bộ sản phẩm (đã áp bộ lọc) -->
+<section class="store-section">
+    <div class="section-heading">
+        <span class="dot"></span>
+        <h3>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
             {
-                <div class="product-grid">
-                    @foreach (var item in Model.Products)
-                    {
-                        @ProductCard(item)
-                    }
-                </div>
-
-                if (Model.TotalPages > 1)
-                {
-                    <div class="pagination-bar">
-                        @Html.ActionLink("‹", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, page = Model.CurrentPage - 1 }, new { @class = "page-link" + (Model.CurrentPage <= 1 ? " is-disabled" : "") })
-
-                        @for (int p = 1; p <= Model.TotalPages; p++)
-                        {
-                            @Html.ActionLink(p.ToString(), "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, page = p }, new { @class = "page-link" + (p == Model.CurrentPage ? " is-active" : "") })
-                        }
-
-                        @Html.ActionLink("›", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, page = Model.CurrentPage + 1 }, new { @class = "page-link" + (Model.CurrentPage >= Model.TotalPages ? " is-disabled" : "") })
-                    </div>
-                }
+                <text>Kết quả cho "@Model.SearchTerm"</text>
             }
             else
             {
-                <div class="empty-state">
-                    <i class="fa-solid fa-basket-shopping"></i>
-                    Không tìm thấy sản phẩm phù hợp. Thử từ khoá hoặc danh mục khác nhé.
-                </div>
+                <text>Tất cả sản phẩm</text>
             }
-        </section>
-
+        </h3>
     </div>
 
-    <!-- Scripts -->
+    @if (Model.Products != null && Model.Products.Any())
+    {
+        <div class="product-grid">
+            @foreach (var item in Model.Products)
+            {
+                @ProductCard(item)
+            }
+        </div>
+
+        if (Model.TotalPages > 1)
+        {
+            <div class="pagination-bar">
+                @Html.ActionLink("‹", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = Model.CurrentPage - 1 }, new { @class = "page-link" + (Model.CurrentPage <= 1 ? " is-disabled" : "") })
+
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    @Html.ActionLink(p.ToString(), "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = p }, new { @class = "page-link" + (p == Model.CurrentPage ? " is-active" : "") })
+                }
+
+                @Html.ActionLink("›", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = Model.CurrentPage + 1 }, new { @class = "page-link" + (Model.CurrentPage >= Model.TotalPages ? " is-disabled" : "") })
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-basket-shopping"></i>
+            Không tìm thấy sản phẩm phù hợp. Thử từ khoá, danh mục hoặc khoảng giá khác nhé.
+        </div>
+    }
+</section>
+
+@section scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var el = document.getElementById("flashBanner");
@@ -654,5 +744,4 @@
             // TODO: gọi fetch('/Cart/Add', { method: 'POST', body: ... }) theo route thực tế của bạn
         });
     </script>
-</body>
-</html>
+}

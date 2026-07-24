@@ -1,0 +1,197 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.UserAddress
+@{
+    Layout = null;
+    ViewBag.Title = "Chỉnh sửa địa chỉ";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --leaf: #20b04c;
+            --forest: #0e8133;
+            --bg: #f4f7f6;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --line: #e5e7eb;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 30px;
+            box-sizing: border-box;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--forest);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 16px;
+            background: rgba(32, 176, 76, 0.1);
+            border-radius: 8px;
+        }
+
+        .card-container {
+            background: var(--card);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin: 80px 20px 40px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--leaf), var(--forest));
+            padding: 24px 20px;
+            color: #fff;
+            text-align: center;
+        }
+
+            .card-header h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+            .form-group label {
+                display: block;
+                font-size: 13px;
+                font-weight: 600;
+                margin-bottom: 6px;
+            }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+            .form-control:focus {
+                border-color: var(--leaf);
+            }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--leaf);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .field-validation-error {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <a href="@Url.Action("Index")" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="card-container">
+        <div class="card-header">
+            <h2>Chỉnh sửa địa chỉ</h2>
+        </div>
+
+        <div class="card-body">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+
+                <div class="form-group">
+                    <label>Tên gợi nhớ</label>
+                    @Html.TextBoxFor(m => m.AddressName, new { @class = "form-control", required = "required" })
+                    @Html.ValidationMessageFor(m => m.AddressName)
+                </div>
+
+                <div class="form-group">
+                    <label>Họ tên người nhận</label>
+                    @Html.TextBoxFor(m => m.ReceiverName, new { @class = "form-control", required = "required" })
+                    @Html.ValidationMessageFor(m => m.ReceiverName)
+                </div>
+
+                <div class="form-group">
+                    <label>Số điện thoại nhận hàng</label>
+                    @Html.TextBoxFor(m => m.ReceiverPhone, new { @class = "form-control", required = "required" })
+                    @Html.ValidationMessageFor(m => m.ReceiverPhone)
+                </div>
+
+                <div class="form-group">
+                    <label>Địa chỉ chi tiết</label>
+                    @Html.TextAreaFor(m => m.DetailedAddress, new { @class = "form-control", rows = "3", required = "required" })
+                    @Html.ValidationMessageFor(m => m.DetailedAddress)
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        @Html.CheckBoxFor(m => m.IsDefault)
+                        Đặt làm địa chỉ mặc định
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-submit">Cập nhật thay đổi</button>
+            }
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+﻿@* Đặt file này tại Views/Shared/_CartSummary.cshtml
+    Được gọi từ CartController.CartSummary() qua Html.RenderAction, dữ liệu truyền qua ViewBag. *@
+@{
+    // Dùng Convert.To... thay vì ép kiểu trực tiếp (int)/(decimal),
+    // vì CartDetail.Price đang là double nên ép kiểu thẳng sẽ ném lỗi InvalidCastException.
+    int cartCount = Convert.ToInt32(ViewBag.CartCount);
+    decimal cartTotal = Convert.ToDecimal(ViewBag.CartTotal);
+}
+<a href="@Url.Action("Index", "Cart")" class="header-cart-link">
+    <span class="cart-icon-wrap">
+        <i class="fa-solid fa-cart-shopping"></i>
+        @if (cartCount > 0)
+        {
+            <span class="cart-badge">@cartCount</span>
+        }
+    </span>
+    <span class="header-cart-text">
+        <small>Giỏ hàng</small>
+        <strong>@cartTotal.ToString("N0") ₫</strong>
+    </span>
+</a>

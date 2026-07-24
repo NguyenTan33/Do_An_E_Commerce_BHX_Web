@@ -169,6 +169,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageOrderController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageRoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
     <Compile Include="Areas\Admin\Services\DashboardService.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
+    <Compile Include="Controllers\UserAddressController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -200,6 +202,10 @@
     <Compile Include="Migrations\202607221701006_UpdateModel1.cs" />
     <Compile Include="Migrations\202607221701006_UpdateModel1.Designer.cs">
       <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607240340282_UpdateProduct.cs" />
+    <Compile Include="Migrations\202607240340282_UpdateProduct.Designer.cs">
+      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -325,14 +331,19 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\Shared\_SidebarCategories.cshtml" />
+    <Content Include="Views\Shared\_CartSummary.cshtml" />
+    <Content Include="Views\UserAddress\Index.cshtml" />
+    <Content Include="Views\UserAddress\Create.cshtml" />
+    <Content Include="Views\UserAddress\Edit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Areas\Admin\Views\AuthorizeAdmin\" />
+    <Folder Include="Areas\Admin\Views\ManageOrder\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
     <Folder Include="Views\Cart\" />
-    <Folder Include="Views\Default\" />
     <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
   </ItemGroup>
@@ -372,6 +383,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202607221701006_UpdateModel1.resx">
       <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607240340282_UpdateProduct.resx">
+      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

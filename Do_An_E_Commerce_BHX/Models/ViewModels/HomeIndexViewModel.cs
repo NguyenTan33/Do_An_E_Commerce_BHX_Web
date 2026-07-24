@@ -45,6 +45,10 @@ namespace Do_An_E_Commerce_BHX.Models.ViewModels
         // Khung giờ vàng kế tiếp (dùng khi hiện không có khung nào đang chạy)
         public FlashSaleSlot NextSlot { get; set; }
 
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+        public string SortBy { get; set; }
+
         public bool IsSlotActive => CurrentSlot != null;
     }
 }
