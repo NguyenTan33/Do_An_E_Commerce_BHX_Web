@@ -1,0 +1,88 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Product>
+
+@{
+    ViewBag.Title = "Danh sách sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Hoặc layout chung của project
+}
+
+<h2>Danh Sách Sản Phẩm</h2>
+
+<!-- FORM TÌM KIẾM TRUYỀN THAM SỐ CHO PRODUCTTYPE -->
+<form method="get" action="@Url.Action("Index", "Product")" class="form-inline mb-4" style="margin-bottom: 20px;">
+    <div class="form-group" style="display: inline-block; margin-right: 10px;">
+        <input type="text" name="searchName" value="@ViewBag.CurrentName" class="form-control" placeholder="Nhập tên sản phẩm..." />
+    </div>
+
+    <div class="form-group" style="display: inline-block; margin-right: 10px;">
+        <select name="categoryId" class="form-control">
+            <option value="">-- Tất cả danh mục --</option>
+            @if (ViewBag.Categories != null)
+            {
+                foreach (var cat in ViewBag.Categories)
+                {
+                    <option value="@cat.Id" @(ViewBag.CurrentCategory == cat.Id ? "selected" : "")>@cat.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+</form>
+
+<hr />
+
+<!-- DANH SÁCH SẢN PHẨM -->
+<div class="row" style="display: flex; flex-wrap: wrap; gap: 20px;">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            <div class="card" style="width: 18rem; border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+                <div class="card-body">
+                    <h5 class="card-title" style="font-weight: bold;">@item.Name</h5>
+                    <p class="card-text">@item.Description</p>
+                    <p class="card-text" style="color: red; font-size: 1.2em; font-weight: bold;">
+                        @item.Price.ToString("N0") VNĐ
+                    </p>
+
+                    <!-- NÚT ADD TO CART GỌI QUA AJAX HOẶC FORM -->
+                    <button class="btn btn-success btn-add-cart" data-id="@item.Id">
+                        Thêm vào giỏ
+                    </button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>Không tìm thấy sản phẩm nào!</p>
+    }
+</div>
+
+<!-- SCRIPT GỌI AJAX SANG CARTCONTROLLER BẠN ĐÃ VIẾT -->
+@section scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.btn-add-cart').click(function () {
+                var productId = $(this).data('id');
+
+                $.ajax({
+                    url: '/Cart/AddToCart',
+                    type: 'POST',
+                    data: { productId: productId, quantity: 1 },
+                    success: function (response) {
+                        if (response.success) {
+                            alert('Thêm vào giỏ thành công! Tổng tiền mới: ' + response.newTotal + ' VNĐ');
+                        } else {
+                            alert('Lỗi thêm giỏ hàng');
+                        }
+                    },
+                    error: function () {
+                        alert('Cần đăng nhập hoặc lỗi server!');
+                    }
+                });
+            });
+        });
+    </script>
+}

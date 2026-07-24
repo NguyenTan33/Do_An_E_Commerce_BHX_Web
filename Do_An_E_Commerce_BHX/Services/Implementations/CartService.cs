@@ -17,18 +17,14 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
         public void AddItemToCart(int id,string userId , int quantity = 1 )
         {
             var product = appDBContext.Product.FirstOrDefault(p => p.Id == id);
-            var cart = appDBContext.Cart
-                .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
-                .FirstOrDefault(c => c.UserId == userId);
-
-            if (cart == null) return;
+            var cart = GetOrCreateCart(userId);
             if (product == null) return;
 
-            var exsistProduct = cart.CartDetails.FirstOrDefault(c => c.ProductId == id);
+            var existProduct = cart.CartDetails.FirstOrDefault(c => c.ProductId == id);
 
-            if (exsistProduct != null)
+            if (existProduct != null)
             {
-                exsistProduct.Quantity += quantity;
+                existProduct.Quantity += quantity;
             }
             else
             {
@@ -47,26 +43,22 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
         public void RemoveItemFromCart(int id,string userId)
         {
             //delete  
-            var cart = appDBContext.Cart
-                .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
-                .FirstOrDefault(c => c.UserId == userId);
+            var cart = GetOrCreateCart(userId);
 
             if (cart == null) return;
 
             var existingProductInCart = cart.CartDetails.FirstOrDefault(p => p.ProductId == id);
             if(existingProductInCart != null)
             {
-                cart.CartDetails.Remove(existingProductInCart);
+                appDBContext.CartDetail.Remove(existingProductInCart);
             }
             appDBContext.SaveChanges();
         }
         public void ChangeQuantity(string userId, int productId, int amount)
         {
-            if (amount < 0 || amount > 100) return;
+            if (amount < 1 || amount > 100) return;
             //add to user table
-            var cart = appDBContext.Cart
-                .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
-                .FirstOrDefault(c => c.UserId == userId);
+            var cart = GetOrCreateCart(userId);
 
             if (cart == null) return;
             var existingProductInCart = cart.CartDetails.FirstOrDefault(p => p.ProductId == productId);
@@ -77,14 +69,68 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             appDBContext.SaveChanges();
         }
 
+        public Cart GetOrCreateCart(string userId)
+        {
+            bool isRealUser = appDBContext.Users.Any(u => u.Id == userId);
+
+            if (isRealUser)
+            {
+
+                var cart = appDBContext.Cart
+                   .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
+                   .FirstOrDefault(c => c.UserId == userId);
+
+                // NẾU CHƯA CÓ CART THÌ TẠO MỚI LUÔN
+                if (cart == null)
+                {
+                    cart = new Cart
+                    {
+                        UserId = userId,
+                        CartDetails = new List<CartDetail>()
+                    };
+                    appDBContext.Cart.Add(cart);
+                    appDBContext.SaveChanges(); // Lưu để lấy Cart.Id
+                }
+                return cart;
+            }
+            else
+            {
+                var cart = appDBContext.Cart
+                  .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
+                  .FirstOrDefault(c => c.GuestId == userId);
+
+                // NẾU CHƯA CÓ CART THÌ TẠO MỚI LUÔN
+                if (cart == null)
+                {
+                    cart = new Cart
+                    {
+                        UserId = null,    // Khách vãng lai -> Để NULL để không dính Foreign Key
+                        GuestId = userId, // Lưu chuỗi "GUEST_..." vào GuestId
+                        CartDetails = new List<CartDetail>()
+                    };
+                    appDBContext.Cart.Add(cart);
+                    appDBContext.SaveChanges(); // Lưu để lấy Cart.Id
+                }
+                return cart;
+            }
+
+
+        }
 
         // Lấy giỏ hàng ra cho Index
         public Cart GetCartByUserId(string userId)
         {
-            return appDBContext.Cart
-                .Include(c => c.CartDetails)
-                .Include("CartDetails.Product") // Lôi Product ra để hiện Tên, Ảnh, Giá
-                .FirstOrDefault(c => c.UserId == userId);
+            // 1. Lấy hoặc tạo mới Cart trước (đảm bảo không bao giờ null)
+            var cart = GetOrCreateCart(userId);
+
+            // 2. Load kèm danh sách Product cho CartDetails
+            appDBContext.Entry(cart)
+                .Collection(c => c.CartDetails)
+                .Query()
+                .Include(cd => cd.Product)
+                .Load();
+
+            return cart;
         }
 
     }

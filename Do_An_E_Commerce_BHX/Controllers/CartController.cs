@@ -5,8 +5,8 @@ using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models; // Add thêm dòng này để gọi ApplicationDbContext
 namespace Do_An_E_Commerce_BHX.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập mới được xài giỏ hàng
-    public class CartController : Controller
+    [AllowAnonymous]
+    public class CartController : BaseController 
     {
         private readonly CartService _cartService;
         private readonly OrderService _orderService;
@@ -23,7 +23,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         // 1. Render Trang Giỏ Hàng
         public ActionResult Index()
         {
-            string userId = User.Identity.GetUserId();
+            string userId =GetCurrentUserId();
             var cart = _cartService.GetCartByUserId(userId);
 
             // Lấy tổng tiền chưa discount
@@ -36,9 +36,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpPost]
         public JsonResult AddToCart(int productId, int quantity = 1)
         {
-            string userId = User.Identity.GetUserId();
+            string userId = GetCurrentUserId();
             _cartService.AddItemToCart(productId, userId, quantity);
-
             decimal newTotal = _orderService.CalculatePrice(userId);
             return Json(new { success = true, newTotal = newTotal });
         }
@@ -47,7 +46,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpPost]
         public JsonResult ChangeQuantity(int productId, int amount)
         {
-            string userId = User.Identity.GetUserId();
+            string userId = GetCurrentUserId();
             _cartService.ChangeQuantity(userId, productId, amount);
 
             decimal newTotal = _orderService.CalculatePrice(userId);
@@ -58,7 +57,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpPost]
         public JsonResult RemoveItem(int productId)
         {
-            string userId = User.Identity.GetUserId();
+            string userId = GetCurrentUserId();
             _cartService.RemoveItemFromCart(productId, userId);
 
             decimal newTotal = _orderService.CalculatePrice(userId);

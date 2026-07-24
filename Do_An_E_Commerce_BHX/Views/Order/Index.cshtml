@@ -1,0 +1,127 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Cart
+
+@{
+    ViewBag.Title = "Thanh toán đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Đổi lại đúng Layout file của ông
+}
+
+<div class="container my-4">
+    <h2 class="mb-4 text-success font-weight-bold">Tiến Hành Đặt Hàng</h2>
+
+    <div class="row">
+        <!-- Cột trái: Form thông tin người nhận -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="m-0">Thông tin giao hàng</h5>
+                </div>
+                <div class="card-body">
+                    <form id="checkoutForm">
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Họ và tên người nhận <span class="text-danger">*</span></label>
+                            <input type="text" id="receiverName" class="form-control" placeholder="Nhập họ tên người nhận" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" id="receiverPhone" class="form-control" placeholder="Nhập số điện thoại giao hàng" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                            <textarea id="shippingAddress" class="form-control" rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Ghi chú đơn hàng (Tùy chọn)</label>
+                            <input type="text" id="note" class="form-control" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..." />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Danh sách sản phẩm & Tổng tiền -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="m-0 font-weight-bold">Đơn hàng của bạn</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @{
+                            decimal total = 0;
+                        }
+                        @foreach (var item in Model.CartDetails)
+                        {
+                            var subtotal = item.Product.Price * item.Quantity;
+                            total += subtotal;
+
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="my-0">@item.Product.Name</h6>
+                                    <small class="text-muted">SL: @item.Quantity x @item.Product.Price.ToString("N0") VNĐ</small>
+                                </div>
+                                <span class="text-muted">@subtotal.ToString("N0") VNĐ</span>
+                            </li>
+                        }
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <strong class="text-dark">Thành tiền:</strong>
+                            <strong class="text-danger h5 m-0">@total.ToString("N0") VNĐ</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white border-0 mt-2">
+                    <button type="button" id="btnConfirmCheckout" class="btn btn-success btn-block btn-lg w-100 font-weight-bold">
+                        XÁC NHẬN ĐẶT HÀNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#btnConfirmCheckout').click(function () {
+                var name = $('#receiverName').val().trim();
+                var phone = $('#receiverPhone').val().trim();
+                var address = $('#shippingAddress').val().trim();
+                var note = $('#note').val().trim();
+
+                if (!name || !phone || !address) {
+                    alert('Vui lòng điền đầy đủ Tên, SĐT và Địa chỉ giao hàng!');
+                    return;
+                }
+
+                // Vô hiệu hóa nút để tránh spam click
+                $(this).prop('disabled', true).text('Đang xử lý...');
+
+                $.ajax({
+                    url: '/Order/Checkout',
+                    type: 'POST',
+                    data: {
+                        receiverName: name,
+                        receiverPhone: phone,
+                        shippingAddress: address,
+                        note: note
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            window.location.href = '/Order/Success'; // Chuyển sang trang cảm ơn
+                        } else {
+                            alert(res.message);
+                            $('#btnConfirmCheckout').prop('disabled', false).text('XÁC NHẬN ĐẶT HÀNG');
+                        }
+                    },
+                    error: function () {
+                        alert('Có lỗi hệ thống xảy ra khi kết nối máy chủ!');
+                        $('#btnConfirmCheckout').prop('disabled', false).text('XÁC NHẬN ĐẶT HÀNG');
+                    }
+                });
+            });
+        });
+    </script>
+}

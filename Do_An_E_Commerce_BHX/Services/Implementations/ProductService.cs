@@ -71,9 +71,9 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
         public override IQueryable<Product> SearchProduct(IQueryable<Product> query, ProductType x)
         {
 
-            if (x.name != null)
+            if (!string.IsNullOrEmpty(x.name))
             {
-                query = query.Where(p => p.Name == x.name);
+                query = query.Where(p => p.Name.Contains(x.name));
             }
             return query;
         }

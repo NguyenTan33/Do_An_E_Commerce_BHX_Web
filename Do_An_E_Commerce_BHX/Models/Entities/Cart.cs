@@ -12,6 +12,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         public int Id { get; set; }
 
         public string UserId { get; set; }
+        public string GuestId { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public virtual ICollection<CartDetail> CartDetails { get; set; }

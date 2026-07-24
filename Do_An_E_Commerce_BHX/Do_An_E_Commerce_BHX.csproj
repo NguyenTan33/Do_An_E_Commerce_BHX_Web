@@ -177,7 +177,7 @@
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageReviewController.cs" />
     <Compile Include="Controllers\CartController.cs" />
-    <Compile Include="Controllers\DefaultController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
@@ -190,6 +190,10 @@
     <Compile Include="Migrations\202607221841302_InitialCreate.cs" />
     <Compile Include="Migrations\202607221841302_InitialCreate.Designer.cs">
       <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.cs" />
+    <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.Designer.cs">
+      <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -304,6 +308,9 @@
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Cart\Index.cshtml" />
+    <Content Include="Views\Product\Index.cshtml" />
+    <Content Include="Views\Order\Index.cshtml" />
+    <Content Include="Views\Order\Success.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -314,8 +321,6 @@
     <Folder Include="Areas\Admin\Views\ManageReview\" />
     <Folder Include="Areas\Admin\Views\ManageUser\" />
     <Folder Include="Views\Default\" />
-    <Folder Include="Views\Order\" />
-    <Folder Include="Views\Product\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
@@ -347,6 +352,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202607221841302_InitialCreate.resx">
       <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607241252241_AddGuestIdInUserTable.resx">
+      <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
