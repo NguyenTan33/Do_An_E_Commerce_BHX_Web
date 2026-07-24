@@ -63,5 +63,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
             decimal newTotal = _orderService.CalculatePrice(userId);
             return Json(new { success = true, newTotal = newTotal });
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _db.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

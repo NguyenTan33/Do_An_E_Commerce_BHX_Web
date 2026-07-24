@@ -1,33 +1,747 @@
-﻿@{
-    ViewBag.Title = "Home Page";
+﻿@model Do_An_E_Commerce_BHX.Models.ViewModels.HomeIndexViewModel
+
+@{
+    ViewBag.Title = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
-    </section>
-
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
+@helper ProductCard(Do_An_E_Commerce_BHX.Models.Entities.Product item)
+{
+    bool soldOut = item.Quantity <= 0;
+    string img = string.IsNullOrEmpty(item.URLImage) ? "/Content/images/no-image.png" : item.URLImage;
+    <div class="product-card @(soldOut ? "is-sold-out" : "")">
+        <div class="product-media">
+            <img src="@img" alt="@item.Name" loading="lazy" onerror="this.src='/Content/images/no-image.png'" />
+            <div class="badge-stack">
+                @if (item.IsHot)
+                {<span class="badge badge-hot"><i class="fa-solid fa-fire"></i> Hot</span>}
+                @if (item.IsBestSeller)
+                {<span class="badge badge-best"><i class="fa-solid fa-star"></i> Bán chạy</span>}
+            </div>
+            @if (soldOut)
+            {
+                <div class="sold-out-layer"><span>Hết hàng</span></div>
+            }
+        </div>
+        <div class="product-body">
+            <h4 class="product-name" title="@item.Name">@item.Name</h4>
+            <div class="product-price">@item.Price.ToString("N0") ₫</div>
+            <button type="button" class="btn-add-cart" data-id="@item.Id" @(soldOut ? "disabled" : "")>
+                <i class="fa-solid fa-cart-plus"></i> @(soldOut ? "Hết hàng" : "Thêm vào giỏ")
+            </button>
+        </div>
     </div>
-</main>
+}
+
+@section styles {
+    <style>
+        /* ===== Hero / tìm kiếm ===== */
+        .hero-band {
+            background: var(--forest);
+            background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 26px, transparent 26px 52px);
+            border-radius: 14px;
+            padding: 30px 28px;
+            margin-bottom: 18px;
+        }
+
+        .hero-eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.65);
+            margin: 0 0 8px;
+        }
+
+            .hero-eyebrow::before {
+                content: "◆ ";
+                color: var(--amber);
+            }
+
+        .hero-title {
+            font-size: 28px;
+            color: #fff;
+            margin: 0 0 18px;
+            text-transform: uppercase;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 8px;
+            box-shadow: 0 14px 34px rgba(14,42,32,0.22);
+            max-width: 640px;
+        }
+
+            .search-form input[type="text"] {
+                flex: 1;
+                border: none;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                font-size: 15px;
+                padding: 0 14px;
+                color: var(--ink);
+            }
+
+            .search-form button {
+                border: none;
+                background: var(--leaf-dark);
+                color: #fff;
+                font-weight: 700;
+                font-size: 14px;
+                padding: 0 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: background 0.15s ease;
+            }
+
+                .search-form button:hover {
+                    background: var(--forest-deep);
+                }
+
+        /* ===== Bộ lọc nâng cao ===== */
+        .filter-panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(14,42,32,0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .filter-toggle {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: var(--forest-deep);
+        }
+
+            .filter-toggle::-webkit-details-marker {
+                display: none;
+            }
+
+            .filter-toggle .toggle-caret {
+                margin-left: auto;
+                transition: transform .2s ease;
+                color: var(--muted);
+            }
+
+        details[open] .filter-toggle .toggle-caret {
+            transform: rotate(180deg);
+        }
+
+        .filter-body {
+            padding: 4px 18px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 18px;
+            flex-wrap: wrap;
+            border-top: 1px solid var(--line);
+            padding-top: 16px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .filter-field label {
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: var(--muted);
+            }
+
+            .filter-field select,
+            .filter-field input {
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 9px 12px;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.875rem;
+                color: var(--ink);
+                outline: none;
+                background: #fff;
+            }
+
+                .filter-field select:focus,
+                .filter-field input:focus {
+                    border-color: var(--leaf);
+                }
+
+            .filter-field select {
+                min-width: 180px;
+            }
+
+        .price-range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .price-range-inputs input {
+                width: 110px;
+            }
+
+            .price-range-inputs span {
+                color: var(--muted);
+                font-size: 0.8125rem;
+            }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .btn-apply-filter {
+            border: none;
+            background: var(--leaf-dark);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-apply-filter:hover {
+                background: var(--forest-deep);
+            }
+
+        .btn-reset-filter {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--tomato);
+        }
+
+            .btn-reset-filter:hover {
+                color: var(--tomato-dark);
+            }
+
+        /* ===== Section heading ===== */
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 18px;
+        }
+
+            .section-heading .dot {
+                width: 10px;
+                height: 10px;
+                background: var(--leaf);
+                transform: rotate(45deg);
+                display: inline-block;
+            }
+
+            .section-heading h3 {
+                margin: 0;
+                font-size: 20px;
+                color: var(--forest-deep);
+                text-transform: uppercase;
+            }
+
+        section.store-section {
+            margin-bottom: 40px;
+        }
+
+        /* ===== Flash sale ===== */
+        .flash-banner {
+            background: linear-gradient(120deg, var(--tomato) 0%, var(--tomato-dark) 100%);
+            border-radius: 12px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .flash-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+            .flash-left i {
+                font-size: 26px;
+                color: #FFD98E;
+            }
+
+        .flash-title {
+            font-family: 'Anton', sans-serif;
+            font-size: 20px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .flash-sub {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: rgba(255,255,255,0.85);
+            margin: 2px 0 0;
+        }
+
+        .flash-timer-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0,0,0,0.18);
+            border-radius: 8px;
+            padding: 8px 16px;
+        }
+
+        .flash-timer {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== Grid sản phẩm ===== */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 18px;
+        }
+
+        .product-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .product-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 22px rgba(15,26,48,0.12);
+            }
+
+        .product-media {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            background: var(--paper);
+        }
+
+            .product-media img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+
+        .badge-stack {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .badge {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 20px;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+        }
+
+        .badge-hot {
+            background: var(--tomato);
+        }
+
+        .badge-best {
+            background: var(--amber-dark);
+        }
+
+        .sold-out-layer {
+            position: absolute;
+            inset: 0;
+            background: rgba(30, 42, 34, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .sold-out-layer span {
+                font-family: 'Anton', sans-serif;
+                color: #fff;
+                border: 2px solid #fff;
+                padding: 6px 14px;
+                border-radius: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                transform: rotate(-8deg);
+            }
+
+        .product-body {
+            padding: 12px 14px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .product-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 0;
+            min-height: 36px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--amber-dark);
+            font-size: 16px;
+        }
+
+        .btn-add-cart {
+            margin-top: auto;
+            border: none;
+            background: var(--leaf-dark);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 9px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s ease;
+        }
+
+            .btn-add-cart:hover:not([disabled]) {
+                background: var(--forest-deep);
+            }
+
+            .btn-add-cart[disabled] {
+                background: #C9C4B4;
+                color: #6E7568;
+                cursor: not-allowed;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--muted);
+            background: #fff;
+            border: 1px dashed var(--line);
+            border-radius: 10px;
+        }
+
+            .empty-state i {
+                font-size: 34px;
+                color: var(--line);
+                margin-bottom: 10px;
+                display: block;
+            }
+
+        /* ===== Phân trang ===== */
+        .pagination-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 26px;
+            flex-wrap: wrap;
+        }
+
+        .page-link {
+            min-width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            color: var(--ink);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+            .page-link:hover {
+                border-color: var(--leaf);
+                color: var(--leaf-dark);
+            }
+
+            .page-link.is-active {
+                background: var(--forest);
+                border-color: var(--forest);
+                color: #fff;
+            }
+
+            .page-link.is-disabled {
+                opacity: 0.4;
+                pointer-events: none;
+            }
+
+        @@media (max-width: 640px) {
+            .hero-title {
+                font-size: 22px;
+            }
+
+            .flash-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-body {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-actions {
+                margin-left: 0;
+            }
+        }
+    </style>
+}
+
+@{
+    var activeSlot = Model.IsSlotActive ? Model.CurrentSlot : Model.NextSlot;
+    var targetEnd = activeSlot != null ? activeSlot.End : TimeSpan.Zero;
+}
+
+<!-- Hero / tìm kiếm nhanh -->
+<div class="hero-band">
+    <p class="hero-eyebrow">Bách Hóa Xanh &middot; Siêu thị trực tuyến</p>
+    <h1 class="hero-title">Hôm nay ăn gì, mua gì cũng có</h1>
+    @using (Html.BeginForm("Index", "Home", FormMethod.Get, new { @class = "search-form" }))
+    {
+        @Html.Hidden("categoryId", Model.CategoryId)
+        @Html.Hidden("minPrice", Model.MinPrice)
+        @Html.Hidden("maxPrice", Model.MaxPrice)
+        @Html.Hidden("sortBy", Model.SortBy)
+        <input type="text" name="searchTerm" placeholder="Tìm rau củ, thịt cá, sữa, gia vị..." value="@Model.SearchTerm" />
+        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+    }
+</div>
+
+<!-- Bộ lọc nâng cao: danh mục + khoảng giá + sắp xếp -->
+<details class="filter-panel" open>
+    <summary class="filter-toggle">
+        <i class="fa-solid fa-sliders"></i> Bộ lọc nâng cao
+        <i class="fa-solid fa-chevron-down toggle-caret"></i>
+    </summary>
+    <div class="filter-body">
+        @using (Html.BeginForm("Index", "Home", FormMethod.Get))
+        {
+            @Html.Hidden("searchTerm", Model.SearchTerm)
+            <div class="filter-field">
+                <label for="filterCategory">Danh mục</label>
+                <select name="categoryId" id="filterCategory">
+                    <option value="">Tất cả danh mục</option>
+                    @if (Model.Categories != null)
+                    {
+                        foreach (var cat in Model.Categories)
+                        {
+                            <option value="@cat.Id" selected="@(Model.CategoryId == cat.Id ? "selected" : null)">@cat.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Khoảng giá</label>
+                <div class="price-range-inputs">
+                    <input type="number" name="minPrice" placeholder="Từ" min="0" step="1000" value="@Model.MinPrice" />
+                    <span>&ndash;</span>
+                    <input type="number" name="maxPrice" placeholder="Đến" min="0" step="1000" value="@Model.MaxPrice" />
+                    <span>₫</span>
+                </div>
+            </div>
+            <div class="filter-field">
+                <label for="filterSort">Sắp xếp</label>
+                <select name="sortBy" id="filterSort">
+                    <option value="">Mặc định</option>
+                    <option value="price_asc" selected="@(Model.SortBy == "price_asc" ? "selected" : null)">Giá tăng dần</option>
+                    <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : null)">Giá giảm dần</option>
+                    <option value="name_asc" selected="@(Model.SortBy == "name_asc" ? "selected" : null)">Tên A-Z</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-apply-filter"><i class="fa-solid fa-check"></i> Áp dụng</button>
+                @Html.ActionLink("Xóa lọc", "Index", "Home", new { searchTerm = Model.SearchTerm }, new { @class = "btn-reset-filter" })
+            </div>
+        }
+    </div>
+</details>
+
+<!-- Khung giờ vàng / Flash sale -->
+@if (Model.HotProducts != null && Model.HotProducts.Any())
+{
+    <section class="store-section">
+        <div class="flash-banner" id="flashBanner"
+             data-active="@Model.IsSlotActive.ToString().ToLower()"
+             data-target-hour="@targetEnd.Hours"
+             data-target-minute="@targetEnd.Minutes">
+            <div class="flash-left">
+                <i class="fa-solid fa-bolt"></i>
+                <div>
+                    <p class="flash-title">Khung giờ vàng @(activeSlot != null ? "· " + activeSlot.Label : "")</p>
+                    <p class="flash-sub">
+                        @if (Model.IsSlotActive)
+                        {
+                            <text>Đang diễn ra &mdash; giá tốt kết thúc sau</text>
+                        }
+                        else
+                        {
+                            <text>Khung giờ vàng tiếp theo bắt đầu sau</text>
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="flash-timer-wrap">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span class="flash-timer">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="section-heading"><span class="dot"></span><h3>Sản phẩm HOT trong khung giờ này</h3></div>
+        <div class="product-grid">
+            @foreach (var item in Model.HotProducts)
+            {
+                @ProductCard(item)
+            }
+        </div>
+    </section>
+}
+
+<!-- Bán chạy nhất -->
+@if (Model.BestSellerProducts != null && Model.BestSellerProducts.Any())
+{
+    <section class="store-section">
+        <div class="section-heading"><span class="dot"></span><h3>Bán chạy nhất</h3></div>
+        <div class="product-grid">
+            @foreach (var item in Model.BestSellerProducts)
+            {
+                @ProductCard(item)
+            }
+        </div>
+    </section>
+}
+
+<!-- Toàn bộ sản phẩm (đã áp bộ lọc) -->
+<section class="store-section">
+    <div class="section-heading">
+        <span class="dot"></span>
+        <h3>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <text>Kết quả cho "@Model.SearchTerm"</text>
+            }
+            else
+            {
+                <text>Tất cả sản phẩm</text>
+            }
+        </h3>
+    </div>
+
+    @if (Model.Products != null && Model.Products.Any())
+    {
+        <div class="product-grid">
+            @foreach (var item in Model.Products)
+            {
+                @ProductCard(item)
+            }
+        </div>
+
+        if (Model.TotalPages > 1)
+        {
+            <div class="pagination-bar">
+                @Html.ActionLink("‹", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = Model.CurrentPage - 1 }, new { @class = "page-link" + (Model.CurrentPage <= 1 ? " is-disabled" : "") })
+
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    @Html.ActionLink(p.ToString(), "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = p }, new { @class = "page-link" + (p == Model.CurrentPage ? " is-active" : "") })
+                }
+
+                @Html.ActionLink("›", "Index", "Home", new { searchTerm = Model.SearchTerm, categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortBy = Model.SortBy, page = Model.CurrentPage + 1 }, new { @class = "page-link" + (Model.CurrentPage >= Model.TotalPages ? " is-disabled" : "") })
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-basket-shopping"></i>
+            Không tìm thấy sản phẩm phù hợp. Thử từ khoá, danh mục hoặc khoảng giá khác nhé.
+        </div>
+    }
+</section>
+
+@section scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var el = document.getElementById("flashBanner");
+            if (!el) return;
+
+            var targetHour = parseInt(el.getAttribute("data-target-hour"), 10);
+            var targetMinute = parseInt(el.getAttribute("data-target-minute"), 10);
+            var timerEl = el.querySelector(".flash-timer");
+
+            function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+            function tick() {
+                var now = new Date();
+                var target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0);
+                if (target <= now) target.setDate(target.getDate() + 1);
+
+                var diff = Math.max(0, target - now);
+                var h = Math.floor(diff / 3600000);
+                var m = Math.floor((diff % 3600000) / 60000);
+                var s = Math.floor((diff % 60000) / 1000);
+
+                if (timerEl) timerEl.textContent = pad(h) + ":" + pad(m) + ":" + pad(s);
+            }
+
+            tick();
+            setInterval(tick, 1000);
+        });
+
+        // Placeholder "thêm vào giỏ" — nối API/Cart controller thật của bạn vào đây
+        document.addEventListener("click", function (e) {
+            var btn = e.target.closest(".btn-add-cart");
+            if (!btn || btn.hasAttribute("disabled")) return;
+            var id = btn.getAttribute("data-id");
+            console.log("Thêm sản phẩm vào giỏ, id =", id);
+            // TODO: gọi fetch('/Cart/Add', { method: 'POST', body: ... }) theo route thực tế của bạn
+        });
+    </script>
+}

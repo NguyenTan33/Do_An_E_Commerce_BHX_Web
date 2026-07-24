@@ -1,0 +1,385 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Product
+
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Sửa sản phẩm #@Model.Id</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --paper: #FAF8F4;
+            --ink: #22262E;
+            --muted: #6B7280;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --green: #2F8F5B;
+            --red: #C4453A;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 32px 60px;
+            background: var(--paper);
+            background-image: radial-gradient(circle at 1px 1px, rgba(22,35,63,0.06) 1px, transparent 0);
+            background-size: 22px 22px;
+            font-family: 'Inter', Arial, sans-serif;
+            color: var(--ink);
+        }
+
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header Form */
+        .header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            border-bottom: 3px solid var(--navy);
+            padding-bottom: 16px;
+        }
+
+        .eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+
+        h2 {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            font-size: 30px;
+            letter-spacing: 0.01em;
+            color: var(--navy-deep);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .btn-back {
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 9px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background 0.15s ease;
+        }
+
+            .btn-back:hover {
+                background: #d4cebe;
+            }
+
+        /* Form Card Layout */
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 28px 32px;
+            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+            .form-group.full-width {
+                grid-column: span 2;
+            }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--navy-deep);
+                margin-bottom: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+        .form-control {
+            height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 0 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--navy);
+                box-shadow: 0 0 0 3px rgba(22,35,63,0.08);
+            }
+
+        textarea.form-control {
+            height: auto;
+            min-height: 110px;
+            padding: 12px 14px;
+            resize: vertical;
+        }
+
+        .text-danger {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 4px;
+        }
+
+        /* Image Preview Box */
+        .image-preview-wrapper {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .img-preview {
+            width: 70px;
+            height: 70px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            object-fit: cover;
+            background: var(--paper);
+        }
+
+        /* Section Title trong Form */
+        .section-divider {
+            grid-column: span 2;
+            margin: 10px 0 0;
+            padding-top: 16px;
+            border-top: 1.5px dashed var(--line);
+        }
+
+        .section-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 15px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--navy);
+            margin: 0 0 14px;
+        }
+
+        /* Checkbox Group Grid */
+        .checkbox-grid {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            background: var(--paper);
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+            .checkbox-item input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                accent-color: var(--navy);
+                cursor: pointer;
+            }
+
+            .checkbox-item span {
+                font-size: 13.5px;
+                font-weight: 500;
+                color: var(--ink);
+            }
+
+        /* Actions */
+        .form-actions {
+            margin-top: 28px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            font-family: 'Oswald', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: var(--navy);
+            color: #fff;
+            padding: 11px 26px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+            .btn-submit:hover {
+                opacity: 0.9;
+            }
+
+        @@media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width, .section-divider, .checkbox-grid {
+                grid-column: span 1;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <div class="header">
+            <div>
+                <p class="eyebrow">Quản lý kho &middot; Chỉnh sửa</p>
+                <h2>Sửa sản phẩm #@Model.Id</h2>
+            </div>
+            <a href="@Url.Action("Index", "ManageProduct")" class="btn-back">
+                &larr; Quản lý sản phẩm
+            </a>
+        </div>
+
+        <div class="form-card">
+            @using (Html.BeginForm("SuaSP", "ManageProduct", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+
+                <div class="form-grid">
+                    <!-- Tên sản phẩm -->
+                    <div class="form-group full-width">
+                        <label>Tên sản phẩm (*)</label>
+                        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập tên sản phẩm..." })
+                        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Danh mục -->
+                    <div class="form-group">
+                        <label>Danh mục sản phẩm</label>
+                        @Html.DropDownListFor(m => m.CategoryId, ViewBag.Category as SelectList, "-- Chọn danh mục --", new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.CategoryId, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Mã vạch (Barcode) -->
+                    <div class="form-group">
+                        <label>Mã vạch (Barcode)</label>
+                        @Html.TextBoxFor(m => m.Barcode, new { @class = "form-control", placeholder = "893..." })
+                        @Html.ValidationMessageFor(m => m.Barcode, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Giá bán -->
+                    <div class="form-group">
+                        <label>Giá bán (VNĐ) (*)</label>
+                        @Html.TextBoxFor(m => m.Price, "{0:G29}", new { @class = "form-control", type = "number", step = "1000", placeholder = "0" })
+                        @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Số lượng tồn kho -->
+                    <div class="form-group">
+                        <label>Số lượng tồn kho (*)</label>
+                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", type = "number", placeholder = "0" })
+                        @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Đường dẫn hình ảnh & Preview -->
+                    <div class="form-group full-width">
+                        <label>URL Hình ảnh</label>
+                        <div class="image-preview-wrapper">
+                            <img id="imgPreview" src="@(string.IsNullOrEmpty(Model.URLImage) ? "/images/no-image.png" : Model.URLImage)"
+                                 class="img-preview" alt="Preview" onerror="this.src='https://via.placeholder.com/70?text=No+Img';" />
+                            @Html.TextBoxFor(m => m.URLImage, new { @class = "form-control", @id = "txtUrlImage", style = "flex:1;", placeholder = "https://example.com/image.jpg", oninput = "updateImagePreview(this.value)" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.URLImage, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Mô tả sản phẩm -->
+                    <div class="form-group full-width">
+                        <label>Mô tả chi tiết</label>
+                        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = "4", placeholder = "Nhập mô tả sản phẩm..." })
+                        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <!-- Trạng thái sản phẩm -->
+                    <div class="section-divider">
+                        <p class="section-title">Trạng thái & Hiển thị</p>
+                    </div>
+
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            @Html.CheckBoxFor(m => m.IsAvailable)
+                            <span>Sẵn có (Kinh doanh)</span>
+                        </label>
+
+                        <label class="checkbox-item">
+                            @Html.CheckBoxFor(m => m.IsHot)
+                            <span>Sản phẩm Hot 🔥</span>
+                        </label>
+
+                        <label class="checkbox-item">
+                            @Html.CheckBoxFor(m => m.IsBestSeller)
+                            <span>Bán chạy ⭐</span>
+                        </label>
+
+                        <label class="checkbox-item">
+                            @Html.CheckBoxFor(m => m.IsLock)
+                            <span>Khóa (Ẩn SP) 🔒</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="@Url.Action("Index", "ManageProduct")" class="btn-back">Hủy bỏ</a>
+                    <button type="submit" class="btn-submit">💾 Lưu thay đổi</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <script>// Cập nhật ảnh Preview khi thay đổi URL
+        function updateImagePreview(url) {
+            const preview = document.getElementById('imgPreview');
+            if (url && url.trim() !== '') {
+                preview.src = url;
+            } else {
+                preview.src = 'https://via.placeholder.com/70?text=No+Img';
+            }
+        }</script>
+</body>
+</html>

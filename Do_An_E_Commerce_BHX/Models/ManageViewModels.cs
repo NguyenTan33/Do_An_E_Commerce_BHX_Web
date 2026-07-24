@@ -12,6 +12,8 @@ namespace Do_An_E_Commerce_BHX.Models
         public string PhoneNumber { get; set; }
         public bool TwoFactor { get; set; }
         public bool BrowserRemembered { get; set; }
+        public string FullName { get; set; }
+        public int LoyaltyPoints { get; set; }
     }
 
     public class ManageLoginsViewModel

@@ -1,7 +1,869 @@
-﻿
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Product>
+
 @{
-    ViewBag.Title = "Index";
+    ViewData["Title"] = "Quản lý sản phẩm";
+    ViewData["Subtitle"] = "Tổng quan toàn bộ sản phẩm đang bán";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h2>Index</h2>
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --paper: #FAF8F4;
+            --ink: #22262E;
+            --muted: #6B7280;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --green: #2F8F5B;
+            --red: #C4453A;
+        }
 
+        .header, .filter-container, .table-wrap {
+            width: 100%;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            border-bottom: 3px solid var(--navy);
+            padding-bottom: 16px;
+        }
+
+        .eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+
+        h2 {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            font-size: 30px;
+            letter-spacing: 0.01em;
+            color: var(--navy-deep);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .count-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: var(--navy);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 3px;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-add {
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: var(--amber);
+            color: #fff;
+            padding: 9px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: opacity 0.15s ease;
+        }
+
+            .btn-add:hover {
+                opacity: 0.9;
+            }
+
+        /* Filter Panel */
+        .filter-container {
+            margin-bottom: 20px;
+        }
+
+        .filter-panel {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            border: 1px solid var(--line);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+            .filter-row:last-child {
+                margin-bottom: 0;
+            }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+            flex: 1;
+        }
+
+            .filter-group label {
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 6px;
+                color: var(--navy-deep);
+            }
+
+            .filter-group input, .filter-group select {
+                height: 40px;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 0 12px;
+                font-family: 'Inter', sans-serif;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.15s ease;
+            }
+
+                .filter-group input:focus, .filter-group select:focus {
+                    border-color: var(--navy);
+                }
+
+        .filter-button {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .btn-search {
+            height: 40px;
+            padding: 0 22px;
+            border: none;
+            border-radius: 6px;
+            background: var(--navy);
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+            .btn-search:hover {
+                opacity: 0.9;
+            }
+
+        .btn-reset {
+            height: 40px;
+            padding: 0 22px;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #E5E1D8;
+            color: var(--ink);
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+        }
+
+            .btn-reset:hover {
+                background: #d4cebe;
+            }
+
+        /* Table Area */
+        .table-wrap {
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+            border: 1px solid var(--line);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: var(--navy);
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 14px 16px;
+        }
+
+        tbody td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--line);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #F3F0E9;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .id-cell {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .name-cell {
+            font-weight: 600;
+            color: var(--navy-deep);
+        }
+
+        .barcode-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+        }
+
+            .barcode-cell::before {
+                content: "";
+                display: inline-block;
+                width: 3px;
+                height: 14px;
+                background: var(--ink);
+                margin-right: 3px;
+                box-shadow: 4px 0 0 var(--ink), 9px 0 0 var(--ink), 12px 0 0 var(--ink), 18px 0 0 var(--ink);
+            }
+
+            .barcode-cell .code-num {
+                margin-left: 26px;
+            }
+
+        .stock-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 140px;
+        }
+
+        .stock-track {
+            flex: 1;
+            height: 6px;
+            background: var(--line);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .stock-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .stock-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .price-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+            color: var(--navy-deep);
+        }
+
+        .action-cell {
+            white-space: nowrap;
+            text-align: right;
+        }
+
+            .action-cell form {
+                display: inline-block;
+                margin: 0;
+            }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 1.5px solid var(--line);
+            background: #fff;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 6px;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+            .icon-btn svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            .icon-btn.view {
+                color: var(--navy);
+            }
+
+                .icon-btn.view:hover {
+                    border-color: var(--navy);
+                    background: #EEF1F6;
+                }
+
+            .icon-btn.edit {
+                color: var(--navy);
+            }
+
+                .icon-btn.edit:hover {
+                    border-color: var(--navy);
+                    background: #EEF1F6;
+                }
+
+            .icon-btn.delete {
+                color: var(--red);
+            }
+
+                .icon-btn.delete:hover {
+                    border-color: var(--red);
+                    background: #FBEAE8;
+                }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        /* Shared Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,26,48,0.55);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+            .modal-overlay.active {
+                display: flex;
+            }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 6px;
+            padding: 28px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(15,26,48,0.3);
+        }
+
+            .modal-box h3 {
+                font-family: 'Oswald', sans-serif;
+                font-size: 18px;
+                text-transform: uppercase;
+                color: var(--navy-deep);
+                margin: 0 0 10px;
+            }
+
+            .modal-box p {
+                font-size: 14px;
+                color: var(--muted);
+                margin: 0 0 22px;
+                line-height: 1.5;
+            }
+
+                .modal-box p strong {
+                    color: var(--ink);
+                }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+            .modal-actions button {
+                font-family: 'Oswald', sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 10px 18px;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+            }
+
+        .modal-cancel {
+            background: transparent;
+            border: 1.5px solid var(--line) !important;
+            color: var(--muted);
+        }
+
+            .modal-cancel:hover {
+                border-color: var(--muted) !important;
+                color: var(--ink);
+            }
+
+        .modal-confirm {
+            background: var(--red);
+            color: #fff;
+        }
+
+            .modal-confirm:hover {
+                opacity: 0.9;
+            }
+
+        /* Modal Xem Chi Tiết */
+        .detail-modal-box {
+            max-width: 580px;
+            width: 92%;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--navy);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+            .detail-header h3 {
+                font-family: 'Oswald', sans-serif;
+                font-size: 20px;
+                color: var(--navy-deep);
+                margin: 0;
+                text-transform: uppercase;
+            }
+
+        .detail-body {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 20px;
+        }
+
+        .detail-img {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            background: var(--paper);
+        }
+
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .detail-info-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed var(--line);
+            padding-bottom: 4px;
+        }
+
+        .detail-info-label {
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .detail-info-val {
+            font-weight: 600;
+            color: var(--navy-deep);
+        }
+
+        .badge-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .bg-hot {
+            background: #FDE8E8;
+            color: var(--red);
+        }
+
+        .bg-bestseller {
+            background: #FEF3C7;
+            color: var(--amber);
+        }
+
+        .bg-available {
+            background: #DEF7EC;
+            color: var(--green);
+        }
+
+        .bg-lock {
+            background: #E5E7EB;
+            color: var(--muted);
+            text-decoration: line-through;
+        }
+
+        .detail-desc {
+            grid-column: span 2;
+            background: var(--paper);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--ink);
+            line-height: 1.5;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+    </style>
+}
+
+<div class="header">
+    <div>
+        <p class="eyebrow">Quản lý kho &middot; Bán lẻ</p>
+        <h2>Danh sách sản phẩm</h2>
+    </div>
+    <div class="header-right">
+        <span class="count-badge">@(Model?.Count() ?? 0) SP</span>
+        @Html.ActionLink("+ Thêm sản phẩm", "ThemSP", "ManageProduct", null, new { @class = "btn-add" })
+    </div>
+</div>
+
+<!-- Bộ lọc tìm kiếm & sắp xếp (Server-side) -->
+<div class="filter-container">
+    @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
+    {
+        <div class="filter-panel">
+            <!-- Hàng 1: Tìm kiếm cơ bản & Giá -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Từ khóa</label>
+                    <input type="text" name="TuKhoa" value="@Request["TuKhoa"]" placeholder="Tên sản phẩm..." />
+                </div>
+                <div class="filter-group">
+                    <label>Danh mục</label>
+                    @Html.DropDownList("CategoryId", ViewBag.Category as SelectList, "-- Tất cả --", new { @class = "form-control" })
+                </div>
+                <div class="filter-group">
+                    <label>Giá từ</label>
+                    <input type="number" name="GiaTu" value="@Request["GiaTu"]" />
+                </div>
+                <div class="filter-group">
+                    <label>Giá đến</label>
+                    <input type="number" name="GiaDen" value="@Request["GiaDen"]" />
+                </div>
+            </div>
+
+            <!-- Hàng 2: Trạng thái kinh doanh & Tồn kho -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Tồn từ</label>
+                    <input type="number" name="TonTu" value="@Request["TonTu"]" />
+                </div>
+                <div class="filter-group">
+                    <label>Tồn đến</label>
+                    <input type="number" name="TonDen" value="@Request["TonDen"]" />
+                </div>
+                <div class="filter-group">
+                    <label>Kinh doanh</label>
+                    <select name="isAvailable">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isAvailable"] == "true" ? "selected" : "")>Đang bán</option>
+                        <option value="false" @(Request["isAvailable"] == "false" ? "selected" : "")>Ngừng bán</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Trạng thái Khóa</label>
+                    <select name="isLock">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isLock"] == "true" ? "selected" : "")>Bị khóa</option>
+                        <option value="false" @(Request["isLock"] == "false" ? "selected" : "")>Đang mở</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hàng 3: Sắp xếp, Nổi bật, Bán chạy -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Sản phẩm Nổi bật (Hot)</label>
+                    <select name="isHot">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isHot"] == "true" ? "selected" : "")>Có</option>
+                        <option value="false" @(Request["isHot"] == "false" ? "selected" : "")>Không</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Bán chạy (Best Seller)</label>
+                    <select name="isBestSeller">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" @(Request["isBestSeller"] == "true" ? "selected" : "")>Có</option>
+                        <option value="false" @(Request["isBestSeller"] == "false" ? "selected" : "")>Không</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sắp xếp</label>
+                    <select name="SortBy">
+                        <option value="">Mặc định</option>
+                        <option value="nameAsc" @(Request["SortBy"] == "nameAsc" ? "selected" : "")>Tên A-Z</option>
+                        <option value="nameDesc" @(Request["SortBy"] == "nameDesc" ? "selected" : "")>Tên Z-A</option>
+                        <option value="priceAsc" @(Request["SortBy"] == "priceAsc" ? "selected" : "")>Giá tăng</option>
+                        <option value="priceDesc" @(Request["SortBy"] == "priceDesc" ? "selected" : "")>Giá giảm</option>
+                        <option value="qtyAsc" @(Request["SortBy"] == "qtyAsc" ? "selected" : "")>Tồn tăng</option>
+                        <option value="qtyDesc" @(Request["SortBy"] == "qtyDesc" ? "selected" : "")>Tồn giảm</option>
+                    </select>
+                </div>
+                <div class="filter-button" style="flex: 1; justify-content: flex-end;">
+                    <button type="submit" class="btn-search">🔍 Tìm kiếm</button>
+                    <a href="@Url.Action("Index")" class="btn-reset">Đặt lại</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Bảng danh sách sản phẩm -->
+<div class="table-wrap">
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên sản phẩm</th>
+                <th>Mã vạch</th>
+                <th>Tồn kho</th>
+                <th style="text-align:right;">Giá bán</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                var maxQty = Model.Max(p => p.Quantity);
+                if (maxQty <= 0) { maxQty = 1; }
+
+                foreach (var item in Model)
+                {
+                    var pct = (int)Math.Min(100, (item.Quantity * 100.0) / maxQty);
+                    var stockColor = item.Quantity <= 5 ? "var(--red)" : (item.Quantity <= 20 ? "var(--amber)" : "var(--green)");
+
+                    <tr>
+                        <td class="id-cell">#@item.Id</td>
+                        <td class="name-cell">
+                            @item.Name
+                            <div style="margin-top: 4px;">
+                                @if (item.IsHot)
+                                {<span class="badge-tag bg-hot">HOT</span>}
+                                @if (item.IsBestSeller)
+                                {<span class="badge-tag bg-bestseller">BEST SELLER</span>}
+                                @if (!item.IsAvailable)
+                                {<span class="badge-tag bg-lock">Ngừng bán</span>}
+                                @if (item.IsLock)
+                                {<span class="badge-tag bg-lock">Bị khóa</span>}
+                            </div>
+                        </td>
+                        <td class="barcode-cell"><span class="code-num">@item.Barcode</span></td>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-track">
+                                    <div class="stock-fill" style="width:@(pct)%; background:@stockColor;"></div>
+                                </div>
+                                <span class="stock-number">@item.Quantity</span>
+                            </div>
+                        </td>
+                        <td class="price-cell">@item.Price.ToString("N0") ₫</td>
+                        <td class="action-cell">
+                            <!-- Nút Xem Chi Tiết -->
+                            <button type="button" class="icon-btn view" title="Xem chi tiết"
+                                    onclick="openDetailModal({
+                                        id: '@item.Id',
+                                        name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))',
+                                        barcode: '@item.Barcode',
+                                        category: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Category?.Name ?? "Chưa phân loại"))',
+                                        price: '@item.Price.ToString("N0") ₫',
+                                        quantity: '@item.Quantity',
+                                        image: '@(string.IsNullOrEmpty(item.URLImage) ? "https://via.placeholder.com/140?text=No+Img" : item.URLImage)',
+                                        desc: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Description ?? "Không có mô tả chi tiết."))',
+                                        isAvailable: @(item.IsAvailable ? "true" : "false"),
+                                        isHot: @(item.IsHot ? "true" : "false"),
+                                        isBestSeller: @(item.IsBestSeller ? "true" : "false"),
+                                        isLock: @(item.IsLock ? "true" : "false")
+                                    })">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+
+                            <!-- Nút Sửa -->
+                            <a href="@Url.Action("SuaSP", "ManageProduct", new { id = item.Id })" class="icon-btn edit" title="Sửa">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+
+                            <!-- Nút Xóa -->
+                            @using (Html.BeginForm("XoaSP", "ManageProduct", FormMethod.Post, new { onsubmit = "return false;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@item.Id" />
+                                <button type="button" class="icon-btn delete" title="Xóa"
+                                        onclick="openDeleteModal(this, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                        <path d="M10 11v6"></path>
+                                        <path d="M14 11v6"></path>
+                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                    </svg>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6" class="empty-state">Chưa có sản phẩm nào trong danh sách.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Xem Chi Tiết -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-box detail-modal-box">
+        <div class="detail-header">
+            <h3>Chi tiết sản phẩm <span id="dtId" style="color:var(--amber);"></span></h3>
+            <button type="button" class="modal-cancel" onclick="closeDetailModal()" style="padding: 4px 10px;">✕</button>
+        </div>
+        <div class="detail-body">
+            <img id="dtImage" src="" class="detail-img" alt="Product Image" onerror="this.src='https://via.placeholder.com/140?text=No+Img';" />
+            <div class="detail-info">
+                <div style="font-size: 16px; font-weight: 700; color: var(--navy);" id="dtName"></div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Danh mục:</span>
+                    <span class="detail-info-val" id="dtCategory"></span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Giá bán:</span>
+                    <span class="detail-info-val" id="dtPrice" style="color:var(--amber);"></span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Tồn kho:</span>
+                    <span class="detail-info-val" id="dtQuantity"></span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-info-label">Mã vạch:</span>
+                    <span class="detail-info-val" id="dtBarcode" style="font-family:'JetBrains Mono';"></span>
+                </div>
+                <div style="margin-top: 6px;" id="dtBadges"></div>
+            </div>
+            <div class="detail-desc">
+                <strong>Mô tả: </strong><span id="dtDesc"></span>
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top:20px;">
+            <button type="button" class="modal-cancel" onclick="closeDetailModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác Nhận Xóa -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3>Xác nhận xóa</h3>
+        <p>Bạn có chắc muốn xóa sản phẩm <strong id="deleteProductName"></strong>? Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions">
+            <button type="button" class="modal-cancel" onclick="closeDeleteModal()">Hủy</button>
+            <button type="button" class="modal-confirm" onclick="confirmDelete()">Xóa sản phẩm</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- JS Modal Chi Tiết ---
+        function openDetailModal(data) {
+            document.getElementById('dtId').textContent = '#' + data.id;
+            document.getElementById('dtName').textContent = data.name;
+            document.getElementById('dtCategory').textContent = data.category;
+            document.getElementById('dtPrice').textContent = data.price;
+            document.getElementById('dtQuantity').textContent = data.quantity + ' sản phẩm';
+            document.getElementById('dtBarcode').textContent = data.barcode || 'N/A';
+            document.getElementById('dtDesc').textContent = data.desc;
+            document.getElementById('dtImage').src = data.image;
+
+            let badgesHtml = '';
+            if (data.isAvailable) badgesHtml += '<span class="badge-tag bg-available">Kinh doanh</span>';
+            if (data.isHot) badgesHtml += '<span class="badge-tag bg-hot">HOT 🔥</span>';
+            if (data.isBestSeller) badgesHtml += '<span class="badge-tag bg-bestseller">Best Seller ⭐</span>';
+            if (data.isLock) badgesHtml += '<span class="badge-tag bg-lock">Đã khóa 🔒</span>';
+            document.getElementById('dtBadges').innerHTML = badgesHtml;
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        document.getElementById('detailModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDetailModal();
+        });
+
+        // --- JS Modal Xóa ---
+        let formToSubmit = null;
+
+        function openDeleteModal(button, productName) {
+            formToSubmit = button.closest('form');
+            document.getElementById('deleteProductName').textContent = productName;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            formToSubmit = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function confirmDelete() {
+            if (formToSubmit) {
+                formToSubmit.onsubmit = null;
+                formToSubmit.submit();
+            }
+        }
+
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
+}

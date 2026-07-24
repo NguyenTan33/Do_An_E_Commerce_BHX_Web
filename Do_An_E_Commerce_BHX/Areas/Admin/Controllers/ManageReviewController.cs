@@ -6,6 +6,7 @@ using System.Web.Mvc;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers  
 {
+    [Authorize(Roles = "Admin")]
     public class ManageReviewController : Controller
     {
         // GET: ManageReview

@@ -1,0 +1,166 @@
+﻿@model Do_An_E_Commerce_BHX.Areas.Admin.Controllers.CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Thêm người dùng mới";
+    ViewData["Subtitle"] = "Tạo tài khoản và cấp quyền truy cập";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --paper: #FAF8F4;
+            --ink: #22262E;
+            --muted: #6B7280;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --red: #C4453A;
+        }
+
+        .form-container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px 36px;
+            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+            border: 1px solid var(--line);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--navy-deep);
+                margin-bottom: 8px;
+            }
+
+        .form-control {
+            height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 0 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--navy);
+                box-shadow: 0 0 0 3px rgba(22,35,63,0.08);
+            }
+
+        .text-danger {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 6px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--amber);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+            .btn-submit:hover {
+                opacity: 0.9;
+            }
+
+        .btn-back {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .btn-back:hover {
+                background: #d4cebe;
+            }
+    </style>
+}
+
+<div class="form-container">
+    <div style="margin-bottom: 20px;">
+        <a href="@Url.Action("Index", "ManageUser")" class="btn-back">
+            &larr; Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="form-card">
+        @using (Html.BeginForm("ThemUser", "ManageUser", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                <label>Họ và Tên (*)</label>
+                @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Ví dụ: Nguyễn Văn A", required = "required", autofocus = "autofocus" })
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email đăng nhập (*)</label>
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "email@domain.com", required = "required" })
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control", placeholder = "090xxxxxxx" })
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mật khẩu khởi tạo (*)</label>
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Nhập ít nhất 6 ký tự", required = "required" })
+                </div>
+                <div class="form-group">
+                    <label>Nhóm quyền (Role)</label>
+                    @Html.DropDownListFor(m => m.RoleName, ViewBag.Roles as SelectList, "-- Chọn Quyền --", new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">💾 Tạo tài khoản</button>
+            </div>
+        }
+    </div>
+</div>

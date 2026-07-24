@@ -1,0 +1,133 @@
+﻿@model Microsoft.AspNet.Identity.EntityFramework.IdentityRole
+
+@{
+    ViewData["Title"] = "Chỉnh sửa quyền";
+    ViewData["Subtitle"] = $"Đang sửa nhóm quyền: {Model.Name}";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --navy: #16233F;
+            --navy-deep: #0F1A30;
+            --line: #E5E1D8;
+            --amber: #E2792B;
+            --ink: #22262E;
+            --red: #C4453A;
+            --paper: #FAF8F4;
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px;
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 12px rgba(15,26,48,0.05);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--navy-deep);
+                margin-bottom: 8px;
+            }
+
+        .form-control {
+            height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 0 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+
+            .form-control[readonly] {
+                background: var(--paper);
+                color: var(--muted);
+                cursor: not-allowed;
+            }
+
+            .form-control:focus:not([readonly]) {
+                border-color: var(--navy);
+            }
+
+        .text-danger {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 6px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--navy);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-back {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #E5E1D8;
+            color: var(--ink);
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+}
+
+<div class="form-container">
+    <div style="margin-bottom: 20px;">
+        <a href="@Url.Action("Index", "ManageRole")" class="btn-back">&larr; Trở lại danh sách</a>
+    </div>
+
+    <div class="form-card">
+        @using (Html.BeginForm("SuaRole", "ManageRole", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                <label>Mã quyền (ID)</label>
+                <input type="text" class="form-control" value="@Model.Id" readonly />
+            </div>
+
+            <div class="form-group">
+                <label>Tên quyền mới (*)</label>
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", required = "required", autofocus = "autofocus" })
+                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">💾 Lưu thay đổi</button>
+            </div>
+        }
+    </div>
+</div>

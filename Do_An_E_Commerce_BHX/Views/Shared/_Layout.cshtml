@@ -1,41 +1,631 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Bách Hóa Xanh</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
+    <style>
+        :root {
+            --forest: #163B2E;
+            --forest-deep: #0E2A20;
+            --leaf: #3F8F5C;
+            --leaf-dark: #1F6B3F;
+            --paper: #F7F4E9;
+            --card: #FFFFFF;
+            --ink: #1E2A22;
+            --muted: #737B6C;
+            --line: #DBD5C2;
+            --amber: #E2A33B;
+            --amber-dark: #A9711A;
+            --tomato: #C1432E;
+            --tomato-dark: #8F2E1E;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            font-family: 'Inter', sans-serif;
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .display-face {
+            font-family: 'Anton', 'Inter', sans-serif;
+            letter-spacing: 0.02em;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== Top utility bar ===== */
+        .topbar {
+            background: var(--forest-deep);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8125rem;
+        }
+
+            .topbar .bar-inner {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 7px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .topbar i {
+                color: var(--amber);
+                margin-right: 4px;
+            }
+
+            .topbar .bar-links {
+                display: flex;
+                gap: 18px;
+            }
+
+            .topbar a:hover {
+                color: #fff;
+            }
+
+        /* ===== Header ===== */
+        .site-header {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Anton', sans-serif;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            color: var(--forest-deep);
+            white-space: nowrap;
+        }
+
+            .brand i {
+                color: var(--leaf-dark);
+                font-size: 1.2rem;
+            }
+
+        .sidebar-toggle {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: var(--forest);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 13px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .header-spacer {
+            flex: 1 1 auto;
+        }
+
+        .header-account {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+            .header-account ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .header-account a {
+                font-weight: 600;
+                color: var(--ink);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .header-account a:hover {
+                    color: var(--leaf-dark);
+                }
+
+        .header-cart-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 18px;
+            border-left: 1px solid var(--line);
+        }
+
+        .cart-icon-wrap {
+            position: relative;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--forest-deep);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: var(--tomato);
+            color: #fff;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .header-cart-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+        }
+
+            .header-cart-text small {
+                color: var(--muted);
+                font-size: 0.6875rem;
+            }
+
+            .header-cart-text strong {
+                font-family: 'JetBrains Mono', monospace;
+                color: var(--amber-dark);
+                font-size: 0.875rem;
+            }
+
+        /* ===== Page shell: sidebar + content ===== */
+        .page-shell {
+            flex: 1 0 auto;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px 20px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .sidebar {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(14,42,32,0.08);
+            overflow: hidden;
+        }
+
+        .sidebar-heading {
+            font-family: 'Anton', sans-serif;
+            font-size: 0.875rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #fff;
+            background: var(--forest);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin: 0;
+            padding: 6px 0;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--ink);
+            border-left: 3px solid transparent;
+        }
+
+            .sidebar-link:hover,
+            .sidebar-link.is-active {
+                background: #F1F6EE;
+                border-left-color: var(--leaf);
+                color: var(--leaf-dark);
+                font-weight: 700;
+            }
+
+        .content-area {
+            min-width: 0;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(14,42,32,0.45);
+            z-index: 1040;
+        }
+
+            .sidebar-backdrop.open {
+                display: block;
+            }
+
+        /* ===== Footer ===== */
+        .site-footer {
+            flex-shrink: 0;
+            background: var(--forest-deep);
+            color: rgba(255,255,255,0.72);
+            margin-top: 12px;
+        }
+
+        .footer-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 42px 20px 26px;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        .footer-col h5 {
+            font-family: 'Anton', sans-serif;
+            color: #fff;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin: 0 0 16px;
+        }
+
+        .footer-col p {
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+            .footer-col ul li {
+                margin-bottom: 10px;
+            }
+
+            .footer-col ul a {
+                font-size: 0.875rem;
+                color: rgba(255,255,255,0.72);
+            }
+
+                .footer-col ul a:hover {
+                    color: var(--amber);
+                }
+
+        .footer-contact li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+
+        .footer-contact i {
+            color: var(--amber);
+            margin-top: 3px;
+        }
+
+        .newsletter-form {
+            display: flex;
+            margin-top: 10px;
+        }
+
+            .newsletter-form input {
+                flex: 1;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.06);
+                color: #fff;
+                border-radius: 6px 0 0 6px;
+                padding: 10px 12px;
+                font-size: 0.875rem;
+                outline: none;
+            }
+
+                .newsletter-form input::placeholder {
+                    color: rgba(255,255,255,0.5);
+                }
+
+            .newsletter-form button {
+                border: none;
+                background: var(--leaf-dark);
+                color: #fff;
+                padding: 0 16px;
+                border-radius: 0 6px 6px 0;
+                cursor: pointer;
+                font-weight: 700;
+            }
+
+                .newsletter-form button:hover {
+                    background: var(--leaf);
+                }
+
+        .social-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+            .social-row a {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 1px solid rgba(255,255,255,0.25);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .social-row a:hover {
+                    background: var(--leaf-dark);
+                    border-color: var(--leaf-dark);
+                }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+            .footer-bottom .bar-inner {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 16px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+                font-size: 0.8125rem;
+                color: rgba(255,255,255,0.5);
+            }
+
+        .payment-icons {
+            display: flex;
+            gap: 8px;
+        }
+
+            .payment-icons span {
+                border: 1px solid rgba(255,255,255,0.25);
+                border-radius: 4px;
+                padding: 3px 8px;
+                font-size: 0.6875rem;
+                font-weight: 700;
+                color: rgba(255,255,255,0.65);
+            }
+
+        /* ===== Responsive ===== */
+        @@media (max-width: 991px) {
+            .page-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-toggle {
+                display: inline-flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 280px;
+                z-index: 1050;
+                border-radius: 0;
+                overflow-y: auto;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+                .sidebar.open {
+                    transform: translateX(0);
+                }
+
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .header-account span.acc-text {
+                display: none;
+            }
+
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    @RenderSection("styles", required: false)
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
-        <div class="container">
-            @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                </ul>
-                 @Html.Partial("_LoginPartial")
+
+    @* ================= TOP UTILITY BAR ================= *@
+    <div class="topbar">
+        <div class="bar-inner">
+            <span><i class="fa-solid fa-truck-fast"></i>Giao hàng nhanh trong 1 giờ &nbsp;•&nbsp; <i class="fa-solid fa-phone"></i>Hotline 1900 1234</span>
+            <div class="bar-links">
+                @Html.ActionLink("Hệ thống cửa hàng", "Stores", "Home")
+                @Html.ActionLink("Trợ giúp", "Help", "Home")
             </div>
         </div>
-    </nav>
-    <div class="container body-content">
-        @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
-        </footer>
     </div>
+
+    @* ================= HEADER ================= *@
+    <header class="site-header">
+        <div class="header-inner">
+            <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Mở danh mục">
+                <i class="fa-solid fa-bars"></i> Danh mục
+            </button>
+
+            <a href="@Url.Action("Index", "Home")" class="brand">
+                <i class="fa-solid fa-leaf"></i> Bách Hóa Xanh
+            </a>
+
+            <div class="header-spacer"></div>
+
+            <div class="header-account">
+                @Html.Partial("_LoginPartial")
+            </div>
+
+            @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
+            <div class="header-cart">
+                @{ Html.RenderAction("CartSummary", "Cart"); }
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    @* ================= PAGE SHELL: SIDEBAR + NỘI DUNG ================= *@
+    <div class="page-shell">
+
+        <aside class="sidebar" id="categorySidebar">
+            <div class="sidebar-heading"><i class="fa-solid fa-list-ul"></i> Danh mục sản phẩm</div>
+            @* Danh mục dùng chung mọi trang: xem HomeController snippet gửi kèm *@
+            @{ Html.RenderAction("SidebarCategories", "Home"); }
+        </aside>
+
+        <div class="content-area">
+            @RenderBody()
+        </div>
+
+    </div>
+
+    @* ================= FOOTER ================= *@
+    <footer class="site-footer">
+        <div class="footer-main">
+            <div class="footer-col">
+                <h5>Bách Hóa Xanh</h5>
+                <p>Chuỗi siêu thị thực phẩm &amp; nhu yếu phẩm, giao nhanh tận nơi, cam kết hàng tươi ngon mỗi ngày.</p>
+                <ul class="footer-contact">
+                    <li><i class="fa-solid fa-location-dot"></i> 123 Đường ABC, Quận 1, TP. Hồ Chí Minh</li>
+                    <li><i class="fa-solid fa-envelope"></i> hotro@bachhoaxanh.vn</li>
+                </ul>
+                <div class="social-row">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Zalo"><i class="fa-solid fa-comment-dots"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Hỗ trợ khách hàng</h5>
+                <ul>
+                    <li>@Html.ActionLink("Hướng dẫn mua hàng", "Guide", "Home")</li>
+                    <li>@Html.ActionLink("Chính sách đổi trả", "ReturnPolicy", "Home")</li>
+                    <li>@Html.ActionLink("Chính sách vận chuyển", "ShippingPolicy", "Home")</li>
+                    <li>@Html.ActionLink("Câu hỏi thường gặp", "Faq", "Home")</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Về chúng tôi</h5>
+                <ul>
+                    <li>@Html.ActionLink("Giới thiệu", "About", "Home")</li>
+                    <li>@Html.ActionLink("Tuyển dụng", "Careers", "Home")</li>
+                    <li>@Html.ActionLink("Hệ thống cửa hàng", "Stores", "Home")</li>
+                    <li>@Html.ActionLink("Liên hệ", "Contact", "Home")</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Đăng ký nhận tin</h5>
+                <p>Nhận thông tin khuyến mãi và khung giờ vàng mới nhất qua email.</p>
+                @using (Html.BeginForm("Subscribe", "Newsletter", FormMethod.Post, new { @class = "newsletter-form" }))
+                {
+                    <input type="email" name="email" placeholder="Email của bạn" required />
+                    <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+                }
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="bar-inner">
+                <span>&copy; @DateTime.Now.Year Bách Hóa Xanh. Đã đăng ký bản quyền.</span>
+                <div class="payment-icons">
+                    <span>VISA</span>
+                    <span>MOMO</span>
+                    <span>ZALOPAY</span>
+                    <span>COD</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
+    <script>
+        (function () {
+            var toggleBtn = document.getElementById('sidebarToggle');
+            var sidebar = document.getElementById('categorySidebar');
+            var backdrop = document.getElementById('sidebarBackdrop');
+
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('open');
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    backdrop.classList.toggle('open');
+                });
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', closeSidebar);
+            }
+        })();
+    </script>
+
     @RenderSection("scripts", required: false)
 </body>
 </html>

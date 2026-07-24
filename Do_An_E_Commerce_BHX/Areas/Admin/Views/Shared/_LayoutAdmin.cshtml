@@ -1,0 +1,120 @@
+﻿@{
+    // Lấy controller/action hiện tại để tô sáng mục menu đang chọn
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool IsActive(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+
+    string ActiveClass(string controller) => IsActive(controller) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} — Admin" : "Admin — Bảng điều khiển")</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/Content/CSS/Admin.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+
+    <!-- ============ SIDEBAR (dùng chung cho mọi trang admin) ============ -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">Q</div>
+            <div class="brand-text">
+                <b>Quản trị cửa hàng</b>
+                <span>admin.shop</span>
+            </div>
+        </div>
+
+        <div class="nav-group-label">Vận hành</div>
+        <ul class="nav">
+            <li>
+                <a href="@Url.Action("Index", "ManageProduct")" class="@ActiveClass("ManageProduct")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M3 8l9 5 9-5" /></svg>
+                    Quản lý sản phẩm
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "ManageCategory")" class="@ActiveClass("ManageCategory")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Danh mục
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "ManagePromotion")" class="@ActiveClass("ManagePromotion")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Mã Giảm Giá
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "ManageReview")" class="@ActiveClass("ManageReview")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Đánh giá sản phẩm
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-group-label">Con người & Dòng tiền</div>
+        <ul class="nav">
+            <li>
+                <a href="@Url.Action("Index", "ManageUser")" class="@ActiveClass("ManageUser")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Quản lý người dùng
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "ManageRole")" class="@ActiveClass("ManageRole")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Roles & Quyền hạn
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "AdminDashboard")" class="@ActiveClass("AdminDashboard")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Báo cáo doanh thu
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Orders" asp-action="History" class="@ActiveClass("Orders")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                    Lịch sử giao dịch mua hàng
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="admin-chip">
+                <div class="avatar">@(User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name) ? User.Identity.Name.Substring(0, Math.Min(2, User.Identity.Name.Length)).ToUpper() : "AD")</div>
+                <div>
+                    <div style="font-size:13.5px;font-weight:600;">@(ViewBag.FullName ?? "Quản trị viên")</div>
+                    <small>Quản trị viên</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="main">
+        <div class="topbar">
+            <div class="page-title">
+                @(ViewData["Title"] ?? "Bảng điều khiển")
+                @if (ViewData["Subtitle"] != null)
+                {
+                    <span>@ViewData["Subtitle"]</span>
+                }
+            </div>
+        </div>
+
+        <div class="content">
+            @RenderBody()
+        </div>
+    </div>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

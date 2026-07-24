@@ -169,9 +169,13 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageOrderController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageRoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
+    <Compile Include="Areas\Admin\Services\DashboardService.cs" />
+    <Compile Include="Areas\Admin\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Areas\Admin\Controllers\AdminCategoryController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageCategoryController.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminDashboardController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageProductController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
@@ -182,6 +186,7 @@
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
+    <Compile Include="Controllers\UserAddressController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -194,6 +199,18 @@
     <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.cs" />
     <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.Designer.cs">
       <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607221636220_UpdateModel.cs" />
+    <Compile Include="Migrations\202607221636220_UpdateModel.Designer.cs">
+      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607221701006_UpdateModel1.cs" />
+    <Compile Include="Migrations\202607221701006_UpdateModel1.Designer.cs">
+      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202607240340282_UpdateProduct.cs" />
+    <Compile Include="Migrations\202607240340282_UpdateProduct.Designer.cs">
+      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -211,6 +228,7 @@
     <Compile Include="Models\Entities\Waranty.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
+    <Compile Include="Models\ViewModels\HomeIndexViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\Implementations\GenericRepository.cs" />
     <Compile Include="Repositories\Implementations\OrderRepository.cs" />
@@ -244,6 +262,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\CSS\Admin.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
@@ -255,13 +274,23 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Areas\Admin\Views\web.config" />
     <Content Include="Areas\Admin\Views\_ViewStart.cshtml" />
-    <Content Include="Areas\Admin\Views\Shared\_Layout.cshtml" />
     <Content Include="Areas\Admin\Views\Shared\View.cshtml" />
+    <Content Include="Areas\Admin\Views\Shared\_LayoutAdmin.cshtml" />
     <Content Include="Areas\Admin\Views\ManageProduct\Index.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Create.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Delete.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Detail.cshtml" />
-    <Content Include="Areas\Admin\Views\ManageProduct\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageProduct\ThemSP.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageProduct\SuaSP.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageCategory\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageCategory\SuaDanhMuc.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\ThemUser.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\SuaUser.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\ThemRole.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageRole\SuaRole.cshtml" />
+    <Content Include="Areas\Admin\Views\AdminDashboard\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\ThemPromotion.cshtml" />
+    <Content Include="Areas\Admin\Views\ManagePromotion\SuaPromotion.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -311,16 +340,23 @@
     <Content Include="Views\Product\Index.cshtml" />
     <Content Include="Views\Order\Index.cshtml" />
     <Content Include="Views\Order\Success.cshtml" />
+    <Content Include="Views\Shared\_SidebarCategories.cshtml" />
+    <Content Include="Views\Shared\_CartSummary.cshtml" />
+    <Content Include="Views\UserAddress\Index.cshtml" />
+    <Content Include="Views\UserAddress\Create.cshtml" />
+    <Content Include="Views\UserAddress\Edit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Data\" />
-    <Folder Include="Areas\Admin\Views\AdminCategory\" />
-    <Folder Include="Areas\Admin\Views\AdminDashboard\" />
-    <Folder Include="Areas\Admin\Views\ManagePromotion\" />
+    <Folder Include="Areas\Admin\Views\AuthorizeAdmin\" />
+    <Folder Include="Areas\Admin\Views\ManageOrder\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
     <Folder Include="Areas\Admin\Views\ManageUser\" />
     <Folder Include="Views\Default\" />
+    <Folder Include="Views\Cart\" />
+    <Folder Include="Views\Order\" />
+    <Folder Include="Views\Product\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
@@ -355,6 +391,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202607241252241_AddGuestIdInUserTable.resx">
       <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607221636220_UpdateModel.resx">
+      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607221701006_UpdateModel1.resx">
+      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202607240340282_UpdateProduct.resx">
+      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
