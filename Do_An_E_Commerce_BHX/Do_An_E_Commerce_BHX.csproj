@@ -169,7 +169,6 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
-    <Compile Include="Areas\Admin\Controllers\ManageOrderController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageRoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
     <Compile Include="Areas\Admin\Services\DashboardService.cs" />
@@ -352,11 +351,7 @@
     <Folder Include="Areas\Admin\Views\AuthorizeAdmin\" />
     <Folder Include="Areas\Admin\Views\ManageOrder\" />
     <Folder Include="Areas\Admin\Views\ManageReview\" />
-    <Folder Include="Areas\Admin\Views\ManageUser\" />
     <Folder Include="Views\Default\" />
-    <Folder Include="Views\Cart\" />
-    <Folder Include="Views\Order\" />
-    <Folder Include="Views\Product\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />

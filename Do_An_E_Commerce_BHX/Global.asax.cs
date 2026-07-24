@@ -12,6 +12,8 @@ namespace Do_An_E_Commerce_BHX
     {
         protected void Application_Start()
         {
+            System.Data.Entity.Database.SetInitializer<Do_An_E_Commerce_BHX.Models.ApplicationDbContext>(null);
+
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
