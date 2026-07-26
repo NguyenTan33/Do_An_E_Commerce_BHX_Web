@@ -7,13 +7,13 @@ namespace Do_An_E_Commerce_BHX.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.4.4")]
-    public sealed partial class UpdateProduct : IMigrationMetadata
+    public sealed partial class FreshStart : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(UpdateProduct));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(FreshStart));
         
         string IMigrationMetadata.Id
         {
-            get { return "202607240340282_UpdateProduct"; }
+            get { return "202607261355340_FreshStart"; }
         }
         
         string IMigrationMetadata.Source

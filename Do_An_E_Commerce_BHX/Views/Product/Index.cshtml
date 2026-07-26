@@ -45,6 +45,12 @@
                         @item.Price.ToString("N0") VNĐ
                     </p>
 
+                    <!-- NÚT MỚI THÊM VÀO ĐÂY -->
+        <a href="/Product/Detail?productId=@item.Id" class="btn btn-info">
+            Xem Chi Tiết
+        </a>
+
+
                     <!-- NÚT ADD TO CART GỌI QUA AJAX HOẶC FORM -->
                     <button class="btn btn-success btn-add-cart" data-id="@item.Id">
                         Thêm vào giỏ

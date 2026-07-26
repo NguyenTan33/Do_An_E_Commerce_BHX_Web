@@ -191,25 +191,9 @@
     </Compile>
     <Compile Include="Helpers\CurrencyHelper.cs" />
     <Compile Include="Helpers\StatusEnum.cs" />
-    <Compile Include="Migrations\202607221841302_InitialCreate.cs" />
-    <Compile Include="Migrations\202607221841302_InitialCreate.Designer.cs">
-      <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.cs" />
-    <Compile Include="Migrations\202607241252241_AddGuestIdInUserTable.Designer.cs">
-      <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202607221636220_UpdateModel.cs" />
-    <Compile Include="Migrations\202607221636220_UpdateModel.Designer.cs">
-      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202607221701006_UpdateModel1.cs" />
-    <Compile Include="Migrations\202607221701006_UpdateModel1.Designer.cs">
-      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202607240340282_UpdateProduct.cs" />
-    <Compile Include="Migrations\202607240340282_UpdateProduct.Designer.cs">
-      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
+    <Compile Include="Migrations\202607261355340_FreshStart.cs" />
+    <Compile Include="Migrations\202607261355340_FreshStart.Designer.cs">
+      <DependentUpon>202607261355340_FreshStart.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -236,6 +220,7 @@
     <Compile Include="Repositories\Interfaces\IOrderRepository.cs" />
     <Compile Include="Repositories\Interfaces\IProductRepository.cs" />
     <Compile Include="Services\Implementations\CartService.cs" />
+    <Compile Include="Services\Implementations\CustomerSupportService.cs" />
     <Compile Include="Services\Implementations\OrderService.cs" />
     <Compile Include="Services\Implementations\PaymentService.cs" />
     <Compile Include="Services\Implementations\ProductService.cs" />
@@ -344,6 +329,7 @@
     <Content Include="Views\UserAddress\Index.cshtml" />
     <Content Include="Views\UserAddress\Create.cshtml" />
     <Content Include="Views\UserAddress\Edit.cshtml" />
+    <Content Include="Views\Product\Detail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -381,20 +367,8 @@
     <Content Include="Scripts\jquery-3.7.0.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202607221841302_InitialCreate.resx">
-      <DependentUpon>202607221841302_InitialCreate.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202607241252241_AddGuestIdInUserTable.resx">
-      <DependentUpon>202607241252241_AddGuestIdInUserTable.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202607221636220_UpdateModel.resx">
-      <DependentUpon>202607221636220_UpdateModel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202607221701006_UpdateModel1.resx">
-      <DependentUpon>202607221701006_UpdateModel1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202607240340282_UpdateProduct.resx">
-      <DependentUpon>202607240340282_UpdateProduct.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202607261355340_FreshStart.resx">
+      <DependentUpon>202607261355340_FreshStart.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

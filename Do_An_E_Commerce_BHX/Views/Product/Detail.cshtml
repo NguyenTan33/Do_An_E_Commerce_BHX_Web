@@ -1,0 +1,121 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Product
+
+@{
+    ViewBag.Title = "Chi tiết sản phẩm";
+}
+
+<h2>Chi tiết sản phẩm</h2>
+
+<!-- Gắn ID ẩn để xài cho JS gửi đi -->
+<input type="hidden" id="hdfProductId" value="@Model.Id" />
+
+<!-- 1. Thông tin cơ bản -->
+<div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
+    @if (!string.IsNullOrEmpty(Model.URLImage))
+    {
+        <img src="@Model.URLImage" style="max-width: 250px; margin-bottom: 10px;" alt="Hình sản phẩm" />
+    }
+    <h3>@Model.Name</h3>
+    <p style="color: red; font-size: 18px; font-weight: bold;">@Model.Price.ToString("N0") VNĐ</p>
+    <p>Tồn kho: @Model.Quantity</p>
+    <p>@Model.Description</p>
+</div>
+
+<hr />
+
+<!-- 2. Bình luận / Đánh giá -->
+<h3>Đánh giá sản phẩm</h3>
+<div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px;">
+    @if (ViewBag.Reviews != null && ViewBag.Reviews.Count > 0)
+    {
+        foreach (var r in ViewBag.Reviews)
+        {
+            <p><b>@r.Rating sao:</b> @r.Comment</p>
+        }
+    }
+    else
+    {
+        <p>Chưa có đánh giá nào.</p>
+    }
+</div>
+
+<h4>Viết đánh giá</h4>
+<select id="review-rating">
+    <option value="5">5 Sao</option>
+    <option value="4">4 Sao</option>
+    <option value="3">3 Sao</option>
+    <option value="2">2 Sao</option>
+    <option value="1">1 Sao</option>
+</select>
+<br />
+<br />
+<textarea id="review-comment" rows="3" style="width: 100%; max-width: 500px;" placeholder="Nhập bình luận..."></textarea>
+<br />
+<button type="button" id="btn-post-review" style="margin-top: 5px;">Gửi đánh giá</button>
+
+<hr />
+
+<!-- 3. Hỏi đáp -->
+<h3>Hỏi đáp</h3>
+<div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px;">
+    @if (ViewBag.Questions != null && ViewBag.Questions.Count > 0)
+    {
+        foreach (var q in ViewBag.Questions)
+        {
+            <p>- @q.Content</p>
+        }
+    }
+    else
+    {
+        <p>Chưa có câu hỏi nào.</p>
+    }
+</div>
+
+<h4>Đặt câu hỏi</h4>
+<textarea id="question-content" rows="3" style="width: 100%; max-width: 500px;" placeholder="Nhập câu hỏi..."></textarea>
+<br />
+<button type="button" id="btn-post-question" style="margin-top: 5px;">Gửi câu hỏi</button>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const productId = $('#hdfProductId').val();
+
+            // Bấm nút Gửi Đánh Giá
+            $('#btn-post-review').click(function () {
+                let rating = $('#review-rating').val();
+                let comment = $('#review-comment').val();
+
+                if (!comment) {
+                    alert("Viết bình luận vô đi ông!");
+                    return;
+                }
+
+                $.post('/Product/PostReview', { productId: productId, rating: rating, comment: comment }, function (res) {
+                    alert(res.message);
+                    if (res.success) {
+                        location.reload(); // Gửi ngon thì tải lại trang để thấy comment mới
+                    }
+                });
+            });
+
+            // Bấm nút Gửi Câu Hỏi
+            $('#btn-post-question').click(function () {
+                let content = $('#question-content').val();
+
+                if (!content) {
+                    alert("Nhập nội dung câu hỏi đi đã!");
+                    return;
+                }
+
+                $.post('/Product/PostQuestion', { productId: productId, content: content }, function (res) {
+                    alert(res.message);
+                    if (res.success) {
+                        location.reload(); // Gửi ngon thì tải lại trang để thấy câu hỏi mới
+                    }
+                });
+            });
+        });
+    </script>
+}

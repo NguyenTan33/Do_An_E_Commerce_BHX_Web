@@ -11,7 +11,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [Key]
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         [Required]
         public string Content { get; set; } // Khách h?i

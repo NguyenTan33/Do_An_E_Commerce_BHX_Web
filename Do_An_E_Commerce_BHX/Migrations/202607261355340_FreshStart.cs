@@ -3,7 +3,7 @@
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class InitialCreate : DbMigration
+    public partial class FreshStart : DbMigration
     {
         public override void Up()
         {
@@ -13,6 +13,7 @@
                     {
                         Id = c.Int(nullable: false, identity: true),
                         UserId = c.String(),
+                        GuestId = c.String(),
                         CreatedDate = c.DateTime(nullable: false),
                     })
                 .PrimaryKey(t => t.Id);
@@ -42,7 +43,7 @@
                         Price = c.Decimal(nullable: false, precision: 18, scale: 2),
                         Quantity = c.Int(nullable: false),
                         Description = c.String(maxLength: 2000),
-                        URLImage = c.String(maxLength: 50),
+                        URLImage = c.String(maxLength: 250),
                         IsAvailable = c.Boolean(nullable: false),
                         IsHot = c.Boolean(nullable: false),
                         IsBestSeller = c.Boolean(nullable: false),
@@ -110,6 +111,7 @@
                 c => new
                     {
                         Id = c.String(nullable: false, maxLength: 128),
+                        FullName = c.String(),
                         LoyaltyPoints = c.Int(nullable: false),
                         Email = c.String(maxLength: 256),
                         EmailConfirmed = c.Boolean(nullable: false),
@@ -217,7 +219,7 @@
                     {
                         Id = c.Int(nullable: false, identity: true),
                         ProductId = c.Int(nullable: false),
-                        UserId = c.Int(nullable: false),
+                        UserId = c.String(),
                         Content = c.String(nullable: false),
                         Answer = c.String(),
                         CreatedDate = c.DateTime(nullable: false),
@@ -230,7 +232,7 @@
                     {
                         Id = c.Int(nullable: false, identity: true),
                         ProductId = c.Int(nullable: false),
-                        UserId = c.Int(nullable: false),
+                        UserId = c.String(),
                         Rating = c.Int(nullable: false),
                         Comment = c.String(),
                         CreatedDate = c.DateTime(nullable: false),
