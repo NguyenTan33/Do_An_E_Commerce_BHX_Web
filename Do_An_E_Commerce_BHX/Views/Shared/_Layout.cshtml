@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 
     @Styles.Render("~/Content/css")
@@ -41,16 +41,16 @@
         body {
             margin: 0;
             background: var(--paper);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--ink);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        h1, h2, h3, .display-face {
-            font-family: 'Anton', 'Inter', sans-serif;
-            letter-spacing: 0.02em;
+        h1, h2, h3, h4, h5, h6, .display-face {
+            font-family: 'Montserrat', 'Inter', sans-serif;
+            letter-spacing: -0.01em;
         }
 
         a {
@@ -112,8 +112,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-family: 'Anton', sans-serif;
-            font-size: 1.4rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
             text-transform: uppercase;
             color: var(--forest-deep);
             white-space: nowrap;
@@ -245,7 +246,8 @@
         }
 
         .sidebar-heading {
-            font-family: 'Anton', sans-serif;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
             font-size: 0.875rem;
             letter-spacing: 0.03em;
             text-transform: uppercase;
@@ -512,17 +514,15 @@
             <a href="@Url.Action("Index", "Home")" class="brand">
                 <i class="fa-solid fa-leaf"></i> Bách Hóa Xanh
             </a>
+            <div class="header-cart">
+                @{ Html.RenderAction("CartSummary", "Cart"); }
+            </div>
 
             <div class="header-spacer"></div>
-
+            @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
             <div class="header-account">
                 @Html.Partial("_LoginPartial")
             </div>
-
-            @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
-        <div class="header-cart">
-            @* @{ Html.RenderAction("CartSummary", "Cart"); } *@
-        </div>
         </div>
     </header>
 

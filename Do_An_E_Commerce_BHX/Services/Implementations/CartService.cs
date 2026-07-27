@@ -1,4 +1,4 @@
-﻿using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +9,61 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
 {
     public class CartService
     {
+        private static bool _schemaUpdated = false;
+        private static readonly object _lock = new object();
+
         public ApplicationDbContext appDBContext { get; set; }
         public CartService(ApplicationDbContext appDBContext)
         {
             this.appDBContext = appDBContext;
+            EnsureCartTableSchema(appDBContext);
         }
-        public void AddItemToCart(int id,string userId , int quantity = 1 )
+
+        private static void EnsureCartTableSchema(ApplicationDbContext db)
+        {
+            if (!_schemaUpdated)
+            {
+                lock (_lock)
+                {
+                    if (!_schemaUpdated)
+                    {
+                        try
+                        {
+                            db.Database.ExecuteSqlCommand(@"
+                                BEGIN TRY
+                                    ALTER TABLE dbo.Carts ALTER COLUMN UserId NVARCHAR(255) NULL;
+                                END TRY BEGIN CATCH END CATCH;
+
+                                BEGIN TRY
+                                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.CartDetails') AND name = 'Price')
+                                    BEGIN
+                                        ALTER TABLE dbo.CartDetails ADD Price FLOAT NOT NULL DEFAULT 0;
+                                    END
+                                END TRY BEGIN CATCH END CATCH;
+                            ");
+                            _schemaUpdated = true;
+                        }
+                        catch { }
+                    }
+                }
+            }
+        }
+
+        public void AddItemToCart(int id, string userId, int quantity = 1)
         {
             var product = appDBContext.Product.FirstOrDefault(p => p.Id == id);
-            var cart = GetOrCreateCart(userId);
             if (product == null) return;
 
-            var existProduct = cart.CartDetails.FirstOrDefault(c => c.ProductId == id);
+            var cart = GetOrCreateCart(userId);
+            if (cart == null) return;
+
+            var existProduct = appDBContext.CartDetail.FirstOrDefault(c => c.CartId == cart.Id && c.ProductId == id);
 
             if (existProduct != null)
             {
                 existProduct.Quantity += quantity;
+                existProduct.Price = Convert.ToDouble(product.Price);
+                appDBContext.Entry(existProduct).State = EntityState.Modified;
             }
             else
             {
@@ -33,105 +72,101 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                     CartId = cart.Id,
                     ProductId = id,
                     Quantity = quantity,
+                    Price = Convert.ToDouble(product.Price)
                 };
-                cart.CartDetails.Add(newCartDetail);
+                appDBContext.CartDetail.Add(newCartDetail);
             }
 
             appDBContext.SaveChanges();
-            //add to user table
         }
-        public void RemoveItemFromCart(int id,string userId)
+        public void RemoveItemFromCart(int id, string userId)
         {
-            //delete  
             var cart = GetOrCreateCart(userId);
-
             if (cart == null) return;
 
-            var existingProductInCart = cart.CartDetails.FirstOrDefault(p => p.ProductId == id);
-            if(existingProductInCart != null)
+            var existingProductInCart = appDBContext.CartDetail.FirstOrDefault(p => p.CartId == cart.Id && p.ProductId == id);
+            if (existingProductInCart != null)
             {
                 appDBContext.CartDetail.Remove(existingProductInCart);
+                appDBContext.SaveChanges();
             }
-            appDBContext.SaveChanges();
         }
         public void ChangeQuantity(string userId, int productId, int amount)
         {
             if (amount < 1 || amount > 100) return;
-            //add to user table
-            var cart = GetOrCreateCart(userId);
 
+            var cart = GetOrCreateCart(userId);
             if (cart == null) return;
-            var existingProductInCart = cart.CartDetails.FirstOrDefault(p => p.ProductId == productId);
+
+            var existingProductInCart = appDBContext.CartDetail.FirstOrDefault(p => p.CartId == cart.Id && p.ProductId == productId);
             if (existingProductInCart != null)
             {
                 existingProductInCart.Quantity = amount;
+                appDBContext.Entry(existingProductInCart).State = EntityState.Modified;
+                appDBContext.SaveChanges();
             }
-            appDBContext.SaveChanges();
         }
 
         public Cart GetOrCreateCart(string userId)
         {
-            bool isRealUser = appDBContext.Users.Any(u => u.Id == userId);
+            if (string.IsNullOrEmpty(userId)) return null;
 
-            if (isRealUser)
+            var cart = appDBContext.Cart
+               .Include(c => c.CartDetails)
+               .FirstOrDefault(c => c.UserId == userId);
+
+            if (cart == null)
             {
-
-                var cart = appDBContext.Cart
-                   .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
-                   .FirstOrDefault(c => c.UserId == userId);
-
-                // NẾU CHƯA CÓ CART THÌ TẠO MỚI LUÔN
-                if (cart == null)
+                cart = new Cart
                 {
-                    cart = new Cart
-                    {
-                        UserId = userId,
-                        CartDetails = new List<CartDetail>()
-                    };
-                    appDBContext.Cart.Add(cart);
-                    appDBContext.SaveChanges(); // Lưu để lấy Cart.Id
-                }
-                return cart;
+                    UserId = userId,
+                    CartDetails = new List<CartDetail>()
+                };
+                appDBContext.Cart.Add(cart);
+                appDBContext.SaveChanges();
             }
-            else
+            return cart;
+        }
+
+        public void RemoveSelectedItemsFromCart(List<int> productIds, string userId)
+        {
+            if (productIds == null || !productIds.Any()) return;
+            var cart = GetOrCreateCart(userId);
+            if (cart == null) return;
+
+            var itemsToRemove = appDBContext.CartDetail.Where(cd => cd.CartId == cart.Id && productIds.Contains(cd.ProductId)).ToList();
+            if (itemsToRemove.Any())
             {
-                var cart = appDBContext.Cart
-                  .Include(c => c.CartDetails) // Lôi luôn CartDetails đi kèm
-                  .FirstOrDefault(c => c.GuestId == userId);
-
-                // NẾU CHƯA CÓ CART THÌ TẠO MỚI LUÔN
-                if (cart == null)
-                {
-                    cart = new Cart
-                    {
-                        UserId = null,    // Khách vãng lai -> Để NULL để không dính Foreign Key
-                        GuestId = userId, // Lưu chuỗi "GUEST_..." vào GuestId
-                        CartDetails = new List<CartDetail>()
-                    };
-                    appDBContext.Cart.Add(cart);
-                    appDBContext.SaveChanges(); // Lưu để lấy Cart.Id
-                }
-                return cart;
+                appDBContext.CartDetail.RemoveRange(itemsToRemove);
+                appDBContext.SaveChanges();
             }
+        }
 
+        public void ClearCart(string userId)
+        {
+            var cart = GetOrCreateCart(userId);
+            if (cart == null) return;
 
+            var itemsToRemove = appDBContext.CartDetail.Where(cd => cd.CartId == cart.Id).ToList();
+            if (itemsToRemove.Any())
+            {
+                appDBContext.CartDetail.RemoveRange(itemsToRemove);
+                appDBContext.SaveChanges();
+            }
         }
 
         // Lấy giỏ hàng ra cho Index
         public Cart GetCartByUserId(string userId)
         {
-            // 1. Lấy hoặc tạo mới Cart trước (đảm bảo không bao giờ null)
             var cart = GetOrCreateCart(userId);
+            if (cart == null) return null;
 
-            // 2. Load kèm danh sách Product cho CartDetails
-            appDBContext.Entry(cart)
-                .Collection(c => c.CartDetails)
-                .Query()
+            cart.CartDetails = appDBContext.CartDetail
                 .Include(cd => cd.Product)
-                .Load();
+                .Where(cd => cd.CartId == cart.Id)
+                .ToList();
 
             return cart;
         }
-
     }
 }

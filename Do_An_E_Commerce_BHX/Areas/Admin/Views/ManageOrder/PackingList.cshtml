@@ -1,0 +1,168 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Danh sách đơn cần soạn";
+    ViewData["Subtitle"] = "Soạn hàng và tích chọn các món đã lấy kho";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+}
+
+<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+    /* ===== CUSTOM CSS CHO ADMIN ĐỒNG BỘ VỚI TRANG INDEX ===== */
+    .admin-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .btn-custom {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+    /* Bảng dữ liệu */
+    .table-custom th {
+        background-color: #f4f6f9;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 12px;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 16px 12px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .table-custom tbody tr {
+        transition: background-color 0.2s;
+    }
+
+        .table-custom tbody tr:hover {
+            background-color: #fcf8e3; /* Đổi màu hover nhẹ sang vàng nhạt cho hợp với Soạn hàng */
+        }
+</style>
+
+<div class="container-fluid py-3">
+    <!-- TIÊU ĐỀ & NÚT ĐIỀU HƯỚNG -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-box-open text-warning me-2"></i>Khu Vực Soạn Hàng (Packing)</h3>
+            <p class="text-muted mb-0 mt-1 fs-6">Danh sách các đơn hàng đã được duyệt, đang chờ nhân viên lấy hàng kho</p>
+        </div>
+        <a href="@Url.Action("Index", "ManageOrder")" class="btn btn-outline-secondary btn-custom fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại Quản lý đơn
+        </a>
+    </div>
+
+    <!-- KHUNG TÌM KIẾM -->
+    <div class="card admin-card mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="@Url.Action("PackingList", "ManageOrder")" class="row g-3">
+                <div class="col-md-8 col-lg-6">
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm theo Số điện thoại hoặc Mã đơn (VD: #12)..." value="@currentSearch" />
+                        <button type="submit" class="btn btn-warning fw-bold px-4 text-dark">TÌM ĐƠN CHỜ SOẠN</button>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(currentSearch))
+                {
+                    <div class="col-md-4 col-lg-2">
+                        <a href="@Url.Action("PackingList", "ManageOrder")" class="btn btn-outline-secondary btn-custom w-100">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Xóa lọc
+                        </a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <!-- BẢNG ĐƠN HÀNG CHỜ SOẠN -->
+    <div class="card admin-card overflow-hidden mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 100px;">Mã Đơn</th>
+                            <th>Thời Gian</th>
+                            <th>Khách Hàng & SĐT</th>
+                            <th>Địa Chỉ Nhận Hàng</th>
+                            <th class="text-center">Số Mặt Hàng</th>
+                            <th class="text-end">Tổng Tiền</th>
+                            <th class="text-center" style="width: 180px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                int totalItemCount = item.OrderDetails != null ? item.OrderDetails.Sum(od => od.Quantity) : 0;
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border px-2 py-1 fs-6">#@item.Id</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@item.OrderDate.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark"><i class="fa-regular fa-circle-user me-1 text-secondary"></i>@item.ReceiverName</div>
+                                        <div class="text-danger fw-bold small my-1"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small text-truncate" style="max-width: 250px;" title="@item.ShippingAddress">
+                                            <i class="fa-solid fa-location-dot me-1"></i>@item.ShippingAddress
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-1 px-2">
+                                            @(item.OrderDetails != null ? item.OrderDetails.Count : 0) loại
+                                        </span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-1 px-2 ms-1">
+                                            @totalItemCount SP
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold text-danger fs-6">@item.TotalAmount.ToString("N0") đ</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="@Url.Action("PackingDetail", "ManageOrder", new { id = item.Id })" class="btn btn-warning btn-sm btn-custom fw-bold text-dark px-3 shadow-sm d-inline-flex align-items-center justify-content-center">
+                                            <i class="fa-solid fa-box-open me-2"></i> SOẠN ĐƠN
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fa-solid fa-clipboard-check fs-1 text-success d-block mb-3 opacity-75"></i>
+                                        <h5>Tuyệt vời! Không còn đơn hàng nào chờ soạn.</h5>
+                                        <p class="mb-0">Tất cả các đơn đã được nhân viên lấy kho xong.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,253 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Quản lý giao hàng";
+    ViewData["Subtitle"] = "Phân công Shipper, xác nhận Giao thành công hoặc Giao thất bại hoàn tồn kho";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+}
+
+<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+    /* ===== CUSTOM CSS CHO ADMIN ĐỒNG BỘ ===== */
+    .admin-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .btn-custom {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+    /* Bảng dữ liệu */
+    .table-custom th {
+        background-color: #f4f6f9;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 12px;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 16px 12px;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background-color 0.2s;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f0f8ff; /* Màu xanh lơ nhạt nhạt hợp với theme Giao Hàng */
+    }
+
+    /* Tùy chỉnh màu Tím mộng mơ cho trạng thái Đang giao */
+    .text-purple {
+        color: #6f42c1;
+    }
+
+    .bg-purple-soft {
+        background-color: #f3e8fc;
+        border-color: #dcbdf5;
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <!-- TIÊU ĐỀ & NÚT ĐIỀU HƯỚNG -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-truck-fast text-info me-2"></i>Khu Vực Quản Lý Giao Hàng</h3>
+            <p class="text-muted mb-0 mt-1 fs-6">Phân công Shipper giao hàng và xác nhận kết quả Giao Thành Công / Thất Bại</p>
+        </div>
+        <a href="@Url.Action("Index", "ManageOrder")" class="btn btn-outline-secondary btn-custom fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại Quản lý đơn
+        </a>
+    </div>
+
+    <!-- KHUNG TÌM KIẾM -->
+    <div class="card admin-card mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="@Url.Action("DeliveryList", "ManageOrder")" class="row g-3">
+                <div class="col-md-8 col-lg-6">
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm theo Số điện thoại hoặc Mã đơn (VD: #12)..." value="@currentSearch" />
+                        <button type="submit" class="btn btn-info fw-bold px-4 text-white">TÌM ĐƠN GIAO HÀNG</button>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(currentSearch))
+                {
+                    <div class="col-md-4 col-lg-2">
+                        <a href="@Url.Action("DeliveryList", "ManageOrder")" class="btn btn-outline-secondary btn-custom w-100">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Xóa lọc
+                        </a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <!-- BẢNG DANH SÁCH ĐƠN CHỜ GIAO / ĐANG GIAO -->
+    <div class="card admin-card overflow-hidden mb-5 border border-light">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 90px;">Mã Đơn</th>
+                            <th>Thời Gian</th>
+                            <th>Khách Hàng & SĐT</th>
+                            <th>Địa Chỉ Nhận Hàng</th>
+                            <th class="text-end">Tổng Tiền</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th class="text-center" style="width: 320px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                bool isDelivering = item.OrderStatus == 3;
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border px-2 py-1 fs-6">#@item.Id</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@item.OrderDate.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark"><i class="fa-regular fa-circle-user me-1 text-secondary"></i>@item.ReceiverName</div>
+                                        <div class="text-danger fw-bold small my-1"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small text-truncate" style="max-width: 250px;" title="@item.ShippingAddress">
+                                            <i class="fa-solid fa-location-dot me-1"></i>@item.ShippingAddress
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(item.Note))
+                                        {
+                                            <div class="small text-info mt-1 fw-bold bg-info bg-opacity-10 d-inline-block px-2 py-1 rounded">
+                                                <i class="fa-solid fa-info-circle me-1"></i>Shipper: @item.Note
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="text-end fw-bold text-danger fs-6">
+                                        @item.TotalAmount.ToString("N0") đ
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.OrderStatus == 2)
+                                        {
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 fs-6">
+                                                <i class="fa-solid fa-boxes-stacked me-1"></i> Chờ giao
+                                            </span>
+                                        }
+                                        else if (item.OrderStatus == 3)
+                                        {
+                                            <span class="badge bg-purple-soft text-purple border px-3 py-2 fs-6">
+                                                <i class="fa-solid fa-motorcycle me-1"></i> Đang đi giao
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (!isDelivering)
+                                        {
+                                            <button type="button" class="btn btn-primary btn-sm btn-custom fw-bold btn-start-delivery w-100 shadow-sm py-2" data-id="@item.Id">
+                                                <i class="fa-solid fa-truck-ramp-box me-2"></i> BẮT ĐẦU ĐI GIAO
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-success btn-sm btn-custom fw-bold btn-success-delivery flex-fill shadow-sm py-2" data-id="@item.Id" title="Giao thành công">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> THÀNH CÔNG
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm btn-custom fw-bold btn-failed-delivery flex-fill py-2" data-id="@item.Id" title="Giao thất bại - Cộng trả tồn kho">
+                                                    <i class="fa-solid fa-circle-xmark me-1"></i> THẤT BẠI
+                                                </button>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fa-solid fa-motorcycle fs-1 text-info d-block mb-3 opacity-50"></i>
+                                        <h5>Không có đơn hàng nào cần giao!</h5>
+                                        <p class="mb-0">Tất cả các đơn đã được xử lý xong hoặc đang chờ soạn.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    /* JS giữ nguyên Logic cũ của bạn */
+    $(document).ready(function () {
+        // BẮT ĐẦU GIAO HÀNG
+        $('.btn-start-delivery').on('click', function () {
+            var id = $(this).data('id');
+            var shipperName = prompt("Nhập tên Tài xế / Shipper giao đơn #" + id + " (Tùy chọn):", "Shipper Bách Hóa Xanh");
+            if (shipperName !== null) {
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang xử lý...');
+
+                $.post('@Url.Action("StartDelivery", "ManageOrder")', { id: id, note: shipperName }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                    else btn.prop('disabled', false).html('<i class="fa-solid fa-truck-ramp-box me-2"></i> BẮT ĐẦU ĐI GIAO');
+                });
+            }
+        });
+
+        // XÁC NHẬN GIAO HÀNG THÀNH CÔNG
+        $('.btn-success-delivery').on('click', function () {
+            var id = $(this).data('id');
+            if (confirm("🎉 XÁC NHẬN: Đơn hàng #" + id + " đã được GIAO HÀNG THÀNH CÔNG cho khách?")) {
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+                $.post('@Url.Action("CompleteDeliverySuccess", "ManageOrder")', { id: id }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                    else btn.prop('disabled', false).html('<i class="fa-solid fa-circle-check me-1"></i> THÀNH CÔNG');
+                });
+            }
+        });
+
+        // XÁC NHẬN GIAO HÀNG THẤT BẠI
+        $('.btn-failed-delivery').on('click', function () {
+            var id = $(this).data('id');
+            if (confirm("⚠️ CẢNH BÁO: Đơn hàng #" + id + " GIAO HÀNG THẤT BẠI?\n(Hệ thống sẽ chuyển trạng thái Thất Bại và TỰ ĐỘNG CỘNG TRẢ LẠI SỐ LƯỢNG TỒN KHO!)")) {
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+                $.post('@Url.Action("CompleteDeliveryFailed", "ManageOrder")', { id: id }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                    else btn.prop('disabled', false).html('<i class="fa-solid fa-circle-xmark me-1"></i> THẤT BẠI');
+                });
+            }
+        });
+    });
+</script>

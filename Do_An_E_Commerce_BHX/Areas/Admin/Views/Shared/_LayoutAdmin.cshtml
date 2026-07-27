@@ -80,11 +80,33 @@
                 </a>
             </li>
             <li>
-                <a asp-controller="Orders" asp-action="History" class="@ActiveClass("Orders")">
+                <a href="@Url.Action("History", "ManageOrder")" class="@ActiveClass("ManageOrder")">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
                     Lịch sử giao dịch mua hàng
                 </a>
             </li>
+        </ul>
+        <div class="nav-group-label">Đơn Hàng</div>
+        <ul class="nav">
+            <li>
+                <a href="@Url.Action("Index", "ManageOrder")" class="@ActiveClass("ManageOrder")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Duyệt Đơn Hàng
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("PackingList", "ManageOrder")" class="@ActiveClass("ManageOrder")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Soạn Đơn
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("DeliveryList", "ManageOrder")" class="@ActiveClass("ManageOrder")">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                    Giao Hàng
+                </a>
+            </li>
+            
         </ul>
 
         <div class="sidebar-footer">

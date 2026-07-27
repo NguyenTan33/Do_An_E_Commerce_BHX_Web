@@ -735,13 +735,37 @@
             setInterval(tick, 1000);
         });
 
-        // Placeholder "thêm vào giỏ" — nối API/Cart controller thật của bạn vào đây
-        document.addEventListener("click", function (e) {
-            var btn = e.target.closest(".btn-add-cart");
-            if (!btn || btn.hasAttribute("disabled")) return;
-            var id = btn.getAttribute("data-id");
-            console.log("Thêm sản phẩm vào giỏ, id =", id);
-            // TODO: gọi fetch('/Cart/Add', { method: 'POST', body: ... }) theo route thực tế của bạn
+        // Thêm vào giỏ hàng AJAX
+        $(document).on("click", ".btn-add-cart", function (e) {
+            e.preventDefault();
+            var btn = $(this);
+            if (btn.is(":disabled")) return;
+
+            var id = btn.data("id");
+            btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> Đang thêm...');
+
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Cart")',
+                type: 'POST',
+                data: { productId: id, quantity: 1 },
+                success: function (res) {
+                    if (res.success) {
+                        btn.removeClass("btn-add-cart").addClass("btn-success").html('<i class="fa-solid fa-check"></i> Đã thêm!');
+                        setTimeout(function () {
+                            btn.removeClass("btn-success").addClass("btn-add-cart").prop("disabled", false).html('<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ');
+                        }, 1500);
+
+                        location.reload();
+                    } else {
+                        alert(res.message || "Không thể thêm vào giỏ hàng!");
+                        btn.prop("disabled", false).html('<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ');
+                    }
+                },
+                error: function (xhr, status, err) {
+                    alert("Lỗi hệ thống khi thêm vào giỏ hàng: " + (xhr.responseText || err));
+                    btn.prop("disabled", false).html('<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ');
+                }
+            });
         });
     </script>
 }

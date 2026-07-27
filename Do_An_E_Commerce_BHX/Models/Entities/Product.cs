@@ -42,6 +42,7 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [Required]
         public bool IsLock { get; set; }
 
+
         public DateTime CreatedDate { get; private set; } = DateTime.Now;
 
         public int CategoryId { get; set; }

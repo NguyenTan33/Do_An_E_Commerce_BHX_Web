@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
@@ -183,6 +183,7 @@
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageOrderController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\UserAddressController.cs" />
@@ -330,6 +331,12 @@
     <Content Include="Views\UserAddress\Create.cshtml" />
     <Content Include="Views\UserAddress\Edit.cshtml" />
     <Content Include="Views\Product\Detail.cshtml" />
+    <Content Include="Views\Order\Payment.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageOrder\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageOrder\PackingList.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageOrder\PackingDetail.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageOrder\DeliveryList.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageOrder\History.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

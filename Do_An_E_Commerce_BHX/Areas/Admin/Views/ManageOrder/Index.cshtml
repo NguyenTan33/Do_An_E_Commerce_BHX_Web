@@ -1,0 +1,484 @@
+﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    ViewData["Subtitle"] = "Duyệt đơn, hủy đơn, tìm kiếm và thao tác hàng loạt";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+    int? currentStatus = ViewBag.CurrentStatus as int?;
+
+    int countAll = ViewBag.CountAll != null ? (int)ViewBag.CountAll : 0;
+    int countPending = ViewBag.CountPending != null ? (int)ViewBag.CountPending : 0;
+    int countApproved = ViewBag.CountApproved != null ? (int)ViewBag.CountApproved : 0;
+    int countPacked = ViewBag.CountPacked != null ? (int)ViewBag.CountPacked : 0;
+    int countDelivering = ViewBag.CountDelivering != null ? (int)ViewBag.CountDelivering : 0;
+    int countSuccess = ViewBag.CountSuccess != null ? (int)ViewBag.CountSuccess : 0;
+    int countFailed = ViewBag.CountFailed != null ? (int)ViewBag.CountFailed : 0;
+}
+
+<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+    /* ===== CUSTOM CSS FOR ADMIN DASHBOARD ===== */
+    .admin-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .btn-custom {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+    /* Bộ lọc Tabs (Pills) */
+    .filter-tabs .nav-link {
+        border-radius: 30px;
+        font-weight: 600;
+        color: #495057;
+        padding: 8px 16px;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+    }
+
+        .filter-tabs .nav-link:hover {
+            background-color: #f8f9fa;
+            border-color: #e9ecef;
+        }
+
+        .filter-tabs .nav-link.active {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+    /* Màu sắc riêng cho từng tab active */
+    .tab-all.active {
+        background-color: #343a40;
+        color: white !important;
+    }
+
+    .tab-pending.active {
+        background-color: #ffc107;
+        color: #000 !important;
+    }
+
+    .tab-approved.active {
+        background-color: #0d6efd;
+        color: white !important;
+    }
+
+    .tab-packed.active {
+        background-color: #0dcaf0;
+        color: #000 !important;
+    }
+
+    .tab-delivering.active {
+        background-color: #6f42c1;
+        color: white !important;
+    }
+
+    .tab-success.active {
+        background-color: #198754;
+        color: white !important;
+    }
+
+    .tab-failed.active {
+        background-color: #dc3545;
+        color: white !important;
+    }
+
+    /* Bảng dữ liệu */
+    .table-custom th {
+        background-color: #f4f6f9;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 12px;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 16px 12px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .table-custom tbody tr {
+        transition: background-color 0.2s;
+    }
+
+        .table-custom tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+    /* Badges Trạng thái (Soft UI) */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        border: 1px solid transparent;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border-color: #ffeeba;
+    }
+
+    .status-approved {
+        background-color: #cce5ff;
+        color: #004085;
+        border-color: #b8daff;
+    }
+
+    .status-packed {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-color: #bee5eb;
+    }
+
+    .status-delivering {
+        background-color: #e2d9f3;
+        color: #5a32a3;
+        border-color: #d3c3ec;
+    }
+
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+
+    .status-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+
+    /* Thanh công cụ thao tác hàng loạt */
+    .bulk-toolbar {
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px dashed #ced4da;
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <!-- TIÊU ĐỀ & NÚT ĐIỀU HƯỚNG BƯỚC SOẠN/GIAO -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing text-success me-2"></i>Quản Lý Đơn Hàng</h3>
+            <p class="text-muted mb-0 mt-1 fs-6">Duyệt đơn mới, hủy đơn hoàn tồn kho và tìm kiếm nhanh</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("PackingList", "ManageOrder")" class="btn btn-warning btn-custom fw-bold text-dark">
+                <i class="fa-solid fa-box-open me-1"></i> Soạn Hàng
+                <span class="badge bg-white text-dark ms-1 rounded-pill">@countApproved</span>
+            </a>
+            <a href="@Url.Action("DeliveryList", "ManageOrder")" class="btn btn-info btn-custom fw-bold text-white">
+                <i class="fa-solid fa-truck-fast me-1"></i> Giao Hàng
+                <span class="badge bg-white text-info ms-1 rounded-pill">@(countPacked + countDelivering)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KHUNG TÌM KIẾM & BỘ LỌC TAB -->
+    <div class="card admin-card mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="@Url.Action("Index", "ManageOrder")" class="row g-3">
+                <div class="col-md-8 col-lg-6">
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm theo SĐT khách hoặc Mã Đơn (VD: 090123... hoặc #12)" value="@currentSearch" />
+                        <button type="submit" class="btn btn-success fw-bold px-4">TÌM KIẾM</button>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-6 text-md-end">
+                    @if (!string.IsNullOrEmpty(currentSearch) || currentStatus.HasValue)
+                    {
+                        <a href="@Url.Action("Index", "ManageOrder")" class="btn btn-outline-secondary btn-custom">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Xóa bộ lọc
+                        </a>
+                    }
+                </div>
+
+                <!-- TABS LỌC TRẠNG THÁI -->
+                <div class="col-12 mt-4">
+                    <div class="nav nav-pills filter-tabs gap-2 flex-wrap">
+                        <a href="@Url.Action("Index", "ManageOrder", new { search = currentSearch })"
+                           class="nav-link tab-all @(!currentStatus.HasValue ? "active" : "")">
+                            Tất cả <span class="badge bg-secondary rounded-pill ms-1">@countAll</span>
+                        </a>
+
+                        <a href="@Url.Action("Index", "ManageOrder", new { search = currentSearch, status = 0 })"
+                           class="nav-link tab-pending @(currentStatus == 0 ? "active" : "")">
+                            Chờ duyệt <span class="badge bg-warning text-dark rounded-pill ms-1">@countPending</span>
+                        </a>
+
+                        <a href="@Url.Action("Index", "ManageOrder", new { search = currentSearch, status = 2 })"
+                           class="nav-link tab-packed @(currentStatus == 2 ? "active" : "")">
+                            Đã soạn <span class="badge bg-info text-dark rounded-pill ms-1">@countPacked</span>
+                        </a>
+
+                        <a href="@Url.Action("Index", "ManageOrder", new { search = currentSearch, status = 3 })"
+                           class="nav-link tab-delivering @(currentStatus == 3 ? "active" : "")">
+                            Đang giao <span class="badge bg-secondary rounded-pill ms-1">@countDelivering</span>
+                        </a>
+
+                        <a href="@Url.Action("Index", "ManageOrder", new { search = currentSearch, status = 4 })"
+                           class="nav-link tab-success @(currentStatus == 4 ? "active" : "")">
+                            Thành công <span class="badge bg-success rounded-pill ms-1">@countSuccess</span>
+                        </a>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- THANH HÀNH ĐỘNG HÀNG LOẠT -->
+    <div class="bulk-toolbar p-3 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
+        <div class="form-check m-0 ms-2">
+            <input class="form-check-input shadow-sm" type="checkbox" id="checkAll" style="width: 22px; height: 22px; cursor: pointer; margin-top: 2px;" />
+            <label class="form-check-label fw-bold ms-2 text-dark" for="checkAll" style="cursor: pointer; font-size: 1.05rem;">
+                Chọn tất cả trang này
+            </label>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button id="btnBulkApprove" class="btn btn-success btn-custom fw-bold">
+                <i class="fa-solid fa-check-double me-1"></i> Duyệt chọn
+            </button>
+            <button id="btnBulkCancel" class="btn btn-warning btn-custom fw-bold text-dark">
+                <i class="fa-solid fa-rotate-left me-1"></i> Hủy & Hoàn kho
+            </button>
+            <button id="btnBulkDelete" class="btn btn-danger btn-custom fw-bold">
+                <i class="fa-solid fa-trash me-1"></i> Xóa
+            </button>
+        </div>
+    </div>
+
+    <!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
+    <div class="card admin-card overflow-hidden mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;" class="ps-4 text-center"><i class="fa-solid fa-list-check"></i></th>
+                            <th style="width: 100px;">Mã Đơn</th>
+                            <th>Thời Gian</th>
+                            <th>Thông tin Giao hàng</th>
+                            <th>Thanh Toán</th>
+                            <th class="text-end">Tổng Tiền</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th class="text-center" style="width: 180px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                string statusBadgeClass = "status-all";
+                                string statusText = "Không xác định";
+
+                                switch (item.OrderStatus)
+                                {
+                                    case 0:
+                                        statusBadgeClass = "status-pending";
+                                        statusText = "Chờ duyệt";
+                                        break;
+                                    case 2:
+                                        statusBadgeClass = "status-packed";
+                                        statusText = "Đã soạn xong";
+                                        break;
+                                    case 3:
+                                        statusBadgeClass = "status-delivering";
+                                        statusText = "Đang giao";
+                                        break;
+                                    case 4:
+                                        statusBadgeClass = "status-success";
+                                        statusText = "Thành công";
+                                        break;
+                                }
+
+                                string paymentMethodText = item.PaymentMethod == 1 ? "Ngân hàng" : (item.PaymentMethod == 2 ? "MoMo" : "COD");
+
+                                <tr>
+                                    <td class="ps-4 text-center">
+                                        <input type="checkbox" class="form-check-input order-check shadow-sm" value="@item.Id" style="width: 20px; height: 20px; cursor: pointer;" />
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-primary border px-2 py-1 fs-6">#@item.Id</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@item.OrderDate.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark"><i class="fa-regular fa-circle-user me-1 text-secondary"></i>@item.ReceiverName</div>
+                                        <div class="text-danger fw-bold small my-1"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 250px;" title="@item.ShippingAddress">
+                                            <i class="fa-solid fa-location-dot me-1"></i>@item.ShippingAddress
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="mb-1">
+                                            <span class="badge bg-light text-dark border">@paymentMethodText</span>
+                                        </div>
+                                        @if (item.PaymentStatus == 1)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="fa-solid fa-check me-1"></i>Đã thu</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"><i class="fa-regular fa-hourglass-half me-1"></i>Chưa thu</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold text-danger fs-6">@item.TotalAmount.ToString("N0") đ</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge @statusBadgeClass">@statusText</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            @if (item.OrderStatus == 0)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-success btn-custom btn-approve" data-id="@item.Id" title="Duyệt đơn hàng">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            }
+
+                                            @if (item.OrderStatus == 1)
+                                            {
+                                                <a href="@Url.Action("PackingDetail", "ManageOrder", new { id = item.Id })" class="btn btn-sm btn-warning text-dark btn-custom" title="Soạn đơn">
+                                                    <i class="fa-solid fa-box-open"></i>
+                                                </a>
+                                            }
+
+                                            @if (item.OrderStatus != 4 && item.OrderStatus != 5)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-warning text-dark btn-custom btn-cancel" data-id="@item.Id" title="Hủy đơn & Hoàn tồn kho">
+                                                    <i class="fa-solid fa-ban"></i>
+                                                </button>
+                                            }
+
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-custom btn-delete" data-id="@item.Id" title="Xóa đơn">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fa-solid fa-box-open fs-1 d-block mb-3 opacity-50"></i>
+                                        <h5>Không tìm thấy đơn hàng nào!</h5>
+                                        <p class="mb-0">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#checkAll').on('change', function () {
+            $('.order-check').prop('checked', $(this).is(':checked'));
+        });
+
+        function getSelectedIds() {
+            var ids = [];
+            $('.order-check:checked').each(function () {
+                ids.push(parseInt($(this).val()));
+            });
+            return ids;
+        }
+
+        $('.btn-approve').on('click', function () {
+            var id = $(this).data('id');
+            if (confirm("Xác nhận duyệt đơn hàng #" + id + "?")) {
+                $.post('@Url.Action("Approve", "ManageOrder")', { id: id }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+
+        $('.btn-cancel').on('click', function () {
+            var id = $(this).data('id');
+            if (confirm("Xác nhận hủy đơn hàng #" + id + "? (Hệ thống sẽ tự động cộng trả lại tồn kho)")) {
+                $.post('@Url.Action("Cancel", "ManageOrder")', { id: id }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+
+        $('.btn-delete').on('click', function () {
+            var id = $(this).data('id');
+            if (confirm("Bạn có chắc chắn muốn xóa đơn hàng #" + id + "?")) {
+                $.post('@Url.Action("Delete", "ManageOrder")', { id: id }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+
+        $('#btnBulkApprove').on('click', function () {
+            var ids = getSelectedIds();
+            if (ids.length === 0) { alert("Vui lòng tích chọn ít nhất 1 đơn hàng!"); return; }
+            if (confirm("Bạn có muốn duyệt " + ids.length + " đơn hàng đã chọn?")) {
+                $.post('@Url.Action("BulkApprove", "ManageOrder")', { ids: ids }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+
+        $('#btnBulkCancel').on('click', function () {
+            var ids = getSelectedIds();
+            if (ids.length === 0) { alert("Vui lòng tích chọn ít nhất 1 đơn hàng!"); return; }
+            if (confirm("Xác nhận hủy " + ids.length + " đơn hàng đã chọn?")) {
+                $.post('@Url.Action("BulkCancel", "ManageOrder")', { ids: ids }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+
+        $('#btnBulkDelete').on('click', function () {
+            var ids = getSelectedIds();
+            if (ids.length === 0) { alert("Vui lòng tích chọn ít nhất 1 đơn hàng!"); return; }
+            if (confirm("CẢNH BÁO: XÓA VĨNH VIỄN " + ids.length + " đơn hàng?")) {
+                $.post('@Url.Action("BulkDelete", "ManageOrder")', { ids: ids }, function (res) {
+                    alert(res.message);
+                    if (res.success) location.reload();
+                });
+            }
+        });
+    });
+</script>

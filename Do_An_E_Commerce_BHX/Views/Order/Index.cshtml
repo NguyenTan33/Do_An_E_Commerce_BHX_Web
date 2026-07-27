@@ -1,127 +1,699 @@
 ﻿@model Do_An_E_Commerce_BHX.Models.Entities.Cart
 
 @{
-    ViewBag.Title = "Thanh toán đơn hàng";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Đổi lại đúng Layout file của ông
+    Layout = null;
+
+    bool isAuthenticated = ViewBag.IsAuthenticated != null && (bool)ViewBag.IsAuthenticated;
+    var userAddresses = ViewBag.UserAddresses as List<Do_An_E_Commerce_BHX.Models.Entities.UserAddress>;
+    string userFullName = ViewBag.UserFullName as string ?? "";
+    string userPhone = ViewBag.UserPhone as string ?? "";
+    int loyaltyPoints = ViewBag.LoyaltyPoints != null ? (int)ViewBag.LoyaltyPoints : 0;
+
+    string couponCode = ViewBag.CouponCode as string ?? "";
+    decimal discountAmount = ViewBag.DiscountAmount != null ? (decimal)ViewBag.DiscountAmount : 0;
+    string selectedIds = ViewBag.SelectedIds as string ?? "";
+
+    decimal subTotal = 0;
+    if (Model != null && Model.CartDetails != null)
+    {
+        subTotal = Model.CartDetails.Sum(item => (item.Product != null ? item.Product.Price : 0) * item.Quantity);
+    }
 }
 
-<div class="container my-4">
-    <h2 class="mb-4 text-success font-weight-bold">Tiến Hành Đặt Hàng</h2>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt Hàng & Giao Hàng - Bách Hóa Xanh</title>
 
-    <div class="row">
-        <!-- Cột trái: Form thông tin người nhận -->
-        <div class="col-md-7">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="m-0">Thông tin giao hàng</h5>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        :root {
+            --bg-forest: #0b1a13;
+            --primary-green: #1F6B3F;
+            --leaf-bright: #3F8F5C;
+            --accent-gold: #E2A33B;
+            --tomato-red: #C1432E;
+            --card-bg: #ffffff;
+            --text-dark: #1e2a22;
+            --text-muted: #6c757d;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #091710 0%, #163b2e 50%, #0d241c 100%);
+            background-attachment: fixed;
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ===== Top Navigation Bar ===== */
+        .checkout-navbar {
+            background: rgba(14, 42, 32, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 16px 0;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .brand-logo i {
+                color: #4ade80;
+            }
+
+        /* Stepper */
+        .checkout-stepper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+            .step-item.active {
+                color: #4ade80;
+            }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8125rem;
+        }
+
+        .step-item.active .step-number {
+            background: #1F6B3F;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+        }
+
+        .step-divider {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ===== Checkout Section Cards ===== */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            margin-bottom: 24px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #163b2e 0%, #1F6B3F 100%);
+            color: #fff;
+            padding: 16px 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header-warning {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: #fff;
+            padding: 16px 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-body-custom {
+            padding: 24px;
+        }
+
+        /* Custom inputs & list items */
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1.5px solid #d1d5db;
+            font-size: 0.9375rem;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #1F6B3F;
+                box-shadow: 0 0 0 4px rgba(31, 107, 63, 0.15);
+        }
+
+        .custom-radio-item {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .custom-radio-item:hover {
+                border-color: #3F8F5C;
+                background: #f0fdf4;
+            }
+
+            .custom-radio-item.selected {
+                border-color: #1F6B3F;
+                background: #f0fdf4;
+                box-shadow: 0 4px 12px rgba(31, 107, 63, 0.1);
+            }
+
+        /* Sticky Summary Card */
+        .summary-card {
+            position: sticky;
+            top: 24px;
+        }
+
+        .btn-checkout-primary {
+            background: linear-gradient(135deg, #1F6B3F 0%, #166534 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(31, 107, 63, 0.4);
+            transition: all 0.25s ease;
+        }
+
+            .btn-checkout-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 26px rgba(31, 107, 63, 0.5);
+                color: #fff;
+            }
+
+        .badge-free {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .product-img-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="checkout-navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Home")" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i>
+                <span>BÁCH HÓA XANH</span>
+            </a>
+
+            <!-- Stepper -->
+            <div class="checkout-stepper d-none d-md-flex">
+                <div class="step-item active">
+                    <span class="step-number">1</span>
+                    <span>Thông tin đặt hàng</span>
                 </div>
-                <div class="card-body">
-                    <form id="checkoutForm">
-                        <div class="form-group mb-3">
-                            <label class="font-weight-bold">Họ và tên người nhận <span class="text-danger">*</span></label>
-                            <input type="text" id="receiverName" class="form-control" placeholder="Nhập họ tên người nhận" required />
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="tel" id="receiverPhone" class="form-control" placeholder="Nhập số điện thoại giao hàng" required />
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="font-weight-bold">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
-                            <textarea id="shippingAddress" class="form-control" rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required></textarea>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="font-weight-bold">Ghi chú đơn hàng (Tùy chọn)</label>
-                            <input type="text" id="note" class="form-control" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..." />
-                        </div>
-                    </form>
+                <div class="step-divider"></div>
+                <div class="step-item">
+                    <span class="step-number">2</span>
+                    <span>Phương thức thanh toán</span>
                 </div>
             </div>
+
+            <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-cart-shopping me-1"></i> Quay lại giỏ hàng
+            </a>
         </div>
+    </nav>
 
-        <!-- Cột phải: Danh sách sản phẩm & Tổng tiền -->
-        <div class="col-md-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="m-0 font-weight-bold">Đơn hàng của bạn</h5>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @{
-                            decimal total = 0;
-                        }
-                        @foreach (var item in Model.CartDetails)
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <div class="row g-4">
+            <!-- CỘT TRÁI (THÔNG TIN & SẢN PHẨM) -->
+            <div class="col-lg-7">
+                <!-- 1. THÔNG TIN GIAO HÀNG -->
+                <div class="glass-card">
+                    <div class="card-header-custom">
+                        <i class="fa-solid fa-location-dot fs-5"></i>
+                        <h5 class="m-0">1. Địa chỉ nhận hàng</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        @if (isAuthenticated && userAddresses != null && userAddresses.Any())
                         {
-                            var subtotal = item.Product.Price * item.Quantity;
-                            total += subtotal;
-
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="my-0">@item.Product.Name</h6>
-                                    <small class="text-muted">SL: @item.Quantity x @item.Product.Price.ToString("N0") VNĐ</small>
+                            <div class="mb-3">
+                                <label class="fw-bold mb-2 text-success"><i class="fa-solid fa-bookmark me-1"></i>Chọn địa chỉ giao hàng đã lưu:</label>
+                                @foreach (var addr in userAddresses)
+                                {
+                                    <div class="custom-radio-item address-item @(addr.IsDefault ? "selected" : "")">
+                                        <div class="form-check d-flex align-items-start gap-2">
+                                            <input class="form-check-input mt-1 address-radio"
+                                                   type="radio"
+                                                   name="addressChoice"
+                                                   data-name="@addr.ReceiverName"
+                                                   data-phone="@addr.ReceiverPhone"
+                                                   data-address="@addr.DetailedAddress"
+                                                   @(addr.IsDefault ? "checked" : "") />
+                                            <div class="w-100">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong class="fs-6">@addr.AddressName</strong>
+                                                    @if (addr.IsDefault)
+                                                    {
+                                                        <span class="badge bg-success">Mặc định</span>
+                                                    }
+                                                </div>
+                                                <div class="text-muted small mt-1">
+                                                    <i class="fa-solid fa-user me-1"></i> @addr.ReceiverName &bull; <i class="fa-solid fa-phone me-1"></i> @addr.ReceiverPhone
+                                                </div>
+                                                <div class="mt-1 text-dark">
+                                                    <i class="fa-solid fa-map-marker-alt me-1 text-danger"></i> @addr.DetailedAddress
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="custom-radio-item address-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input address-radio" type="radio" name="addressChoice" id="radioNewAddress" value="new" />
+                                        <label class="form-check-label fw-bold text-primary" for="radioNewAddress">
+                                            <i class="fa-solid fa-plus-circle me-1"></i> Giao đến địa chỉ mới khác
+                                        </label>
+                                    </div>
                                 </div>
-                                <span class="text-muted">@subtotal.ToString("N0") VNĐ</span>
-                            </li>
+                            </div>
                         }
-                        <li class="list-group-item d-flex justify-content-between bg-light">
-                            <strong class="text-dark">Thành tiền:</strong>
-                            <strong class="text-danger h5 m-0">@total.ToString("N0") VNĐ</strong>
-                        </li>
-                    </ul>
+
+                        <div id="addressInputsContainer" style="@(isAuthenticated && userAddresses != null && userAddresses.Any() ? "display:none;" : "")">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Họ và tên người nhận <span class="text-danger">*</span></label>
+                                    <input type="text" id="receiverName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" value="@userFullName" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Số điện thoại liên hệ <span class="text-danger">*</span></label>
+                                    <input type="text" id="receiverPhone" class="form-control" placeholder="Ví dụ: 0901234567" value="@userPhone" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Địa chỉ nhận hàng chi tiết <span class="text-danger">*</span></label>
+                                    <textarea id="shippingAddress" class="form-control" rows="2" placeholder="Số nhà, Tên đường, Phường/Xã, Quận/Huyện, Tỉnh/TP"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label fw-bold text-secondary"><i class="fa-solid fa-note-sticky me-1"></i> Ghi chú đơn hàng (Tùy chọn)</label>
+                            <input type="text" id="orderNote" class="form-control" placeholder="Ví dụ: Giao giờ hành chính, gọi điện trước khi giao..." />
+                        </div>
+                    </div>
                 </div>
-                <div class="card-footer bg-white border-0 mt-2">
-                    <button type="button" id="btnConfirmCheckout" class="btn btn-success btn-block btn-lg w-100 font-weight-bold">
-                        XÁC NHẬN ĐẶT HÀNG
-                    </button>
+
+                <!-- 2. DANH SÁCH SẢN PHẨM ĐẶT MUA -->
+                <div class="glass-card">
+                    <div class="card-header-custom">
+                        <i class="fa-solid fa-basket-shopping fs-5"></i>
+                        <h5 class="m-0">2. Sản phẩm mua chọn (@(Model != null && Model.CartDetails != null ? Model.CartDetails.Count : 0))</h5>
+                    </div>
+                    <div class="card-body-custom p-0">
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th style="width: 70px;" class="ps-3">Hình</th>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end pe-3">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model != null && Model.CartDetails != null && Model.CartDetails.Any())
+                                    {
+                                        foreach (var item in Model.CartDetails)
+                                        {
+                                            var p = item.Product;
+                                            decimal pPrice = p != null ? p.Price : 0;
+                                            decimal itemTotal = pPrice * item.Quantity;
+                                            <tr>
+                                                <td class="ps-3">
+                                                    <img src="@(p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png")"
+                                                         alt="@(p != null ? p.Name : "")"
+                                                         class="product-img-box" />
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-dark">@(p != null ? p.Name : "Sản phẩm")</div>
+                                                    <div class="small text-muted">@pPrice.ToString("N0") VNĐ / sản phẩm</div>
+                                                </td>
+                                                <td class="text-center fw-bold">x@item.Quantity</td>
+                                                <td class="text-end pe-3 fw-bold text-success">@itemTotal.ToString("N0") VNĐ</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted">Chưa có sản phẩm nào được chọn.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. PHÍ GIAO HÀNG & GÓI VẬN CHUYỂN -->
+                <div class="glass-card">
+                    <div class="card-header-custom">
+                        <i class="fa-solid fa-truck-fast fs-5"></i>
+                        <h5 class="m-0">3. Gói giao hàng & Phí vận chuyển</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="custom-radio-item shipping-item selected">
+                            <div class="form-check d-flex justify-content-between align-items-center w-100">
+                                <div>
+                                    <input class="form-check-input me-2 shipping-radio" type="radio" name="shippingSpeed" id="ship15" value="15000" checked />
+                                    <label class="form-check-label fw-bold" for="ship15">🚚 Giao tiêu chuẩn (Hôm sau)</label>
+                                    <div class="small text-muted ms-4">Nhận hàng vào ngày mai. Miễn phí cho đơn từ 200.000đ</div>
+                                </div>
+                                <span class="fw-bold text-success">
+                                    @(subTotal >= 200000 ? "0 VNĐ (MIỄN PHÍ)" : "15.000 VNĐ")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="custom-radio-item shipping-item">
+                            <div class="form-check d-flex justify-content-between align-items-center w-100">
+                                <div>
+                                    <input class="form-check-input me-2 shipping-radio" type="radio" name="shippingSpeed" id="ship25" value="25000" />
+                                    <label class="form-check-label fw-bold" for="ship25">🚀 Giao nhanh 4 tiếng</label>
+                                    <div class="small text-muted ms-4">Giao hàng trong vòng 4 tiếng làm việc</div>
+                                </div>
+                                <span class="fw-bold text-primary">25.000 VNĐ</span>
+                            </div>
+                        </div>
+
+                        <div class="custom-radio-item shipping-item mb-0">
+                            <div class="form-check d-flex justify-content-between align-items-center w-100">
+                                <div>
+                                    <input class="form-check-input me-2 shipping-radio" type="radio" name="shippingSpeed" id="ship35" value="35000" />
+                                    <label class="form-check-label fw-bold text-danger" for="ship35">⚡ Giao siêu tốc 2 tiếng</label>
+                                    <div class="small text-muted ms-4">Tài xế giao siêu tốc tức thì trong 2 tiếng</div>
+                                </div>
+                                <span class="fw-bold text-danger">35.000 VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. ĐỔI ĐIỂM THƯỞNG TÍCH LŨY -->
+                <div class="glass-card">
+                    <div class="card-header-warning">
+                        <i class="fa-solid fa-coins fs-5"></i>
+                        <h5 class="m-0">4. Điểm thưởng & Khuyến mãi</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        @if (isAuthenticated)
+                        {
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-amber-light rounded-3 mb-3 border border-warning">
+                                <div>
+                                    <i class="fa-solid fa-crown text-warning fs-4 me-2"></i>
+                                    <span>Điểm tích lũy hiện tại:</span>
+                                    <strong class="text-danger fs-5 ms-1" id="user-points-balance">@loyaltyPoints</strong> điểm
+                                </div>
+                                <span class="badge bg-warning text-dark fw-bold">100 điểm = 1.000 VNĐ</span>
+                            </div>
+
+                            if (loyaltyPoints > 0)
+                            {
+                                <div class="row align-items-center g-2">
+                                    <div class="col-md-7">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-coins text-warning"></i></span>
+                                            <input type="number" id="inputUsedPoints" class="form-control" min="0" max="@loyaltyPoints" step="10" placeholder="Nhập số điểm..." />
+                                            <button class="btn btn-outline-secondary" type="button" id="btnMaxPoints">Dùng hết</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="text-success fw-bold">
+                                            Giảm giá từ điểm: -<span id="points-discount-text">0</span> VNĐ
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small text-muted"><i class="fa-solid fa-info-circle me-1"></i>Bạn chưa có điểm thưởng. Đặt đơn hàng này sẽ giúp bạn tích thêm điểm!</div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="small text-muted">
+                                <i class="fa-solid fa-user-lock me-1 text-warning"></i> <a href="/Account/Login" class="text-success fw-bold">Đăng nhập</a> để sử dụng điểm thưởng tích lũy giảm giá đơn hàng!
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI (TÓM TẮT ĐƠN HÀNG & CHUYỂN BƯỚC) -->
+            <div class="col-lg-5">
+                <div class="glass-card summary-card">
+                    <div class="card-header-custom" style="background: #111827;">
+                        <i class="fa-solid fa-receipt fs-5"></i>
+                        <h5 class="m-0">Tóm tắt chi phí đơn hàng</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">Tạm tính tiền hàng:</span>
+                            <strong class="text-dark">@subTotal.ToString("N0") VNĐ</strong>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(couponCode) && discountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-danger">
+                                <span>Mã giảm giá (@couponCode):</span>
+                                <strong>-@discountAmount.ToString("N0") VNĐ</strong>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between mb-2 text-warning" id="row-points-discount" style="display: none !important;">
+                            <span>Giảm giá điểm thưởng:</span>
+                            <strong id="points-discount-val">-0 VNĐ</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">Phí vận chuyển:</span>
+                            <strong id="shipping-fee-text" class="text-success">
+                                @(subTotal >= 200000 ? "0 VNĐ (Free)" : "15.000 VNĐ")
+                            </strong>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="fs-5 fw-bold">TỔNG THANH TOÁN:</span>
+                            <span id="final-total-amount" class="fs-3 fw-bold text-danger">0 VNĐ</span>
+                        </div>
+
+                        <div class="alert alert-success small mb-4 border-0 bg-light">
+                            <i class="fa-solid fa-circle-check text-success me-1"></i> Kiểm tra thông tin đầy đủ trước khi nhấn chuyển sang <strong>Bước Thanh Toán</strong>.
+                        </div>
+
+                        <button id="btnSubmitOrder" class="btn-checkout-primary">
+                            <span>XÁC NHẬN & SANG THANH TOÁN</span>
+                            <i class="fa-solid fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
+    <!-- JAVASCRIPT -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         $(document).ready(function () {
-            $('#btnConfirmCheckout').click(function () {
+            var baseSubtotal = @subTotal.ToString("F0");
+            var couponDiscount = @discountAmount.ToString("F0");
+            var isSubTotalFreeShipping = baseSubtotal >= 200000;
+            var maxUserPoints = @loyaltyPoints;
+
+            function calculateFinalTotal() {
+                // 1. Phí giao hàng
+                var selectedShippingFee = parseInt($('input[name="shippingSpeed"]:checked').val()) || 15000;
+                if (isSubTotalFreeShipping && selectedShippingFee === 15000) {
+                    selectedShippingFee = 0;
+                    $('#shipping-fee-text').html('<span class="badge-free">0 VNĐ (MIỄN PHÍ)</span>');
+                } else {
+                    $('#shipping-fee-text').html(selectedShippingFee.toLocaleString('vi-VN') + ' VNĐ');
+                }
+
+                // 2. Điểm tích lũy (1 điểm = 10 VNĐ)
+                var usedPoints = parseInt($('#inputUsedPoints').val()) || 0;
+                if (usedPoints > maxUserPoints) {
+                    usedPoints = maxUserPoints;
+                    $('#inputUsedPoints').val(usedPoints);
+                }
+                if (usedPoints < 0) {
+                    usedPoints = 0;
+                    $('#inputUsedPoints').val(0);
+                }
+
+                var pointsDiscount = usedPoints * 10;
+                if (pointsDiscount > 0) {
+                    $('#points-discount-text').text(pointsDiscount.toLocaleString('vi-VN'));
+                    $('#points-discount-val').text('-' + pointsDiscount.toLocaleString('vi-VN') + ' VNĐ');
+                    $('#row-points-discount').removeAttr('style');
+                } else {
+                    $('#row-points-discount').attr('style', 'display: none !important;');
+                }
+
+                // 3. Tổng thanh toán
+                var total = (baseSubtotal - couponDiscount - pointsDiscount) + selectedShippingFee;
+                if (total < 0) total = 0;
+
+                $('#final-total-amount').text(total.toLocaleString('vi-VN') + ' VNĐ');
+            }
+
+            calculateFinalTotal();
+
+            // Chọn địa chỉ
+            $('.address-radio').on('change', function () {
+                $('.address-item').removeClass('selected');
+                $(this).closest('.address-item').addClass('selected');
+
+                if ($('#radioNewAddress').is(':checked')) {
+                    $('#addressInputsContainer').slideDown();
+                    $('#receiverName').val('');
+                    $('#receiverPhone').val('');
+                    $('#shippingAddress').val('');
+                } else {
+                    $('#addressInputsContainer').slideUp();
+                    var name = $(this).data('name');
+                    var phone = $(this).data('phone');
+                    var addr = $(this).data('address');
+                    $('#receiverName').val(name);
+                    $('#receiverPhone').val(phone);
+                    $('#shippingAddress').val(addr);
+                }
+            });
+
+            var defaultRadio = $('.address-radio:checked');
+            if (defaultRadio.length > 0 && defaultRadio.val() !== 'new') {
+                $('#receiverName').val(defaultRadio.data('name'));
+                $('#receiverPhone').val(defaultRadio.data('phone'));
+                $('#shippingAddress').val(defaultRadio.data('address'));
+            }
+
+            // Gói giao hàng
+            $('input[name="shippingSpeed"]').on('change', function () {
+                $('.shipping-item').removeClass('selected');
+                $(this).closest('.shipping-item').addClass('selected');
+                calculateFinalTotal();
+            });
+
+            // Đổi điểm
+            $('#inputUsedPoints').on('input change', function () {
+                calculateFinalTotal();
+            });
+
+            $('#btnMaxPoints').on('click', function () {
+                $('#inputUsedPoints').val(maxUserPoints);
+                calculateFinalTotal();
+            });
+
+            // Bấm Nút Tạo Đơn & Chuyển Sang Bước Thanh Toán
+            $('#btnSubmitOrder').on('click', function (e) {
+                e.preventDefault();
+
                 var name = $('#receiverName').val().trim();
                 var phone = $('#receiverPhone').val().trim();
                 var address = $('#shippingAddress').val().trim();
-                var note = $('#note').val().trim();
+                var note = $('#orderNote').val().trim();
 
                 if (!name || !phone || !address) {
-                    alert('Vui lòng điền đầy đủ Tên, SĐT và Địa chỉ giao hàng!');
+                    alert("Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!");
                     return;
                 }
 
-                // Vô hiệu hóa nút để tránh spam click
-                $(this).prop('disabled', true).text('Đang xử lý...');
+                var shippingFee = parseInt($('input[name="shippingSpeed"]:checked').val()) || 15000;
+                if (isSubTotalFreeShipping && shippingFee === 15000) {
+                    shippingFee = 0;
+                }
+
+                var usedPoints = parseInt($('#inputUsedPoints').val()) || 0;
+
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG TẠO ĐƠN HÀNG...');
 
                 $.ajax({
-                    url: '/Order/Checkout',
+                    url: '@Url.Action("Checkout", "Order")',
                     type: 'POST',
                     data: {
                         receiverName: name,
                         receiverPhone: phone,
                         shippingAddress: address,
-                        note: note
+                        paymentMethod: 0,
+                        shippingFee: shippingFee,
+                        discountAmount: couponDiscount,
+                        usedPoints: usedPoints,
+                        note: note,
+                        selectedIds: '@selectedIds',
+                        couponCode: '@couponCode'
                     },
                     success: function (res) {
-                        if (res.success) {
-                            alert(res.message);
-                            window.location.href = '/Order/Success'; // Chuyển sang trang cảm ơn
+                        if (res.success && res.redirectUrl) {
+                            window.location.href = res.redirectUrl;
                         } else {
-                            alert(res.message);
-                            $('#btnConfirmCheckout').prop('disabled', false).text('XÁC NHẬN ĐẶT HÀNG');
+                            alert(res.message || "Tạo đơn hàng thất bại, vui lòng thử lại!");
+                            btn.prop('disabled', false).html('<span>XÁC NHẬN & SANG THANH TOÁN</span> <i class="fa-solid fa-arrow-right ms-2"></i>');
                         }
                     },
-                    error: function () {
-                        alert('Có lỗi hệ thống xảy ra khi kết nối máy chủ!');
-                        $('#btnConfirmCheckout').prop('disabled', false).text('XÁC NHẬN ĐẶT HÀNG');
+                    error: function (xhr, status, err) {
+                        alert("Lỗi hệ thống khi tạo đơn hàng: " + (xhr.responseText || err));
+                        btn.prop('disabled', false).html('<span>XÁC NHẬN & SANG THANH TOÁN</span> <i class="fa-solid fa-arrow-right ms-2"></i>');
                     }
                 });
             });
         });
     </script>
-}
+</body>
+</html>

@@ -1,17 +1,161 @@
 ﻿@{
-    ViewBag.Title = "Đặt hàng thành công";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
+    int paymentMethod = ViewBag.PaymentMethod != null ? (int)ViewBag.PaymentMethod : 0;
+    int orderId = ViewBag.OrderId != null ? (int)ViewBag.OrderId : 0;
+    var order = ViewBag.Order as Do_An_E_Commerce_BHX.Models.Entities.Order;
 }
 
-<div class="container text-center my-5 py-5">
-    <div class="card shadow-sm p-4 mx-auto" style="max-width: 500px;">
-        <div class="text-success mb-3">
-            <i class="fas fa-check-circle display-1"></i>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt Hàng Thành Công - Bách Hóa Xanh</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #091710 0%, #163b2e 50%, #0d241c 100%);
+            background-attachment: fixed;
+            color: #1e2a22;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .checkout-navbar {
+            background: rgba(14, 42, 32, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 16px 0;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .brand-logo i {
+                color: #4ade80;
+            }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .btn-home {
+            background: linear-gradient(135deg, #1F6B3F 0%, #166534 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 14px 40px;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 20px rgba(31, 107, 63, 0.4);
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.25s ease;
+        }
+
+            .btn-home:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 26px rgba(31, 107, 63, 0.5);
+                color: #fff;
+            }
+    </style>
+</head>
+<body>
+
+    <nav class="checkout-navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Home")" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i>
+                <span>BÁCH HÓA XANH</span>
+            </a>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-house me-1"></i> Trang chủ
+            </a>
         </div>
-        <h2 class="font-weight-bold text-success">Đặt Hàng Thành Công!</h2>
-        <p class="text-muted mt-2">Cảm ơn bạn đã mua sắm. Đơn hàng của bạn đang được hệ thống tiếp nhận và xử lý.</p>
-        <div class="mt-4">
-            <a href="/" class="btn btn-primary px-4">Tiếp tục mua hàng</a>
+    </nav>
+
+    <div class="container text-center my-4">
+        <div class="glass-card p-4 p-md-5 mx-auto text-start" style="max-width: 680px;">
+            <div class="text-center mb-3">
+                <i class="fa-solid fa-circle-check text-success" style="font-size: 4.5rem;"></i>
+                <h2 class="fw-bold text-success mt-2">ĐẶT HÀNG THÀNH CÔNG!</h2>
+                <p class="text-muted">Cảm ơn bạn đã lựa chọn Bách Hóa Xanh. Đơn hàng của bạn đã được lưu hệ thống.</p>
+            </div>
+
+            @if (order != null)
+            {
+                <div class="bg-light p-3 rounded-3 mb-4 border">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary">Mã đơn hàng:</span>
+                        <strong class="text-primary fs-5">#@order.Id</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary">Người nhận:</span>
+                        <strong>@order.ReceiverName (@order.ReceiverPhone)</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary">Địa chỉ giao:</span>
+                        <strong class="text-end" style="max-width: 350px;">@order.ShippingAddress</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fw-bold">Tổng thanh toán:</span>
+                        <strong class="text-danger fs-4">@order.TotalAmount.ToString("N0") VNĐ</strong>
+                    </div>
+                </div>
+            }
+
+            @if (paymentMethod == 1)
+            {
+                <div class="alert alert-info p-4 shadow-sm border-info rounded-3 mb-4">
+                    <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-qrcode me-2"></i> Trạng thái thanh toán:</h6>
+                    <p class="mb-0">Đơn hàng đã được xác nhận chuyển khoản ngân hàng. Nhân viên sẽ đóng gói và giao hàng cho bạn nhanh nhất.</p>
+                </div>
+            }
+            else if (paymentMethod == 2)
+            {
+                <div class="alert alert-danger p-4 shadow-sm border-danger rounded-3 mb-4" style="background-color: #fff0f5;">
+                    <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-mobile-screen-button me-2"></i> Trạng thái thanh toán:</h6>
+                    <p class="mb-0">Đơn hàng đã thanh toán qua Ví MoMo thành công!</p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success p-3 mb-4 rounded-3 border-success">
+                    <i class="fa-solid fa-truck-ramp-box me-2 fs-5 text-success"></i>
+                    Phương thức thanh toán: <strong>Thanh toán khi nhận hàng (COD)</strong>. Quý khách vui lòng chuẩn bị số tiền mặt tương ứng để thanh toán cho tài xế giao hàng.
+                </div>
+            }
+
+            <div class="text-center mt-3">
+                <a href="@Url.Action("Index", "Home")" class="btn-home">
+                    <i class="fa-solid fa-store me-2"></i> TIẾP TỤC MUA SẮM
+                </a>
+            </div>
         </div>
     </div>
-</div>
+</body>
+</html>

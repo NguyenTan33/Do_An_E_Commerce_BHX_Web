@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
@@ -10,8 +11,10 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
     {
         [Key]
         public int Id { get; set; }
-
+        
         public string UserId { get; set; }
+        
+        [NotMapped]
         public string GuestId { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 

@@ -1,0 +1,393 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Order
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thanh Toán Đơn Hàng #@Model.Id - Bách Hóa Xanh</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #091710 0%, #163b2e 50%, #0d241c 100%);
+            background-attachment: fixed;
+            color: #1e2a22;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Top Navigation */
+        .checkout-navbar {
+            background: rgba(14, 42, 32, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 16px 0;
+            margin-bottom: 35px;
+        }
+
+        .brand-logo {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .brand-logo i {
+                color: #4ade80;
+            }
+
+        /* Stepper */
+        .checkout-stepper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+            .step-item.active {
+                color: #4ade80;
+            }
+
+            .step-item.done {
+                color: #ffffff;
+            }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8125rem;
+        }
+
+        .step-item.active .step-number {
+            background: #1F6B3F;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+        }
+
+        .step-item.done .step-number {
+            background: #3F8F5C;
+            color: #fff;
+        }
+
+        .step-divider {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .payment-header {
+            background: linear-gradient(135deg, #111827 0%, #163b2e 100%);
+            color: #fff;
+            padding: 24px 30px;
+        }
+
+        /* Nav Pills Tabs */
+        .payment-tabs .nav-link {
+            border-radius: 12px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: #4b5563;
+            background: #f3f4f6;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+            .payment-tabs .nav-link:hover {
+                background: #e5e7eb;
+            }
+
+            .payment-tabs .nav-link.active {
+                background: #f0fdf4;
+                border-color: #1F6B3F;
+                color: #166534;
+                box-shadow: 0 6px 16px rgba(31, 107, 63, 0.15);
+            }
+
+        .btn-action-lg {
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-action-lg:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="checkout-navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Home")" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i>
+                <span>BÁCH HÓA XANH</span>
+            </a>
+
+            <!-- Stepper -->
+            <div class="checkout-stepper d-none d-md-flex">
+                <div class="step-item done">
+                    <span class="step-number"><i class="fa-solid fa-check"></i></span>
+                    <span>Thông tin đặt hàng</span>
+                </div>
+                <div class="step-divider"></div>
+                <div class="step-item active">
+                    <span class="step-number">2</span>
+                    <span>Phương thức thanh toán</span>
+                </div>
+            </div>
+
+            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-house me-1"></i> Trang chủ
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="glass-card mx-auto" style="max-width: 860px;">
+            <!-- CARD HEADER -->
+            <div class="payment-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="m-0 font-weight-bold"><i class="fa-solid fa-wallet text-warning me-2"></i>Chọn Phương Thức Thanh Toán</h4>
+                    <div class="small text-muted mt-1">Đơn hàng đã khởi tạo thành công. Chọn phương thức để hoàn tất đơn hàng.</div>
+                </div>
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">Mã đơn #@Model.Id</span>
+            </div>
+
+            <div class="p-4 p-md-5">
+                <!-- TÓM TẮT ĐƠN HÀNG -->
+                <div class="bg-light p-4 rounded-3 border mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <span class="text-secondary small">Người nhận hàng:</span>
+                            <div class="fw-bold fs-6">@Model.ReceiverName (@Model.ReceiverPhone)</div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <span class="text-secondary small">Thời gian tạo đơn:</span>
+                            <div class="fw-bold text-dark">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="col-12 pt-2 border-top">
+                            <span class="text-secondary small">Địa chỉ nhận hàng:</span>
+                            <div class="fw-bold"><i class="fa-solid fa-map-marker-alt text-danger me-1"></i>@Model.ShippingAddress</div>
+                        </div>
+                        <div class="col-12 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <span class="fs-5 fw-bold">TỔNG TIỀN CẦN THANH TOÁN:</span>
+                            <span class="text-danger fs-2 fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-hand-pointer text-success me-2"></i>Nhấp chọn phương thức thanh toán:</h6>
+
+                <!-- NAV TABS -->
+                <ul class="nav nav-pills payment-tabs row g-2 mb-4" id="paymentTab" role="tablist">
+                    <li class="nav-item col-md-4" role="presentation">
+                        <button class="nav-link w-100 active" id="cod-tab" data-bs-toggle="pill" data-bs-target="#cod-content" type="button" role="tab">
+                            💵 1. COD (Tiền mặt)
+                        </button>
+                    </li>
+                    <li class="nav-item col-md-4" role="presentation">
+                        <button class="nav-link w-100" id="bank-tab" data-bs-toggle="pill" data-bs-target="#bank-content" type="button" role="tab">
+                            🏦 2. VietQR / Ngân Hàng API
+                        </button>
+                    </li>
+                    <li class="nav-item col-md-4" role="presentation">
+                        <button class="nav-link w-100" id="momo-tab" data-bs-toggle="pill" data-bs-target="#momo-content" type="button" role="tab">
+                            📱 3. Ví MoMo API
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- TAB CONTENTS -->
+                <div class="tab-content border rounded-3 p-4 bg-white shadow-sm" id="paymentTabContent">
+                    <!-- 1. COD -->
+                    <div class="tab-pane fade show active text-center py-3" id="cod-content" role="tabpanel">
+                        <div class="text-success mb-3">
+                            <i class="fa-solid fa-hand-holding-dollar" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="fw-bold">Thanh Toán Khi Nhận Hàng (COD)</h5>
+                        <p class="text-muted max-w-500 mx-auto">Bạn sẽ thanh toán số tiền <strong class="text-danger">@Model.TotalAmount.ToString("N0") VNĐ</strong> bằng tiền mặt cho shipper khi nhận được hàng.</p>
+                        <button id="btnConfirmCOD" class="btn btn-success btn-action-lg px-5 mt-2 shadow">
+                            <i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ
+                        </button>
+                    </div>
+
+                    <!-- 2. BANK TRANSFER / VIETQR API -->
+                    <div class="tab-pane fade" id="bank-content" role="tabpanel">
+                        <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-qrcode me-2"></i> Quét mã VietQR hoặc Chuyển khoản Ngân hàng</h5>
+                        <div class="row align-items-center g-4">
+                            <div class="col-md-5 text-center">
+                                <img src="https://api.vietqr.io/image/970422-0909888999-compact.png?amount=@((int)Model.TotalAmount)&addInfo=BHX%20@Model.Id"
+                                     alt="Mã VietQR Đơn #@Model.Id"
+                                     class="img-fluid rounded-3 border shadow-sm p-2 bg-white"
+                                     style="max-height: 220px;" />
+                                <div class="small text-muted mt-2">App Ngân hàng quét QR tự nhập số tiền & nội dung</div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="bg-light p-3 rounded-3 border">
+                                    <div class="mb-2"><strong>Ngân hàng:</strong> MB Bank (NHTMCP Quân Đội)</div>
+                                    <div class="mb-2"><strong>Số tài khoản:</strong> <span class="text-danger fw-bold fs-5">0909 888 999</span></div>
+                                    <div class="mb-2"><strong>Chủ tài khoản:</strong> CÔNG TY TNHH BÁCH HÓA XANH</div>
+                                    <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
+                                    <div class="mb-0"><strong>Nội dung CK:</strong> <span class="text-primary fw-bold fs-6">BHX @Model.Id</span></div>
+                                </div>
+                                <button id="btnConfirmBankApi" class="btn btn-primary btn-action-lg w-100 shadow mt-3">
+                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. MOMO API -->
+                    <div class="tab-pane fade" id="momo-content" role="tabpanel">
+                        <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-mobile-screen-button me-2"></i> Thanh Toán Qua Ví Điện Tử MoMo</h5>
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="mb-2"><strong>Số điện thoại MoMo:</strong> <span class="text-danger fw-bold fs-5">0909 888 999</span></div>
+                            <div class="mb-2"><strong>Chủ tài khoản:</strong> CÔNG TY TNHH BÁCH HÓA XANH</div>
+                            <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
+                            <div class="mb-0"><strong>Nội dung chuyển tiền:</strong> <span class="text-primary fw-bold fs-6">BHX @Model.Id</span></div>
+                        </div>
+                        <button id="btnConfirmMomoApi" class="btn btn-danger btn-action-lg w-100 shadow">
+                            <i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var orderId = @Model.Id;
+
+            // 1. COD
+            $('#btnConfirmCOD').on('click', function (e) {
+                e.preventDefault();
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> Đang xử lý...');
+
+                $.ajax({
+                    url: '@Url.Action("ProcessCOD", "Order")',
+                    type: 'POST',
+                    data: { orderId: orderId },
+                    success: function (res) {
+                        if (res.success) {
+                            alert("🎉 ĐẶT HÀNG COD THÀNH CÔNG!\nCảm ơn bạn đã lựa chọn Bách Hóa Xanh!");
+                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
+                        } else {
+                            alert(res.message || "Xử lý COD thất bại!");
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ');
+                        }
+                    },
+                    error: function (xhr, status, err) {
+                        alert("Lỗi hệ thống: " + (xhr.responseText || err));
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ');
+                    }
+                });
+            });
+
+            // 2. VietQR / Bank API
+            $('#btnConfirmBankApi').on('click', function (e) {
+                e.preventDefault();
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG XÁC NHẬN VỚI API NGÂN HÀNG...');
+
+                $.ajax({
+                    url: '@Url.Action("ConfirmBankPaymentApi", "Order")',
+                    type: 'POST',
+                    data: { orderId: orderId, paymentMethod: 1 },
+                    success: function (res) {
+                        if (res.success) {
+                            alert("✅ API XÁC NHẬN THANH TOÁN THÀNH CÔNG!\nĐơn hàng đã được cập nhật trạng thái ĐÃ THANH TOÁN.");
+                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
+                        } else {
+                            alert(res.message || "Xác nhận chuyển khoản thất bại!");
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)');
+                        }
+                    },
+                    error: function (xhr, status, err) {
+                        alert("Lỗi hệ thống API: " + (xhr.responseText || err));
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)');
+                    }
+                });
+            });
+
+            // 3. MoMo API
+            $('#btnConfirmMomoApi').on('click', function (e) {
+                e.preventDefault();
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG XÁC NHẬN VỚI MOMO API...');
+
+                $.ajax({
+                    url: '@Url.Action("ConfirmBankPaymentApi", "Order")',
+                    type: 'POST',
+                    data: { orderId: orderId, paymentMethod: 2 },
+                    success: function (res) {
+                        if (res.success) {
+                            alert("✅ API XÁC NHẬN VÍ MOMO THÀNH CÔNG!\nĐơn hàng đã được cập nhật trạng thái ĐÃ THANH TOÁN.");
+                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
+                        } else {
+                            alert(res.message || "Xác nhận MoMo thất bại!");
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)');
+                        }
+                    },
+                    error: function (xhr, status, err) {
+                        alert("Lỗi hệ thống API: " + (xhr.responseText || err));
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

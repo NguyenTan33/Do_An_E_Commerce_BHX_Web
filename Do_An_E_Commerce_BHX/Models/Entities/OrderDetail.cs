@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -23,6 +23,6 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [Required, Range(1, 120)]
         public int Quantity { get; set; }
 
-        public decimal Price { get; set; }
+        public double Price { get; set; }
     }
 }

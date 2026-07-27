@@ -1,0 +1,288 @@
+﻿@model Do_An_E_Commerce_BHX.Models.Entities.Order
+
+@{
+    ViewData["Title"] = "Chi tiết soạn đơn hàng #" + Model.Id;
+    ViewData["Subtitle"] = "Tích chọn từng sản phẩm đã lấy từ kệ hàng kho";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    int totalItems = Model.OrderDetails != null ? Model.OrderDetails.Count : 0;
+}
+
+<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+    /* ===== CUSTOM CSS CHO ADMIN ĐỒNG BỘ ===== */
+    .admin-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .btn-custom {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+    /* Bảng dữ liệu */
+    .table-custom th {
+        background-color: #f4f6f9;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 12px;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 16px 12px;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background-color 0.2s;
+    }
+
+    /* Tùy chỉnh Checkbox to và rõ hơn */
+    .pick-item-check {
+        width: 26px !important;
+        height: 26px !important;
+        cursor: pointer;
+        border: 2px solid #ced4da;
+        border-radius: 6px !important;
+    }
+
+        .pick-item-check:checked {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+    /* Highlight dòng đã chọn */
+    .table-success td {
+        background-color: #d1e7dd !important; /* Xanh nhạt */
+        border-color: #badbcc;
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <!-- TIÊU ĐỀ & NÚT ĐIỀU HƯỚNG -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-clipboard-check text-warning me-2"></i>Soạn Hàng Chi Tiết - Đơn <span class="text-primary">#@Model.Id</span></h3>
+            <p class="text-muted mb-0 mt-1 fs-6">Kiểm tra và tích chọn đủ sản phẩm trước khi bấm Đã Soạn Xong</p>
+        </div>
+        <a href="@Url.Action("PackingList", "ManageOrder")" class="btn btn-outline-secondary btn-custom fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại Danh sách
+        </a>
+    </div>
+
+    <!-- KHUNG THÔNG TIN KHÁCH HÀNG & NHÂN VIÊN SOẠN -->
+    <div class="card admin-card mb-4 bg-white border border-light">
+        <div class="card-body p-4">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-4 border-end">
+                    <span class="text-muted small text-uppercase fw-bold letter-spacing-1">Người nhận</span>
+                    <div class="fw-bold fs-5 text-dark mt-1"><i class="fa-regular fa-circle-user me-2 text-primary"></i>@Model.ReceiverName</div>
+                    <div class="text-danger fw-bold mt-1"><i class="fa-solid fa-phone me-2"></i>@Model.ReceiverPhone</div>
+                </div>
+                <div class="col-md-5 border-end">
+                    <span class="text-muted small text-uppercase fw-bold letter-spacing-1">Địa chỉ giao hàng & Nhân viên soạn</span>
+                    <div class="fw-bold text-dark mt-1 pe-3">
+                        <i class="fa-solid fa-location-dot me-2 text-danger"></i>@Model.ShippingAddress
+                    </div>
+                    <div class="mt-2 text-primary fw-bold small">
+                        <i class="fa-solid fa-user-gear me-1"></i>Nhân viên thực hiện soạn đơn: <span class="badge bg-primary text-white fs-6">@User.Identity.Name</span>
+                    </div>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <span class="text-muted small text-uppercase fw-bold letter-spacing-1">Tổng tiền đơn hàng</span>
+                    <div class="text-danger fw-bold fs-3 mt-1">@Model.TotalAmount.ToString("N0") <span class="fs-5">đ</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG TIẾN TRÌNH LẤY HÀNG (PROGRESS BAR) -->
+    <div class="card admin-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                <div class="fw-bold text-dark fs-5">
+                    Tiến trình lấy hàng:
+                    <span id="picked-count-text" class="text-success fs-3 mx-1">0</span>
+                    <span class="text-muted mx-1">/</span>
+                    <span class="fs-4">@totalItems</span> sản phẩm
+                </div>
+                <button type="button" id="btnCheckAllItems" class="btn btn-outline-primary btn-custom fw-bold">
+                    <i class="fa-solid fa-check-double me-1"></i> Chọn tất cả
+                </button>
+            </div>
+            <div class="progress shadow-sm" style="height: 16px; border-radius: 8px; background-color: #e9ecef;">
+                <div id="packingProgressBar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; transition: width 0.4s ease;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH MẶT HÀNG CẦN LẤY -->
+    <div class="card admin-card overflow-hidden mb-4 border border-light">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="m-0 fw-bold text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Danh Sách Sản Phẩm Cần Lấy</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;" class="ps-4">Trạng Thái</th>
+                            <th style="width: 80px;" class="text-center">Hình</th>
+                            <th>Sản Phẩm & Mã Barcode</th>
+                            <th class="text-center">Cần Lấy</th>
+                            <th class="text-end">Đơn Giá</th>
+                            <th class="text-end pe-4">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+                        {
+                            foreach (var item in Model.OrderDetails)
+                            {
+                                var p = item.Product;
+                                decimal price = p != null ? p.Price : 0;
+                                decimal lineTotal = price * item.Quantity;
+                                <tr class="item-row">
+                                    <td class="ps-4">
+                                        <div class="form-check m-0 d-flex align-items-center">
+                                            <input type="checkbox" class="form-check-input pick-item-check shadow-sm m-0" />
+                                            <label class="form-check-label ms-2 fw-bold text-secondary check-label" style="cursor: pointer; user-select: none;">Chưa lấy</label>
+                                        </div>
+                                    </td>
+                                    <td class="text-center py-2">
+                                        <div class="bg-white rounded border shadow-sm p-1 d-inline-block">
+                                            <img src="@(p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png")"
+                                                 alt="@(p != null ? p.Name : "Hình ảnh")"
+                                                 style="width: 50px; height: 50px; object-fit: contain;" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark fs-6">@(p != null ? p.Name : "Sản phẩm không xác định")</div>
+                                        <div class="small text-muted mt-1">
+                                            Barcode: <span class="badge bg-light text-dark border px-2 py-1">@(p != null ? p.Barcode : "N/A")</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 fs-6 px-3 py-2">x @item.Quantity</span>
+                                    </td>
+                                    <td class="text-end fw-bold text-secondary">
+                                        @price.ToString("N0") đ
+                                    </td>
+                                    <td class="text-end pe-4 fw-bold text-success fs-6">
+                                        @lineTotal.ToString("N0") đ
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fa-solid fa-box-open fs-1 d-block mb-3 opacity-50"></i>
+                                        <h5>Đơn hàng này không có sản phẩm nào!</h5>
+                                        <p class="mb-0">Vui lòng kiểm tra lại dữ liệu.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- NÚT HOÀN TẤT SOẠN ĐƠN -->
+    <div class="text-end mb-5">
+        <button id="btnCompletePacking" class="btn btn-secondary btn-lg px-5 py-3 fw-bold shadow btn-custom" disabled style="border-radius: 50px;">
+            <i class="fa-solid fa-truck-fast me-2"></i> ĐÃ SOẠN XONG <i class="fa-solid fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var totalItems = @totalItems;
+
+        // Cho phép click vào toàn bộ dòng (row) để check/uncheck cho tiện thao tác
+        $('.item-row').on('click', function(e) {
+            if(e.target.type !== 'checkbox' && e.target.tagName !== 'LABEL') {
+                var checkbox = $(this).find('.pick-item-check');
+                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+            }
+        });
+
+        function updateProgress() {
+            var checkedCount = $('.pick-item-check:checked').length;
+            $('#picked-count-text').text(checkedCount);
+
+            var percent = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0;
+            $('#packingProgressBar').css('width', percent + '%');
+
+            // Cập nhật nhãn của ô tích
+            $('.pick-item-check').each(function () {
+                var row = $(this).closest('tr');
+                var label = row.find('.check-label');
+                if ($(this).is(':checked')) {
+                    row.addClass('table-success');
+                    label.html('<i class="fa-solid fa-circle-check text-success me-1"></i>Đã lấy')
+                         .addClass('text-success').removeClass('text-secondary');
+                } else {
+                    row.removeClass('table-success');
+                    label.text('Chưa lấy')
+                         .addClass('text-secondary').removeClass('text-success');
+                }
+            });
+
+            // Nếu tích chọn đủ 100% thì BẬT nút hoàn tất
+            if (checkedCount === totalItems && totalItems > 0) {
+                $('#btnCompletePacking').prop('disabled', false)
+                    .removeClass('btn-secondary').addClass('btn-success')
+                    .addClass('shadow-lg px-5'); // Hiệu ứng phóng to xíu
+            } else {
+                $('#btnCompletePacking').prop('disabled', true)
+                    .removeClass('btn-success').addClass('btn-secondary')
+                    .removeClass('shadow-lg');
+            }
+        }
+
+        $('.pick-item-check').on('change', function () {
+            updateProgress();
+        });
+
+        $('#btnCheckAllItems').on('click', function () {
+            $('.pick-item-check').prop('checked', true);
+            updateProgress();
+        });
+
+        // BẤM NÚT ĐÃ SOẠN XONG
+        $('#btnCompletePacking').on('click', function (e) {
+            e.preventDefault();
+            var btn = $(this);
+            var originalHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> Đang xử lý...');
+
+            $.post('@Url.Action("CompletePacking", "ManageOrder")', { id: @Model.Id }, function (res) {
+                if (res.success) {
+                    alert("🎉 " + res.message);
+                    window.location.href = res.redirectUrl || '@Url.Action("DeliveryList", "ManageOrder")';
+                } else {
+                    alert(res.message || "Xử lý thất bại!");
+                    btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+    });
+</script>
