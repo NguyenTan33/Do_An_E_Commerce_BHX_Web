@@ -53,6 +53,8 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
         {
             var product = appDBContext.Product.FirstOrDefault(p => p.Id == id);
             if (product == null) return;
+            int curQuantity = product.Quantity;
+            if (quantity > curQuantity) quantity = curQuantity;
 
             var cart = GetOrCreateCart(userId);
             if (cart == null) return;
@@ -61,7 +63,18 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
 
             if (existProduct != null)
             {
-                existProduct.Quantity += quantity;
+                // Tính tổng số lượng dự định có trong giỏ
+                int targetQuantity = existProduct.Quantity + quantity;
+
+                // Nếu vượt quá tồn kho thì chỉ lấy tối đa bằng tồn kho
+                if (targetQuantity > product.Quantity)
+                {
+                    existProduct.Quantity = product.Quantity;
+                }
+                else
+                {
+                    existProduct.Quantity = targetQuantity;
+                }
                 existProduct.Price = Convert.ToDouble(product.Price);
                 appDBContext.Entry(existProduct).State = EntityState.Modified;
             }
@@ -91,20 +104,32 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                 appDBContext.SaveChanges();
             }
         }
-        public void ChangeQuantity(string userId, int productId, int amount)
+        public int ChangeQuantity(string userId, int productId, int amount)
         {
-            if (amount < 1 || amount > 100) return;
+            bool z = false;
+            if (amount < 1 || amount > 100) return 0;
+            int realQuantity = appDBContext.Product.FirstOrDefault(Product => Product.Id == productId).Quantity;
+            if (amount > realQuantity) z = true;
 
             var cart = GetOrCreateCart(userId);
-            if (cart == null) return;
+            if (cart == null) return 0;
 
             var existingProductInCart = appDBContext.CartDetail.FirstOrDefault(p => p.CartId == cart.Id && p.ProductId == productId);
             if (existingProductInCart != null)
             {
-                existingProductInCart.Quantity = amount;
+                if (z == false)
+                {
+                    existingProductInCart.Quantity = amount;
+                }
+                else
+                {
+                    existingProductInCart.Quantity = realQuantity;
+                }
                 appDBContext.Entry(existingProductInCart).State = EntityState.Modified;
                 appDBContext.SaveChanges();
+                return existingProductInCart.Quantity;
             }
+            return 0;
         }
 
         public Cart GetOrCreateCart(string userId)
