@@ -70,10 +70,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
         public JsonResult ChangeQuantity(int productId, int amount)
         {
             string userId = GetCurrentUserId();
-            _cartService.ChangeQuantity(userId, productId, amount);
-
+            int finalAmount = _cartService.ChangeQuantity(userId, productId, amount);
+            if (finalAmount == 0)
+            {
+                return Json(new { success = false , massage = "số lượng vượt tồn kho hoặc ko hợp lệ" });
+            }
             decimal newTotal = _orderService.CalculatePrice(userId);
-            return Json(new { success = true, newTotal = newTotal });
+            return Json(new { success = true, newTotal = newTotal , finalAmount  = finalAmount });
         }
 
         // 4. Xóa khỏi giỏ (Gọi qua AJAX)
