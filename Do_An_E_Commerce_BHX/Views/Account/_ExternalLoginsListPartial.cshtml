@@ -1,28 +1,38 @@
-﻿@model Do_An_E_Commerce_BHX.Models.ExternalLoginListViewModel
+@model Do_An_E_Commerce_BHX.Models.ExternalLoginListViewModel
 @using Microsoft.Owin.Security
 
-<h4>Use another service to log in.</h4>
-<hr />
 @{
     var loginProviders = Context.GetOwinContext().Authentication.GetExternalAuthenticationTypes();
-    if (loginProviders.Count() == 0) {
-        <div>
-            <p>
-                There are no external authentication services configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                for details on setting up this ASP.NET application to support logging in via external services.
+    if (loginProviders != null && loginProviders.Any())
+    {
+        <div class="social-login-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--line); text-align: center;">
+            <p style="font-size: 0.825rem; color: var(--muted); margin-bottom: 14px; position: relative; font-weight: 500;">
+                Hoặc đăng nhập bằng
             </p>
-        </div>
-    }
-    else {
-        using (Html.BeginForm("ExternalLogin", "Account", new { ReturnUrl = Model.ReturnUrl }, FormMethod.Post, new { role = "form" })) {
-            @Html.AntiForgeryToken()
-            <div id="socialLoginList">
-                <p>
-                    @foreach (AuthenticationDescription p in loginProviders) {
-                        <button type="submit" class="btn btn-outline-dark" id="@p.AuthenticationType" name="provider" value="@p.AuthenticationType" title="Log in using your @p.Caption account">@p.AuthenticationType</button>
+            @using (Html.BeginForm("ExternalLogin", "Account", new { ReturnUrl = Model.ReturnUrl }, FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    @foreach (AuthenticationDescription p in loginProviders)
+                    {
+                        <button type="submit" class="btn-social-provider" id="@p.AuthenticationType" name="provider" value="@p.AuthenticationType" title="Đăng nhập bằng tài khoản @p.Caption" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid #E5E7EB; background: #FFFFFF; font-size: 0.875rem; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s ease;">
+                            @if (p.AuthenticationType.ToLower().Contains("google"))
+                            {
+                                <i class="fa-brands fa-google" style="color: #EA4335;"></i>
+                            }
+                            else if (p.AuthenticationType.ToLower().Contains("facebook"))
+                            {
+                                <i class="fa-brands fa-facebook" style="color: #1877F2;"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-key"></i>
+                            }
+                            <span>@p.Caption</span>
+                        </button>
                     }
-                </p>
-            </div>
-        }
+                </div>
+            }
+        </div>
     }
 }

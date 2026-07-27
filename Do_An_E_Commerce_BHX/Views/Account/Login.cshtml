@@ -1,65 +1,75 @@
-﻿@using Do_An_E_Commerce_BHX.Models
+@using Do_An_E_Commerce_BHX.Models
+@using Microsoft.Owin.Security
 @model LoginViewModel
 @{
-    ViewBag.Title = "Log in";
-    Layout = null;
+    ViewBag.Title = "Đăng nhập";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <div class="row">
-        <div class="col-md-8">
-            <section id="loginForm">
-                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
-                {
-                    @Html.AntiForgeryToken()
-                    <h4>Use a local account to log in.</h4>
-                    <hr />
-                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                    <div class="row">
-                        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <div class="checkbox">
-                                @Html.CheckBoxFor(m => m.RememberMe)
-                                @Html.LabelFor(m => m.RememberMe)
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <input type="submit" value="Log in" class="btn btn-outline-dark" />
-                        </div>
-                    </div>
-                    <p>
-                        @Html.ActionLink("Register as a new user", "Register")
-                    </p>
-                    @* Enable this once you have account confirmation enabled for password reset functionality
-                        <p>
-                            @Html.ActionLink("Forgot your password?", "ForgotPassword")
-                        </p>*@
-                }
-            </section>
+<!-- Segmented Navigation Tabs -->
+<div class="auth-tabs">
+    <a href="@Url.Action("Login", "Account")" class="auth-tab-item active">
+        <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập
+    </a>
+    <a href="@Url.Action("Register", "Account")" class="auth-tab-item">
+        <i class="fa-solid fa-user-plus me-1"></i> Đăng Ký
+    </a>
+</div>
+
+<div class="auth-form-header" style="margin-bottom: 24px;">
+    <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.7rem; font-weight: 800; color: #123829; margin-bottom: 6px;">
+        Mời Bạn Đăng Nhập
+    </h2>
+    <p style="font-size: 0.9rem; color: #6B7280;">
+        Nhập thông tin tài khoản của bạn để tiếp tục mua sắm
+    </p>
+</div>
+
+@using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
+
+    <div class="auth-form-group">
+        @Html.LabelFor(m => m.Email, "Địa chỉ Email")
+        <div class="input-with-icon">
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "nhapemail@domain.com", autocomplete = "email" })
+            <i class="fa-solid fa-envelope input-icon"></i>
         </div>
-        <div class="col-md-4">
-            <section id="socialLoginForm">
-                @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
-            </section>
-        </div>
+        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "field-validation-error" })
     </div>
-</main>
+
+    <div class="auth-form-group">
+        @Html.LabelFor(m => m.Password, "Mật khẩu")
+        <div class="input-with-icon">
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "••••••••", id = "LoginPassword", autocomplete = "current-password" })
+            <i class="fa-solid fa-lock input-icon"></i>
+            <i class="fa-solid fa-eye toggle-password" data-target="LoginPassword" title="Hiện/Ẩn mật khẩu"></i>
+        </div>
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "field-validation-error" })
+    </div>
+
+    <div class="auth-options">
+        <label class="custom-checkbox-wrapper">
+            @Html.CheckBoxFor(m => m.RememberMe)
+            <span>Ghi nhớ đăng nhập</span>
+        </label>
+        <a href="@Url.Action("ForgotPassword", "Account")" class="auth-link">Quên mật khẩu?</a>
+    </div>
+
+    <button type="submit" class="btn-auth-submit">
+        <span>Đăng Nhập Ngay</span>
+        <i class="fa-solid fa-arrow-right"></i>
+    </button>
+}
+
+@{
+    var loginProviders = Context.GetOwinContext().Authentication.GetExternalAuthenticationTypes();
+    if (loginProviders != null && loginProviders.Any())
+    {
+        @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
+    }
+}
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
@@ -34,8 +34,9 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            height: 100%;
+        /* BỎ height: 100% ĐỂ POSITION STICKY HOẠT ĐỘNG */
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -58,7 +59,15 @@
             color: inherit;
         }
 
-        /* ===== Top utility bar ===== */
+        /* ===== Top utility bar & Header (STICKY) ===== */
+        .site-chrome {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(14, 42, 32, 0.08); /* Đổ bóng mờ khi cuộn trang */
+        }
+
         .topbar {
             background: var(--forest-deep);
             color: rgba(255,255,255,0.7);
@@ -66,7 +75,7 @@
         }
 
             .topbar .bar-inner {
-                max-width: 1200px;
+                max-width: 1560px;
                 margin: 0 auto;
                 padding: 7px 20px;
                 display: flex;
@@ -94,13 +103,12 @@
         .site-header {
             background: var(--card);
             border-bottom: 1px solid var(--line);
-            position: sticky;
-            top: 0;
-            z-index: 1030;
+            position: relative;
+            z-index: 1;
         }
 
         .header-inner {
-            max-width: 1200px;
+            max-width: 1560px;
             margin: 0 auto;
             padding: 14px 20px;
             display: flex;
@@ -188,6 +196,30 @@
             justify-content: center;
             font-size: 1.25rem;
             color: var(--forest-deep);
+            transition: transform 0.3s ease;
+        }
+
+        @@keyframes cartBounce {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.45) rotate(-14deg); color: var(--leaf-dark); }
+            70% { transform: scale(0.88) rotate(8deg); }
+            100% { transform: scale(1); }
+        }
+
+        .cart-bounce {
+            animation: cartBounce 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) !important;
+        }
+
+        .flying-cart-img {
+            position: fixed;
+            z-index: 999999;
+            border-radius: 50%;
+            object-fit: contain;
+            background: #ffffff;
+            border: 2px solid var(--leaf);
+            box-shadow: 0 12px 32px rgba(22, 59, 46, 0.35);
+            pointer-events: none;
+            transition: all 0.85s cubic-bezier(0.18, 0.89, 0.32, 1.25);
         }
 
         .cart-badge {
@@ -227,13 +259,13 @@
         /* ===== Page shell: sidebar + content ===== */
         .page-shell {
             flex: 1 0 auto;
-            max-width: 1200px;
+            max-width: 1600px;
             width: 100%;
             margin: 0 auto;
-            padding: 24px 20px;
+            padding: 24px 24px 32px;
             display: grid;
-            grid-template-columns: 240px 1fr;
-            gap: 22px;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 20px;
             align-items: start;
         }
 
@@ -243,6 +275,10 @@
             border-radius: 10px;
             box-shadow: 0 8px 22px rgba(14,42,32,0.08);
             overflow: hidden;
+            position: sticky;
+            top: 112px;
+            max-height: calc(100vh - 132px);
+            overflow-y: auto;
         }
 
         .sidebar-heading {
@@ -307,7 +343,7 @@
         }
 
         .footer-main {
-            max-width: 1200px;
+            max-width: 1560px;
             margin: 0 auto;
             padding: 42px 20px 26px;
             display: grid;
@@ -420,7 +456,7 @@
         }
 
             .footer-bottom .bar-inner {
-                max-width: 1200px;
+                max-width: 1560px;
                 margin: 0 auto;
                 padding: 16px 20px;
                 display: flex;
@@ -450,6 +486,7 @@
         @@media (max-width: 991px) {
             .page-shell {
                 grid-template-columns: 1fr;
+                padding: 20px;
             }
 
             .sidebar-toggle {
@@ -462,6 +499,7 @@
                 left: 0;
                 bottom: 0;
                 width: 280px;
+                max-height: none;
                 z-index: 1050;
                 border-radius: 0;
                 overflow-y: auto;
@@ -479,6 +517,10 @@
         }
 
         @@media (max-width: 576px) {
+            .page-shell {
+                padding: 16px;
+            }
+
             .header-account span.acc-text {
                 display: none;
             }
@@ -494,43 +536,45 @@
 <body>
 
     @* ================= TOP UTILITY BAR ================= *@
-    <div class="topbar">
-        <div class="bar-inner">
-            <span><i class="fa-solid fa-truck-fast"></i>Giao hàng nhanh trong 1 giờ &nbsp;•&nbsp; <i class="fa-solid fa-phone"></i>Hotline 1900 1234</span>
-            <div class="bar-links">
-                @if (User != null && User.IsInRole("Admin"))
-                {
-                    <a href="@Url.Action("Index", "AdminDashboard", new { area = "Admin" })" style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); padding: 2px 8px; border-radius: 4px; border: 1px dashed #f59e0b; font-size: 0.8125rem;">
-                        <i class="fa-solid fa-user-shield me-1"></i> Trang Admin Quản Trị
-                    </a>
-                }
-                @Html.ActionLink("Hệ thống cửa hàng", "Stores", "Home")
-                @Html.ActionLink("Trợ giúp", "Help", "Home")
+    <div class="site-chrome">
+        <div class="topbar">
+            <div class="bar-inner">
+                <span><i class="fa-solid fa-truck-fast"></i>Giao hàng nhanh trong 1 giờ &nbsp;•&nbsp; <i class="fa-solid fa-phone"></i>Hotline 1900 1234</span>
+                <div class="bar-links">
+                    @if (User != null && User.IsInRole("Admin"))
+                    {
+                        <a href="@Url.Action("Index", "AdminDashboard", new { area = "Admin" })" style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); padding: 2px 8px; border-radius: 4px; border: 1px dashed #f59e0b; font-size: 0.8125rem;">
+                            <i class="fa-solid fa-user-shield me-1"></i> Trang Admin Quản Trị
+                        </a>
+                    }
+                    @Html.ActionLink("Hệ thống cửa hàng", "Stores", "Home")
+                    @Html.ActionLink("Trợ giúp", "Help", "Home")
+                </div>
             </div>
         </div>
+
+        @* ================= HEADER ================= *@
+        <header class="site-header">
+            <div class="header-inner">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Mở danh mục">
+                    <i class="fa-solid fa-bars"></i> Danh mục
+                </button>
+
+                <a href="@Url.Action("Index", "Home")" class="brand">
+                    <i class="fa-solid fa-leaf"></i> Bách Hóa Xanh
+                </a>
+                <div class="header-cart">
+                    @{ Html.RenderAction("CartSummary", "Cart"); }
+                </div>
+
+                <div class="header-spacer"></div>
+                @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
+                <div class="header-account">
+                    @Html.Partial("_LoginPartial")
+                </div>
+            </div>
+        </header>
     </div>
-
-    @* ================= HEADER ================= *@
-    <header class="site-header">
-        <div class="header-inner">
-            <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Mở danh mục">
-                <i class="fa-solid fa-bars"></i> Danh mục
-            </button>
-
-            <a href="@Url.Action("Index", "Home")" class="brand">
-                <i class="fa-solid fa-leaf"></i> Bách Hóa Xanh
-            </a>
-            <div class="header-cart">
-                @{ Html.RenderAction("CartSummary", "Cart"); }
-            </div>
-
-            <div class="header-spacer"></div>
-            @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
-            <div class="header-account">
-                @Html.Partial("_LoginPartial")
-            </div>
-        </div>
-    </header>
 
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
@@ -617,8 +661,7 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
 
-    <script>
-        (function () {
+    <script>(function () {
             var toggleBtn = document.getElementById('sidebarToggle');
             var sidebar = document.getElementById('categorySidebar');
             var backdrop = document.getElementById('sidebarBackdrop');
@@ -637,8 +680,7 @@
             if (backdrop) {
                 backdrop.addEventListener('click', closeSidebar);
             }
-        })();
-    </script>
+        })();</script>
 
     @RenderSection("scripts", required: false)
 </body>

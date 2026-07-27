@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Bách Hóa Xanh</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    <style>
+        :root {
+            --forest-deep: #092117;
+            --forest: #123829;
+            --leaf: #2E8B57;
+            --leaf-bright: #3EB472;
+            --leaf-light: #EBF7F0;
+            --amber: #F5A623;
+            --amber-soft: #FFF8EB;
+            --paper: #F4F1EA;
+            --card-bg: #FFFFFF;
+            --ink: #1A261D;
+            --muted: #6B7280;
+            --line: #E5E7EB;
+            --tomato: #D9381E;
+            --shadow-3d: 0 30px 60px -12px rgba(9, 33, 23, 0.22), 0 18px 36px -18px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+            background: #0E261C;
+            background: radial-gradient(circle at 15% 15%, #184A36 0%, #0C241B 50%, #06150F 100%);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Ambient Light Spheres */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            left: -100px;
+            width: 550px;
+            height: 550px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(62, 180, 114, 0.22) 0%, rgba(18, 56, 41, 0) 70%);
+            animation: floatOrb1 14s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -150px;
+            right: -100px;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 166, 35, 0.18) 0%, rgba(18, 56, 41, 0) 70%);
+            animation: floatOrb2 18s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @@keyframes floatOrb1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+
+        @@keyframes floatOrb2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-70px, -50px) scale(1.2); }
+        }
+
+        /* Top Header Navigation */
+        .auth-header {
+            position: relative;
+            z-index: 10;
+            padding: 24px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .auth-logo-badge {
+            background: linear-gradient(135deg, var(--leaf-bright) 0%, var(--leaf) 100%);
+            color: #ffffff;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 8px 20px rgba(62, 180, 114, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .auth-logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-logo-text span {
+            color: var(--leaf-bright);
+        }
+
+        .btn-back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 22px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #FFFFFF;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-back-home:hover {
+            background: var(--leaf-bright);
+            color: #FFFFFF;
+            border-color: var(--leaf-bright);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(62, 180, 114, 0.4);
+        }
+
+        /* Main Container Card */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1120px;
+            width: 100%;
+            margin: 15px auto 35px auto;
+            padding: 0 20px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            box-shadow: var(--shadow-3d);
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            overflow: hidden;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            animation: fadeInCard 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @@keyframes fadeInCard {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Left Hero Showcase */
+        .auth-hero {
+            background: linear-gradient(145deg, #092117 0%, #123829 60%, #0F422E 100%);
+            color: #ffffff;
+            padding: 52px 46px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+        }
+
+        .auth-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(62, 180, 114, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--amber);
+            width: fit-content;
+            margin-bottom: 28px;
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            letter-spacing: 0.3px;
+        }
+
+        .auth-hero-badge .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--amber);
+            box-shadow: 0 0 10px var(--amber);
+            animation: pulseDot 2s infinite;
+        }
+
+        @@keyframes pulseDot {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .auth-hero-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1.25;
+            margin-bottom: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-hero-title span {
+            background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-hero-desc {
+            font-size: 0.975rem;
+            line-height: 1.65;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 36px;
+        }
+
+        .auth-features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .feature-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(6px);
+            border-color: rgba(62, 180, 114, 0.4);
+        }
+
+        .feature-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(62, 180, 114, 0.3) 0%, rgba(18, 56, 41, 0.6) 100%);
+            color: var(--leaf-bright);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            border: 1px solid rgba(62, 180, 114, 0.4);
+        }
+
+        .feature-info h5 {
+            font-size: 0.925rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 2px;
+        }
+
+        .feature-info p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        /* Stats Bar */
+        .auth-stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 16px 22px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--amber);
+        }
+
+        .stat-lbl {
+            font-size: 0.725rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 2px;
+        }
+
+        /* Right Form Wrapper */
+        .auth-form-wrapper {
+            padding: 52px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #FFFFFF;
+        }
+
+        /* Segmented Tab Switcher */
+        .auth-tabs {
+            display: flex;
+            background: #F3F4F6;
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 32px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .auth-tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 11px 16px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--muted);
+            border-radius: 11px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+        .auth-tab-item.active {
+            background: #FFFFFF;
+            color: var(--forest);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-tab-item:hover:not(.active) {
+            color: var(--forest);
+        }
+
+        /* Form Inputs */
+        .auth-form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 8px;
+        }
+
+        .auth-form-wrapper input:not([type="checkbox"]):not([type="radio"]),
+        .auth-form-wrapper select,
+        .auth-form-wrapper textarea,
+        .input-with-icon,
+        .input-with-icon .form-control {
+            max-width: none !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .input-with-icon {
+            position: relative;
+            display: block;
+        }
+
+        .input-with-icon .form-control {
+            padding: 14px 44px 14px 46px !important;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            border: 1.5px solid #E5E7EB;
+            background: #F9FAFB;
+            color: var(--ink);
+            transition: all 0.25s ease;
+            outline: none;
+            height: auto !important;
+        }
+
+        .input-with-icon .form-control:focus {
+            border-color: var(--leaf-bright);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(62, 180, 114, 0.15);
+        }
+
+        .input-with-icon i.input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: 1.05rem;
+            transition: color 0.25s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .input-with-icon .form-control:focus ~ i.input-icon {
+            color: var(--leaf-bright);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 6px;
+            font-size: 1.05rem;
+            transition: color 0.2s ease;
+            z-index: 5;
+        }
+
+        .toggle-password:hover {
+            color: var(--forest);
+        }
+
+        /* Checkbox & Links */
+        .auth-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 26px;
+            font-size: 0.875rem;
+        }
+
+        .custom-checkbox-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .custom-checkbox-wrapper input {
+            accent-color: var(--leaf-bright);
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .auth-link {
+            color: var(--leaf);
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .auth-link:hover {
+            color: var(--forest-deep);
+            text-decoration: underline;
+        }
+
+        /* Submit Button with Shimmer Sweep */
+        .btn-auth-submit {
+            position: relative;
+            width: 100%;
+            padding: 15px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--leaf-bright) 0%, var(--leaf) 100%);
+            color: #FFFFFF;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(46, 139, 87, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-auth-submit::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            transition: none;
+        }
+
+        .btn-auth-submit:hover::after {
+            animation: shimmer 1.2s ease-in-out infinite;
+        }
+
+        @@keyframes shimmer {
+            100% { left: 130%; }
+        }
+
+        .btn-auth-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(46, 139, 87, 0.45);
+            background: linear-gradient(135deg, #45C27C 0%, #237447 100%);
+        }
+
+        .btn-auth-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Validation Alerts */
+        .validation-summary-valid,
+        .validation-summary-errors:empty,
+        .validation-summary-errors ul:empty {
+            display: none !important;
+        }
+
+        .validation-summary-errors {
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            color: #991B1B;
+            font-weight: 500;
+        }
+
+        .validation-summary-errors ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .field-validation-error {
+            color: var(--tomato);
+            font-size: 0.8125rem;
+            margin-top: 6px;
+            display: block;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .auth-site-footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.825rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ===== Responsive Media Queries ===== */
+        @@media (max-width: 991px) {
+            .auth-card {
+                grid-template-columns: 1fr;
+                max-width: 520px;
+            }
+
+            .auth-hero {
+                display: none;
+            }
+
+            .auth-form-wrapper {
+                padding: 40px 32px;
+            }
+
+            .auth-header {
+                padding: 18px 24px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .auth-form-wrapper {
+                padding: 32px 22px;
+            }
+        }
+    </style>
+    @RenderSection("styles", required: false)
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="auth-header">
+        <a href="@Url.Action("Index", "Home")" class="auth-logo">
+            <div class="auth-logo-badge">
+                <i class="fa-solid fa-basket-shopping"></i>
+            </div>
+            <div class="auth-logo-text">
+                Bách Hóa <span>Xanh</span>
+            </div>
+        </a>
+        <a href="@Url.Action("Index", "Home")" class="btn-back-home">
+            <i class="fa-solid fa-house"></i> Trang chủ
+        </a>
+    </header>
+
+    <!-- Main Container -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Left Hero Section -->
+            <div class="auth-hero">
+                <div>
+                    <div class="auth-hero-badge">
+                        <span class="status-dot"></span> Bách Hóa Xanh Official
+                    </div>
+                    <h1 class="auth-hero-title">
+                        Đi Chợ Nhanh,<br /><span>Sống Khỏe Mỗi Ngày</span>
+                    </h1>
+                    <p class="auth-hero-desc">
+                        Nông sản tươi ngon, thực phẩm sạch và nhu yếu phẩm chất lượng cao giao tận cửa nhà bạn chỉ trong 60 phút.
+                    </p>
+
+                    <div class="auth-features">
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper"><i class="fa-solid fa-bolt"></i></div>
+                            <div class="feature-info">
+                                <h5>Giao hàng 1 giờ</h5>
+                                <p>Nhận hàng tươi ngon hỏa tốc tận tay</p>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper"><i class="fa-solid fa-leaf"></i></div>
+                            <div class="feature-info">
+                                <h5>100% Nông sản sạch</h5>
+                                <p>Nguồn gốc rõ ràng, đạt chuẩn VietGAP</p>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper"><i class="fa-solid fa-gem"></i></div>
+                            <div class="feature-info">
+                                <h5>Tích điểm &amp; Ưu đãi</h5>
+                                <p>Hoàn tiền và quà tặng thành viên hấp dẫn</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-val">10.000+</div>
+                        <div class="stat-lbl">Khách hàng / ngày</div>
+                    </div>
+                    <div class="stat-item" style="border-left: 1px solid rgba(255,255,255,0.15); border-right: 1px solid rgba(255,255,255,0.15); padding: 0 16px;">
+                        <div class="stat-val">100%</div>
+                        <div class="stat-lbl">Tươi ngon chọn lọc</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-val">60 Phút</div>
+                        <div class="stat-lbl">Giao nhanh</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form Section -->
+            <div class="auth-form-wrapper">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Site Footer -->
+    <footer class="auth-site-footer">
+        &copy; @DateTime.Now.Year Bách Hóa Xanh &middot; Hệ thống siêu thị thực phẩm tươi ngon hàng đầu Việt Nam.
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtns = document.querySelectorAll('.toggle-password');
+            toggleBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const input = document.getElementById(targetId);
+                    if (input && (input.type === 'password' || input.type === 'text')) {
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            this.classList.remove('fa-eye');
+                            this.classList.add('fa-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            this.classList.remove('fa-eye-slash');
+                            this.classList.add('fa-eye');
+                        }
+                    }
+                });
+            });
+
+            // Tự động ẩn khung thông báo lỗi nếu không có lỗi
+            const valSummaries = document.querySelectorAll('.validation-summary-errors, .validation-summary-valid');
+            valSummaries.forEach(function (el) {
+                const lis = el.querySelectorAll('li');
+                let hasText = false;
+                lis.forEach(function (li) {
+                    if (li.textContent && li.textContent.trim().length > 0 && li.style.display !== 'none') {
+                        hasText = true;
+                    }
+                });
+                if (!hasText) {
+                    el.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
