@@ -1,19 +1,23 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Question>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Review>
+@using Do_An_E_Commerce_BHX.Models.Entities
 
 @{
-    ViewData["Title"] = "Quản lý Hỏi đáp & Đánh giá (QTV Rep)";
-    ViewData["Subtitle"] = "Danh sách câu hỏi của khách hàng cần trả lời ngay";
+    ViewData["Title"] = "Quản lý Đánh giá sản phẩm";
+    ViewData["Subtitle"] = "Danh sách các bài đánh giá số sao (1-5★) & nhận xét từ Khách hàng";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 
-    var products = ViewBag.Products as Dictionary<int, Do_An_E_Commerce_BHX.Models.Entities.Product> ?? new Dictionary<int, Do_An_E_Commerce_BHX.Models.Entities.Product>();
+    var products = ViewBag.Products as Dictionary<int, Product> ?? new Dictionary<int, Product>();
     var users = ViewBag.Users as Dictionary<string, string> ?? new Dictionary<string, string>();
 
-    int countUnanswered = ViewBag.CountUnanswered != null ? (int)ViewBag.CountUnanswered : 0;
-    int countAnswered = ViewBag.CountAnswered != null ? (int)ViewBag.CountAnswered : 0;
-    int countAll = ViewBag.CountAll != null ? (int)ViewBag.CountAll : 0;
-
-    string currentFilter = ViewBag.CurrentFilter as string ?? "unanswered";
+    int? currentStar = ViewBag.CurrentStar as int?;
     string currentSearch = ViewBag.CurrentSearch as string ?? "";
+
+    int countAll = ViewBag.CountAll != null ? (int)ViewBag.CountAll : 0;
+    int count5Star = ViewBag.Count5Star != null ? (int)ViewBag.Count5Star : 0;
+    int count4Star = ViewBag.Count4Star != null ? (int)ViewBag.Count4Star : 0;
+    int count3Star = ViewBag.Count3Star != null ? (int)ViewBag.Count3Star : 0;
+    int count2Star = ViewBag.Count2Star != null ? (int)ViewBag.Count2Star : 0;
+    int count1Star = ViewBag.Count1Star != null ? (int)ViewBag.Count1Star : 0;
 }
 
 <!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
@@ -39,37 +43,60 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
 
-    /* Tabs Filter Nâng cấp */
-    .filter-tab {
+    /* Bộ lọc Tabs (Pills) */
+    .filter-tabs .nav-link {
         border-radius: 30px;
         font-weight: 600;
+        color: #495057;
+        padding: 8px 20px;
         transition: all 0.3s;
-        border: 2px solid transparent;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-        .filter-tab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        .filter-tabs .nav-link:hover {
+            background-color: #f8f9fa;
+            border-color: #e9ecef;
         }
 
-    /* Bong bóng Chat (UI Messenger) */
-    .chat-bubble-user {
-        background-color: #f1f3f5;
-        border: 1px solid #e9ecef;
-        border-radius: 0 16px 16px 16px;
-        position: relative;
+        .filter-tabs .nav-link.active {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+    .tab-all.active {
+        background-color: #343a40;
+        color: #fff !important;
+        border-color: #343a40;
     }
 
-    .chat-bubble-admin {
-        background-color: #f0fdf4; /* Xanh lá siêu nhạt */
-        border: 1px solid #dcfce7;
-        border-radius: 16px 0 16px 16px;
-        position: relative;
-    }
-
-    .input-reply:focus {
-        box-shadow: none;
+    .tab-star.active {
+        background-color: #ffc107;
+        color: #000 !important;
         border-color: #ffc107;
+    }
+
+    /* Bảng dữ liệu */
+    .table-custom th {
+        background-color: #f4f6f9;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 12px;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 16px 12px;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background-color 0.2s;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f8f9fa;
     }
 </style>
 
@@ -77,32 +104,47 @@
     <!-- TOP HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-comments text-warning me-2"></i>Quản Lý Hỏi Đáp (Q&A)</h3>
-            <p class="text-muted mb-0 mt-1 fs-6">Danh sách câu hỏi chưa trả lời - Phản hồi trực tiếp với tư cách QTV Bách Hóa Xanh</p>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-star-half-stroke text-warning me-2"></i>Quản Lý Đánh Giá Sản Phẩm</h3>
+            <p class="text-muted mb-0 mt-1 fs-6">Danh sách các bài đánh giá số sao (1-5★) & nhận xét từ Khách hàng</p>
         </div>
     </div>
 
-    <!-- TABS NÚT LỌC TRẠNG THÁI REP -->
-    <div class="d-flex flex-wrap gap-3 mb-4">
-        <a href="@Url.Action("Index", "ManageReview", new { filter = "unanswered", search = currentSearch })"
-           class="btn filter-tab px-4 py-2 @(currentFilter == "unanswered" ? "btn-warning text-dark shadow-sm border-warning" : "bg-white text-dark border-light shadow-sm")">
-            <i class="fa-solid fa-hourglass-half me-1"></i> CẦN PHẢN HỒI
-            @if (countUnanswered > 0)
-            {
-                <span class="badge bg-danger rounded-pill ms-2">@countUnanswered</span>
-            }
+    <!-- TABS NÚT LỌC THEO SỐ SAO -->
+    <div class="nav nav-pills filter-tabs gap-3 mb-4 flex-wrap">
+        <a href="@Url.Action("Index", "ManageReview", new { star = (int?)null, search = currentSearch })"
+           class="nav-link tab-all @(!currentStar.HasValue ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-list"></i> Tất cả
+            <span class="badge @(!currentStar.HasValue ? "bg-secondary" : "bg-light text-dark border") rounded-pill ms-1">@countAll</span>
         </a>
 
-        <a href="@Url.Action("Index", "ManageReview", new { filter = "answered", search = currentSearch })"
-           class="btn filter-tab px-4 py-2 @(currentFilter == "answered" ? "btn-success text-white shadow-sm border-success" : "bg-white text-dark border-light shadow-sm")">
-            <i class="fa-solid fa-circle-check me-1"></i> ĐÃ PHẢN HỒI (QTV)
-            <span class="badge @(currentFilter == "answered" ? "bg-white text-success" : "bg-light text-dark") rounded-pill ms-2 border">@countAnswered</span>
+        <a href="@Url.Action("Index", "ManageReview", new { star = 5, search = currentSearch })"
+           class="nav-link tab-star @(currentStar == 5 ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-star text-warning"></i> 5 Sao
+            <span class="badge @(currentStar == 5 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count5Star</span>
         </a>
 
-        <a href="@Url.Action("Index", "ManageReview", new { filter = "all", search = currentSearch })"
-           class="btn filter-tab px-4 py-2 @(currentFilter == "all" ? "btn-dark text-white shadow-sm border-dark" : "bg-white text-dark border-light shadow-sm")">
-            <i class="fa-solid fa-list-ul me-1"></i> TẤT CẢ
-            <span class="badge @(currentFilter == "all" ? "bg-secondary" : "bg-light text-dark") rounded-pill ms-2 border">@countAll</span>
+        <a href="@Url.Action("Index", "ManageReview", new { star = 4, search = currentSearch })"
+           class="nav-link tab-star @(currentStar == 4 ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-star text-warning"></i> 4 Sao
+            <span class="badge @(currentStar == 4 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count4Star</span>
+        </a>
+
+        <a href="@Url.Action("Index", "ManageReview", new { star = 3, search = currentSearch })"
+           class="nav-link tab-star @(currentStar == 3 ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-star text-warning"></i> 3 Sao
+            <span class="badge @(currentStar == 3 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count3Star</span>
+        </a>
+
+        <a href="@Url.Action("Index", "ManageReview", new { star = 2, search = currentSearch })"
+           class="nav-link tab-star @(currentStar == 2 ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-star text-warning"></i> 2 Sao
+            <span class="badge @(currentStar == 2 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count2Star</span>
+        </a>
+
+        <a href="@Url.Action("Index", "ManageReview", new { star = 1, search = currentSearch })"
+           class="nav-link tab-star @(currentStar == 1 ? "active" : "bg-white border-light shadow-sm")">
+            <i class="fa-solid fa-star text-warning"></i> 1 Sao
+            <span class="badge @(currentStar == 1 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count1Star</span>
         </a>
     </div>
 
@@ -110,210 +152,152 @@
     <div class="card admin-card border border-light mb-4">
         <div class="card-body p-4">
             <form method="get" action="@Url.Action("Index", "ManageReview")">
-                <input type="hidden" name="filter" value="@currentFilter" />
+                <input type="hidden" name="star" value="@currentStar" />
                 <div class="row g-2">
-                    <div class="col-md-10">
+                    <div class="col-md-9 col-lg-10">
                         <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
                             <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm nội dung câu hỏi, tên khách hàng..." value="@currentSearch" />
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm nội dung nhận xét, đánh giá..." value="@currentSearch" />
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary btn-custom fw-bold w-100 h-100 shadow-sm">
-                            TÌM KIẾM
+                    <div class="col-md-3 col-lg-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-custom fw-bold flex-grow-1 shadow-sm">
+                            <i class="fa-solid fa-filter me-1"></i> Lọc
                         </button>
+                        <a href="@Url.Action("Index", "ManageReview")" class="btn btn-outline-secondary btn-custom shadow-sm" title="Xóa bộ lọc">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- DANH SÁCH CÂU HỎI -->
-    <div class="row g-4 mb-5">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var q in Model)
-            {
-                string productName = "Sản phẩm không tồn tại";
-                string productImg = "/Content/images/no-image.png";
+    <!-- BẢNG DANH SÁCH ĐÁNH GIÁ -->
+    <div class="card admin-card border border-light overflow-hidden mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">ID</th>
+                            <th style="width: 280px;">Sản Phẩm</th>
+                            <th style="width: 180px;">Khách Hàng</th>
+                            <th style="width: 140px;">Đánh Giá</th>
+                            <th>Nội Dung Nhận Xét</th>
+                            <th style="width: 130px;">Thời Gian</th>
+                            <th class="text-center" style="width: 100px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var r in Model)
+                            {
+                                var p = products.ContainsKey(r.ProductId) ? products[r.ProductId] : null;
+                                string pName = p != null ? p.Name : "Sản phẩm #" + r.ProductId;
+                                string pImg = p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png";
 
-                if (products.ContainsKey(q.ProductId))
-                {
-                    var p = products[q.ProductId];
-                    productName = p.Name;
-                    if (!string.IsNullOrEmpty(p.URLImage)) { productImg = p.URLImage; }
-                }
+                                string uName = "Khách hàng";
+                                if (!string.IsNullOrEmpty(r.UserId) && users.ContainsKey(r.UserId))
+                                {
+                                    uName = users[r.UserId];
+                                }
 
-                string userName = "Khách hàng";
-                string uidStr = q.UserId.ToString();
-                if (q.UserId > 0 && users.ContainsKey(uidStr))
-                {
-                    userName = users[uidStr];
-                }
-
-                bool isAnswered = !string.IsNullOrWhiteSpace(q.Answer);
-
-                <div class="col-12" id="question-card-@q.Id">
-                    <div class="card admin-card border border-light overflow-hidden @(isAnswered ? "border-start border-success border-4" : "border-start border-warning border-4")">
-                        <div class="card-body p-0">
-                            <div class="row g-0">
-                                <!-- CỘT TRÁI: Thông tin sản phẩm & Khách hỏi -->
-                                <div class="col-md-4 p-4 border-end bg-light bg-opacity-50">
-                                    <div class="d-flex align-items-center gap-3 mb-4">
-                                        <div class="bg-white rounded p-1 shadow-sm border">
-                                            <img src="@productImg" style="width: 60px; height: 60px; object-fit: contain;" />
-                                        </div>
-                                        <div>
-                                            <div class="small text-muted text-uppercase fw-bold letter-spacing-1 mb-1">Sản phẩm</div>
-                                            <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" title="@productName">@productName</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-white p-3 rounded-3 shadow-sm border border-light">
-                                        <div class="small text-muted text-uppercase fw-bold mb-2">Người đặt câu hỏi</div>
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 28px; height: 28px;">
-                                                <i class="fa-solid fa-user"></i>
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border px-2 py-1 fs-6">#@r.Id</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-white rounded p-1 shadow-sm border flex-shrink-0">
+                                                <img src="@pImg" alt="@pName" style="width: 45px; height: 45px; object-fit: contain;" onerror="this.src='/Content/images/no-image.png';" />
                                             </div>
-                                            <div class="fw-bold text-dark fs-6">@userName</div>
-                                        </div>
-                                        <div class="text-muted small ms-4 ps-1"><i class="fa-regular fa-clock me-1"></i>@q.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
-                                    </div>
-                                </div>
-
-                                <!-- CỘT PHẢI: Nội dung câu hỏi & Khung rep -->
-                                <div class="col-md-8 p-4 d-flex flex-column justify-content-between">
-                                    <div>
-                                        <!-- Tiêu đề & Nút Xóa -->
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-comment-dots text-primary me-2"></i>Nội dung trao đổi:</h6>
-                                            <button type="button" class="btn btn-sm btn-outline-danger btn-custom btn-delete-question px-3" data-id="@q.Id" title="Xóa câu hỏi này">
-                                                <i class="fa-solid fa-trash me-1"></i> Xóa
-                                            </button>
-                                        </div>
-
-                                        <!-- Bong bóng câu hỏi của khách (Bên trái) -->
-                                        <div class="d-flex mb-3">
-                                            <div class="p-3 chat-bubble-user text-dark fw-bold shadow-sm" style="max-width: 85%;">
-                                                @q.Content
+                                            <div>
+                                                <div class="fw-bold text-dark text-truncate" style="max-width: 190px;" title="@pName">@pName</div>
+                                                <small class="text-muted">Mã SP: <span class="badge bg-light text-dark border">#@r.ProductId</span></small>
                                             </div>
                                         </div>
-
-                                        <!-- Bong bóng QTV trả lời (Bên phải) - Nếu đã rep -->
-                                        @if (isAnswered)
-                                        {
-                                            <div class="d-flex justify-content-end mb-3">
-                                                <div class="p-3 chat-bubble-admin shadow-sm" style="max-width: 85%;">
-                                                    <div class="d-flex align-items-center justify-content-end gap-2 mb-2">
-                                                        <span class="badge bg-warning text-dark fw-bold px-2 py-1">QTV</span>
-                                                        <div class="fw-bold text-success fs-6">Bách Hóa Xanh</div>
-                                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 28px; height: 28px; font-size: 12px;">
-                                                            <i class="fa-solid fa-leaf"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-dark">@q.Answer</div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-
-                                    <!-- KHUNG KHÁCH / ADMIN NHẬP CÂU TRẢ LỜI QTV NGAY TẠI ĐÓ -->
-                                    <div class="mt-3 pt-3 border-top">
-                                        <label class="form-label fw-bold text-secondary small text-uppercase mb-2">
-                                            <i class="fa-solid fa-reply me-1 text-warning"></i>@(isAnswered ? "Cập nhật lại câu trả lời QTV:" : "Nhập câu trả lời tư vấn (Hiển thị nhãn QTV màu vàng):")
-                                        </label>
-                                        <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #ced4da;">
-                                            <input type="text" id="answer-input-@q.Id" class="form-control border-0 input-reply px-3 py-2" placeholder="VD: Dạ sản phẩm bên em cam kết chính hãng, hạn sử dụng mới nhất ạ..." value="@(q.Answer ?? "")" />
-                                            <button type="button" class="btn btn-warning fw-bold text-dark px-4 btn-submit-reply border-0" data-id="@q.Id">
-                                                <i class="fa-solid fa-paper-plane me-1"></i> TRẢ LỜI
-                                            </button>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-success"><i class="fa-solid fa-circle-user text-secondary me-2"></i>@uName</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-warning fs-6">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= r.Rating)
+                                                {
+                                                    <i class="fa-solid fa-star"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-regular fa-star text-muted opacity-50"></i>
+                                                }
+                                            }
                                         </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
-        else
-        {
-            <div class="col-12">
-                <div class="card admin-card p-5 text-center bg-white border border-light">
-                    <i class="fa-solid fa-comments fs-1 text-success d-block mb-3 opacity-50"></i>
-                    <h5 class="fw-bold text-dark">Không có câu hỏi nào cần phản hồi trong danh mục này!</h5>
-                    <p class="text-muted m-0">Tất cả câu hỏi của khách hàng đã được đội ngũ QTV giải quyết chu đáo.</p>
-                </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-dark fw-medium bg-light p-2 rounded-3 border d-inline-block">
+                                            <i class="fa-solid fa-quote-left text-muted me-2 opacity-50"></i>@r.Comment
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@r.CreatedDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@r.CreatedDate.ToString("HH:mm")</div>
+                                    </td>
+                                    <td class="text-center pe-3">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-custom btn-delete-review" data-id="@r.Id" title="Xóa đánh giá này">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fa-solid fa-star-half-stroke fs-1 d-block mb-3 opacity-50"></i>
+                                    <h5>Không tìm thấy bài đánh giá nào!</h5>
+                                    <p class="mb-0">Thử thay đổi tiêu chí sao hoặc từ khóa tìm kiếm.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-        }
+        </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
     $(document).ready(function () {
-        // Admin bấm gửi câu trả lời QTV ngay tại đó
-        $('.btn-submit-reply').on('click', function () {
-            var qid = $(this).data('id');
-            var answer = $('#answer-input-' + qid).val().trim();
+        // XÓA ĐÁNH GIÁ SẢN PHẨM
+        $('.btn-delete-review').click(function () {
+            var id = $(this).data('id');
             var btn = $(this);
             var originalHtml = btn.html();
 
-            if (!answer) {
-                alert("Vui lòng nhập nội dung câu trả lời!");
-                $('#answer-input-' + qid).focus();
+            if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài đánh giá #" + id + " này không?\nHành động này không thể hoàn tác!")) {
                 return;
             }
 
-            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang gửi...');
-
-            $.ajax({
-                url: '@Url.Action("Reply", "ManageReview")',
-                type: 'POST',
-                data: { questionId: qid, answer: answer },
-                success: function (res) {
-                    if (res.success) {
-                        alert("🎉 " + res.message);
-                        location.reload();
-                    } else {
-                        alert(res.message || "Không thể gửi phản hồi!");
-                        btn.prop('disabled', false).html(originalHtml);
-                    }
-                },
-                error: function (xhr, status, err) {
-                    btn.prop('disabled', false).html(originalHtml);
-                    alert("Lỗi hệ thống khi gửi phản hồi: " + (xhr.responseText || err));
-                }
-            });
-        });
-
-        // Admin bấm Xóa câu hỏi
-        $('.btn-delete-question').on('click', function () {
-            var qid = $(this).data('id');
-            if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn câu hỏi #" + qid + " này không?")) return;
-
-            var btn = $(this);
-            var originalHtml = btn.html();
+            // Hiệu ứng loading
             btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
 
-            $.ajax({
-                url: '@Url.Action("Delete", "ManageReview")',
-                type: 'POST',
-                data: { questionId: qid },
-                success: function (res) {
-                    if (res.success) {
-                        $('#question-card-' + qid).fadeOut(300, function () { $(this).remove(); });
-                    } else {
-                        alert(res.message || "Không thể xóa!");
-                        btn.prop('disabled', false).html(originalHtml);
-                    }
-                },
-                error: function (xhr, status, err) {
+            $.post('@Url.Action("Delete", "ManageReview")', { id: id }, function (res) {
+                if (res.success) {
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message || "Không thể xóa bài đánh giá này!");
                     btn.prop('disabled', false).html(originalHtml);
-                    alert("Lỗi khi xóa câu hỏi: " + (xhr.responseText || err));
                 }
+            }).fail(function() {
+                alert("Lỗi kết nối đến máy chủ!");
+                btn.prop('disabled', false).html(originalHtml);
             });
         });
     });

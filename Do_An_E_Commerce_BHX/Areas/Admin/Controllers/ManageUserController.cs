@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -82,6 +82,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     Email = user.Email,
                     FullName = user.FullName,
                     PhoneNumber = user.PhoneNumber,
+                    LoyaltyPoints = user.LoyaltyPoints,
                     Roles = roles.ToList(),
                     IsLocked = user.LockoutEndDateUtc.HasValue && user.LockoutEndDateUtc.Value > DateTime.UtcNow
                 });
@@ -269,6 +270,56 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        // GET: Admin/ManageUser/OrderHistory?userId=XXX&statusFilter=all
+        public async Task<ActionResult> OrderHistory(string userId, string statusFilter = "all")
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return HttpNotFound("Không tìm thấy mã khách hàng!");
+            }
+
+            var customer = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (customer == null)
+            {
+                return HttpNotFound("Khách hàng không tồn tại!");
+            }
+
+            var ordersQuery = _db.Order
+                .Include("OrderDetails.Product")
+                .Where(o => o.UserId == userId);
+
+            // Thống kê số lượng đơn hàng theo từng trạng thái
+            int totalCount = await _db.Order.CountAsync(o => o.UserId == userId);
+            int processingCount = await _db.Order.CountAsync(o => o.UserId == userId && (o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2));
+            int completedCount = await _db.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 3);
+            int cancelledCount = await _db.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 4);
+
+            ViewBag.TotalCount = totalCount;
+            ViewBag.ProcessingCount = processingCount;
+            ViewBag.CompletedCount = completedCount;
+            ViewBag.CancelledCount = cancelledCount;
+
+            statusFilter = (statusFilter ?? "all").ToLower();
+            ViewBag.StatusFilter = statusFilter;
+            ViewBag.Customer = customer;
+
+            if (statusFilter == "processing")
+            {
+                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2);
+            }
+            else if (statusFilter == "completed")
+            {
+                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 3);
+            }
+            else if (statusFilter == "cancelled")
+            {
+                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 4);
+            }
+
+            var orders = await ordersQuery.OrderByDescending(o => o.OrderDate).ToListAsync();
+            return View(orders);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -289,6 +340,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         public string Email { get; set; }
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
+        public int LoyaltyPoints { get; set; }
         public List<string> Roles { get; set; }
         public bool IsLocked { get; set; }
     }

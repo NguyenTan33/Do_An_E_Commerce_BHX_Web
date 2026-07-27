@@ -174,12 +174,14 @@
     <Compile Include="Areas\Admin\Controllers\ManageProductController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManagePromotionController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageReviewController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageQuestionController.cs" />
     <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageOrderController.cs" />
     <Compile Include="Controllers\OrderController.cs" />
+    <Compile Include="Controllers\SePayController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\UserAddressController.cs" />
     <Compile Include="Global.asax.cs">
@@ -193,6 +195,7 @@
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\CustomerTierHelper.cs" />
     <Compile Include="Models\Entities\Cart.cs" />
     <Compile Include="Models\Entities\CartDetail.cs" />
     <Compile Include="Models\Entities\Order.cs" />
@@ -201,7 +204,9 @@
     <Compile Include="Models\Entities\Preview.cs" />
     <Compile Include="Models\Entities\Product.cs" />
     <Compile Include="Models\Entities\Promotion.cs" />
+    <Compile Include="Models\Entities\UserPromotion.cs" />
     <Compile Include="Models\Entities\Question.cs" />
+    <Compile Include="Services\Implementations\VoucherService.cs" />
     <Compile Include="Models\Entities\Review.cs" />
     <Compile Include="Models\Entities\UserAddress.cs" />
     <Compile Include="Models\Entities\Waranty.cs" />
@@ -217,6 +222,7 @@
     <Compile Include="Repositories\Interfaces\IProductRepository.cs" />
     <Compile Include="Services\Implementations\CartService.cs" />
     <Compile Include="Services\Implementations\CustomerSupportService.cs" />
+    <Compile Include="Services\Implementations\OrderInvoiceEmailService.cs" />
     <Compile Include="Services\Implementations\OrderService.cs" />
     <Compile Include="Services\Implementations\PaymentService.cs" />
     <Compile Include="Services\Implementations\ProductService.cs" />
@@ -315,6 +321,7 @@
     <Content Include="Views\Manage\ManageLogins.cshtml" />
     <Content Include="Views\Manage\SetPassword.cshtml" />
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
+    <Content Include="Views\Manage\MyOrders.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Cart\Index.cshtml" />
@@ -334,11 +341,13 @@
     <Content Include="Areas\Admin\Views\ManageOrder\DeliveryList.cshtml" />
     <Content Include="Areas\Admin\Views\ManageOrder\History.cshtml" />
     <Content Include="Areas\Admin\Views\ManageReview\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageQuestion\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageUser\OrderHistory.cshtml" />
+    <Content Include="Views\Manage\MyVouchers.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Data\" />
-    <Folder Include="Areas\Admin\Views\AuthorizeAdmin\" />
     <Folder Include="Views\Default\" />
   </ItemGroup>
   <ItemGroup>

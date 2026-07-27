@@ -1,7 +1,11 @@
-﻿@model Do_An_E_Commerce_BHX.Models.Entities.Order
+@model Do_An_E_Commerce_BHX.Models.Entities.Order
 
 @{
     Layout = null;
+    string sePayBank = System.Configuration.ConfigurationManager.AppSettings["SePay_Bank"] ?? "VietinBank";
+    string sePayAccNum = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountNumber"] ?? "10123456789";
+    string sePayAccName = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountName"] ?? "NGUYEN MINH TAN";
+    string qrUrl = $"https://img.vietqr.io/image/vietinbank-{sePayAccNum}-compact2.jpg?amount={(int)Model.TotalAmount}&addInfo=BHX{Model.Id}&accountName={HttpUtility.UrlEncode(sePayAccName)}";
 }
 
 <!DOCTYPE html>
@@ -258,27 +262,33 @@
                         </button>
                     </div>
 
-                    <!-- 2. BANK TRANSFER / VIETQR API -->
+                    <!-- 2. BANK TRANSFER / VIETQR SEPAY VIETINBANK -->
                     <div class="tab-pane fade" id="bank-content" role="tabpanel">
-                        <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-qrcode me-2"></i> Quét mã VietQR hoặc Chuyển khoản Ngân hàng</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-qrcode me-2"></i> Quét Mã VietQR Ngân Hàng VietinBank (SePay Webhook)</h5>
+                            <span class="badge bg-success px-3 py-2 fs-6 shadow-sm"><i class="fa-solid fa-bolt me-1"></i> Tự Động Gạch Nợ 24/7</span>
+                        </div>
                         <div class="row align-items-center g-4">
                             <div class="col-md-5 text-center">
-                                <img src="https://api.vietqr.io/image/970422-0909888999-compact.png?amount=@((int)Model.TotalAmount)&addInfo=BHX%20@Model.Id"
-                                     alt="Mã VietQR Đơn #@Model.Id"
-                                     class="img-fluid rounded-3 border shadow-sm p-2 bg-white"
-                                     style="max-height: 220px;" />
-                                <div class="small text-muted mt-2">App Ngân hàng quét QR tự nhập số tiền & nội dung</div>
+                                <img src="@qrUrl"
+                                     alt="Mã VietQR VietinBank Đơn #@Model.Id"
+                                     class="img-fluid rounded-3 border shadow p-2 bg-white"
+                                     style="max-height: 240px;" />
+                                <div class="small text-success fw-bold mt-2"><i class="fa-solid fa-sync fa-spin me-1"></i> Đang chờ tiền vào tài khoản VietinBank...</div>
                             </div>
                             <div class="col-md-7">
                                 <div class="bg-light p-3 rounded-3 border">
-                                    <div class="mb-2"><strong>Ngân hàng:</strong> MB Bank (NHTMCP Quân Đội)</div>
-                                    <div class="mb-2"><strong>Số tài khoản:</strong> <span class="text-danger fw-bold fs-5">0909 888 999</span></div>
-                                    <div class="mb-2"><strong>Chủ tài khoản:</strong> CÔNG TY TNHH BÁCH HÓA XANH</div>
-                                    <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
-                                    <div class="mb-0"><strong>Nội dung CK:</strong> <span class="text-primary fw-bold fs-6">BHX @Model.Id</span></div>
+                                    <div class="mb-2"><strong>Ngân hàng:</strong> <span class="text-primary fw-bold">@sePayBank</span></div>
+                                    <div class="mb-2"><strong>Số tài khoản:</strong> <span class="text-danger fw-bold fs-4 ms-1">@sePayAccNum</span></div>
+                                    <div class="mb-2"><strong>Chủ tài khoản:</strong> <span class="text-dark fw-bold">@sePayAccName</span></div>
+                                    <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold fs-5">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
+                                    <div class="mb-0 p-2 bg-warning bg-opacity-25 rounded border border-warning">
+                                        <span class="text-secondary small d-block">Nội dung chuyển khoản (Bắt buộc giữ nguyên):</span>
+                                        <span class="text-danger fw-bold fs-5">BHX @Model.Id</span>
+                                    </div>
                                 </div>
                                 <button id="btnConfirmBankApi" class="btn btn-primary btn-action-lg w-100 shadow mt-3">
-                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)
+                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (MÔ PHỎNG THỦ CÔNG)
                                 </button>
                             </div>
                         </div>
@@ -309,6 +319,22 @@
     <script>
         $(document).ready(function () {
             var orderId = @Model.Id;
+
+            // AUTO-POLLING SEPAY VIETINBANK (Kiểm tra tự động mỗi 3 giây)
+            var pollTimer = setInterval(function () {
+                $.ajax({
+                    url: '@Url.Action("CheckPaymentStatus", "Order")',
+                    type: 'GET',
+                    data: { orderId: orderId },
+                    success: function (res) {
+                        if (res && res.isPaid) {
+                            clearInterval(pollTimer);
+                            alert("🎉 THANH TOÁN VIETINBANK QUA SEPAY THÀNH CÔNG!\nHệ thống đã tự động gạch nợ đơn hàng #" + orderId + " và gửi Hóa đơn về Email của bạn.");
+                            window.location.href = '@Url.Action("Index", "Home")';
+                        }
+                    }
+                });
+            }, 3000);
 
             // 1. COD
             $('#btnConfirmCOD').on('click', function (e) {

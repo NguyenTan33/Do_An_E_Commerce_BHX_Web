@@ -1,4 +1,4 @@
-﻿using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Models.Entities;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using System.Collections.Generic;
@@ -46,6 +46,7 @@ namespace Do_An_E_Commerce_BHX.Models
         public DbSet<Entities.Preview> Preview { get; set; }
         public DbSet<Entities.Product> Product { get; set; }
         public DbSet<Entities.Promotion> Promotion { get; set; }
+        public DbSet<Entities.UserPromotion> UserPromotion { get; set; }
         public DbSet<Entities.Question> Question { get; set; }
         public DbSet<Entities.Review> Review{ get; set; }
         public DbSet<Entities.Waranty> Waranty { get; set; }

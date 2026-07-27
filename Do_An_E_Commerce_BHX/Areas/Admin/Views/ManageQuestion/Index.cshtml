@@ -1,0 +1,465 @@
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Question>
+@using Do_An_E_Commerce_BHX.Models.Entities
+
+@{
+    ViewData["Title"] = "Hỏi Đáp Sản Phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    var products = ViewBag.Products as Dictionary<int, Product> ?? new Dictionary<int, Product>();
+    var users = ViewBag.Users as Dictionary<string, string> ?? new Dictionary<string, string>();
+
+    string currentFilter = ViewBag.CurrentFilter as string ?? "unanswered";
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+
+    int countUnanswered = ViewBag.CountUnanswered != null ? (int)ViewBag.CountUnanswered : 0;
+    int countAnswered = ViewBag.CountAnswered != null ? (int)ViewBag.CountAnswered : 0;
+    int countAll = ViewBag.CountAll != null ? (int)ViewBag.CountAll : 0;
+}
+
+@section Styles {
+    <!-- Đảm bảo có FontAwesome để hiển thị icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --bhx-green: #008848;
+            --bhx-green-hover: #006a38;
+            --bg-body: #f4f6f8;
+            --border-color: #e5e8eb;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        /* Tieu de */
+        .page-header-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* Khung tim kiem */
+        .search-box-container {
+            background: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .search-form-flex {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+            .search-input-wrapper i {
+                position: absolute;
+                left: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+            }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+            .search-input:focus {
+                outline: none;
+                border-color: var(--bhx-green);
+                box-shadow: 0 0 0 3px rgba(0, 136, 72, 0.15);
+            }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-filter {
+            background: var(--bhx-green);
+            color: white;
+        }
+
+            .btn-filter:hover {
+                background: var(--bhx-green-hover);
+            }
+
+        .btn-reset {
+            background: #f1f3f5;
+            color: var(--text-dark);
+            border: 1px solid #dee2e6;
+        }
+
+            .btn-reset:hover {
+                background: #e2e6ea;
+            }
+
+        /* Tabs loc */
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            background: #fff;
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+            .tab-btn:hover {
+                border-color: var(--bhx-green);
+                color: var(--bhx-green);
+                background: #f0fdf4;
+            }
+
+            .tab-btn.active {
+                background: var(--bhx-green);
+                color: #fff;
+                border-color: var(--bhx-green);
+            }
+
+        .badge-count {
+            background: rgba(0,0,0,0.08);
+            color: inherit;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .tab-btn.active .badge-count {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        /* Bang du lieu */
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            overflow-x: auto; /* Chong vỡ layout ngang */
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px; /* Ép bảng luôn đủ độ rộng */
+        }
+
+            .custom-table th {
+                background: #f9fafb;
+                color: var(--text-muted);
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                padding: 16px;
+                border-bottom: 1px solid var(--border-color);
+                white-space: nowrap;
+            }
+
+            .custom-table td {
+                padding: 16px;
+                border-bottom: 1px solid var(--border-color);
+                vertical-align: top;
+                font-size: 14px;
+                color: var(--text-dark);
+            }
+
+        /* O San pham */
+        .product-cell {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .product-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #eee;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            max-width: 200px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Phan hoi QTV */
+        .qtv-reply-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .qtv-badge {
+            background: var(--bhx-green);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .qtv-text {
+            margin-top: 6px;
+            font-size: 13.5px;
+            color: #166534;
+            line-height: 1.4;
+        }
+
+        /* Input tra loi */
+        .reply-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+            .reply-input-group input {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 13px;
+            }
+
+            .reply-input-group button {
+                background: var(--bhx-green);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+        /* Nut xoa */
+        .btn-delete {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .btn-delete:hover {
+                background: #fca5a5;
+                color: white;
+            }
+    </style>
+}
+
+<div>
+    <h2 class="page-header-title">HỎI ĐÁP SẢN PHẨM & TRẢ LỜI QTV</h2>
+</div>
+
+<!-- KHUNG TÌM KIẾM MỚI (FIX VỠ LAYOUT) -->
+<div class="search-box-container">
+    <form method="get" action="@Url.Action("Index", "ManageQuestion")">
+        <input type="hidden" name="filter" value="@currentFilter" />
+        <div class="search-form-flex">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" class="search-input" placeholder="Tìm kiếm nội dung câu hỏi hoặc bình luận..." value="@currentSearch" />
+            </div>
+            <button type="submit" class="btn-action btn-filter">
+                <i class="fa-solid fa-filter"></i> Lọc
+            </button>
+            <a href="@Url.Action("Index", "ManageQuestion")" class="btn-action btn-reset">
+                <i class="fa-solid fa-rotate-right"></i> Đặt lại
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- BỘ LỌC TABS -->
+<div class="filter-tabs">
+    <a href="@Url.Action("Index", "ManageQuestion", new { filter = "unanswered", search = currentSearch })" class="tab-btn @(currentFilter == "unanswered" ? "active" : "")">
+        <i class="fa-regular fa-clock"></i> Chưa trả lời <span class="badge-count">@countUnanswered</span>
+    </a>
+    <a href="@Url.Action("Index", "ManageQuestion", new { filter = "answered", search = currentSearch })" class="tab-btn @(currentFilter == "answered" ? "active" : "")">
+        <i class="fa-regular fa-circle-check"></i> Đã trả lời <span class="badge-count">@countAnswered</span>
+    </a>
+    <a href="@Url.Action("Index", "ManageQuestion", new { filter = "all", search = currentSearch })" class="tab-btn @(currentFilter == "all" ? "active" : "")">
+        <i class="fa-solid fa-list-ul"></i> Tất cả <span class="badge-count">@countAll</span>
+    </a>
+</div>
+
+<!-- BẢNG DỮ LIỆU ĐÃ FIX CỘT -->
+<div class="table-container">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th style="width: 60px; text-align:center;">ID</th>
+                <th style="width: 25%;">Sản Phẩm</th>
+                <th style="width: 15%;">Khách Hàng</th>
+                <th style="width: 20%;">Bình Luận / Câu Hỏi</th>
+                <th style="width: 25%;">Phản Hồi QTV</th>
+                <th style="width: 120px;">Thời Gian</th>
+                <th style="width: 80px; text-align: center;">Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var q in Model)
+                {
+                    var p = products.ContainsKey(q.ProductId) ? products[q.ProductId] : null;
+                    string pName = p != null ? p.Name : "Sản phẩm #" + q.ProductId;
+                    string pImg = p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png";
+
+                    string uName = "Khách hàng";
+                    if (q.UserId > 0 && users.ContainsKey(q.UserId.ToString()))
+                    {
+                        uName = users[q.UserId.ToString()];
+                    }
+
+                    <tr>
+                        <td align="center" style="font-weight: 600; color: #9ca3af;">#@q.Id</td>
+                        <td>
+                            <div class="product-cell">
+                                <img src="@pImg" alt="Product" class="product-thumb" onerror="this.src='/Content/images/no-image.png';" />
+                                <div>
+                                    <div class="product-name" title="@pName">@pName</div>
+                                    <span style="font-size: 12px; color: #9ca3af;">Mã: #@q.ProductId</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="color: var(--bhx-green); font-weight: 600;"><i class="fa-solid fa-user-circle me-1"></i> @uName</span>
+                        </td>
+                        <td style="font-weight: 500; font-size: 14px;">
+                            @q.Content
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(q.Answer))
+                            {
+                                <div class="qtv-reply-box">
+                                    <div><span class="qtv-badge">QTV</span> <span style="font-size: 12px; font-weight: 600; color: #065f46;">Bách Hóa Xanh Đã Trả Lời:</span></div>
+                                    <div class="qtv-text">@q.Answer</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="reply-input-group">
+                                    <input type="text" class="admin-reply-input" placeholder="Nhập trả lời..." />
+                                    <button type="button" class="btn-submit-reply" data-id="@q.Id">Gửi</button>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; font-size: 13px;">@q.CreatedDate.ToString("dd/MM/yyyy")</div>
+                            <div style="font-size: 12px; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> @q.CreatedDate.ToString("HH:mm")</div>
+                        </td>
+                        <td align="center">
+                            <button class="btn-delete btn-delete-question" data-id="@q.Id" title="Xóa bình luận">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-regular fa-folder-open mb-2" style="font-size: 32px; opacity: 0.5;"></i>
+                        <br />Không có câu hỏi hoặc bình luận nào.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // GỬI TRẢ LỜI
+            $('.btn-submit-reply').click(function () {
+                var btn = $(this);
+                var questionId = btn.data('id');
+                var input = btn.siblings('.admin-reply-input');
+                var answer = input.val().trim();
+
+                if (!answer) {
+                    alert("Vui lòng nhập nội dung câu trả lời!");
+                    input.focus();
+                    return;
+                }
+
+                btn.prop('disabled', true).text('...');
+
+                $.post('@Url.Action("Reply", "ManageQuestion")', { questionId: questionId, answer: answer }, function (res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                        btn.prop('disabled', false).text('Gửi');
+                    }
+                });
+            });
+
+            // XÓA CÂU HỎI
+            $('.btn-delete-question').click(function () {
+                var id = $(this).data('id');
+                if (confirm("Bạn có chắc chắn muốn xóa bình luận #" + id + " này?\nHành động này không thể hoàn tác!")) {
+                    $.post('@Url.Action("Delete", "ManageQuestion")', { id: id }, function (res) {
+                        if (res.success) {
+                            location.reload();
+                        } else {
+                            alert(res.message);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

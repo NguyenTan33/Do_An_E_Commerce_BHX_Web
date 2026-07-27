@@ -78,35 +78,42 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 ViewBag.LoyaltyPoints = 0;
             }
 
-            // Xử lý mã giảm giá Coupon nếu có
+            // Xử lý mã giảm giá Coupon qua VoucherService Shopee-style
+            var voucherService = new VoucherService(_dbContext);
+            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<CartDetail>();
+            var suggestedVouchers = voucherService.GetSuggestedVouchersForCart(cartItems, userId);
+            ViewBag.SuggestedVouchers = suggestedVouchers;
+
             decimal discountAmount = 0;
             string appliedCode = "";
+            string couponMessage = "";
+
             if (!string.IsNullOrWhiteSpace(coupon))
             {
                 var codeUpper = coupon.Trim().ToUpper();
-                var now = DateTime.Now;
-                var promo = _dbContext.Promotion.FirstOrDefault(p => p.Code.ToUpper() == codeUpper && p.IsActive);
-                if (promo != null && promo.EffectiveDate <= now && promo.ExpiryDate >= now)
+                var promo = _dbContext.Promotion.Include("Category").FirstOrDefault(p => p.Code.ToUpper() == codeUpper);
+                if (promo != null)
                 {
-                    decimal subTotal = cart.CartDetails.Sum(cd => (cd.Product != null ? cd.Product.Price : 0) * cd.Quantity);
-                    if (promo.percentDiscount > 0)
+                    var eval = voucherService.EvaluateVoucher(promo, cartItems, userId);
+                    if (eval.IsEligible)
                     {
-                        decimal rate = promo.percentDiscount;
-                        if (rate > 1) rate = rate / 100m; // Ví dụ: 90% -> 0.90
-                        discountAmount = subTotal * rate;
+                        discountAmount = (decimal)eval.CalculatedDiscount;
+                        appliedCode = promo.Code;
                     }
-                    else if (promo.DiscountValue > 0)
+                    else
                     {
-                        discountAmount = promo.DiscountValue;
+                        couponMessage = eval.ReasonIfNotEligible;
                     }
-
-                    if (discountAmount > subTotal) discountAmount = subTotal;
-                    appliedCode = promo.Code;
+                }
+                else
+                {
+                    couponMessage = $"Mã giảm giá '{coupon}' không tồn tại trên hệ thống!";
                 }
             }
 
             ViewBag.CouponCode = appliedCode;
             ViewBag.DiscountAmount = discountAmount;
+            ViewBag.CouponMessage = couponMessage;
             ViewBag.SelectedIds = selectedIds ?? "";
 
             return View(cart);
@@ -194,6 +201,34 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View(order);
         }
 
+        private string GetLoggedUserEmail(Order order)
+        {
+            if (order != null && order.User != null)
+            {
+                if (!string.IsNullOrWhiteSpace(order.User.Email) && order.User.Email.Contains("@")) return order.User.Email;
+                if (!string.IsNullOrWhiteSpace(order.User.UserName) && order.User.UserName.Contains("@")) return order.User.UserName;
+            }
+
+            if (User.Identity.IsAuthenticated)
+            {
+                string currentName = User.Identity.Name;
+                if (!string.IsNullOrWhiteSpace(currentName) && currentName.Contains("@")) return currentName;
+
+                string currentId = User.Identity.GetUserId();
+                if (!string.IsNullOrWhiteSpace(currentId))
+                {
+                    var u = _dbContext.Users.FirstOrDefault(x => x.Id == currentId);
+                    if (u != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(u.Email) && u.Email.Contains("@")) return u.Email;
+                        if (!string.IsNullOrWhiteSpace(u.UserName) && u.UserName.Contains("@")) return u.UserName;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         // POST: /Order/ProcessCOD (Xử lý hoàn tất đặt hàng COD)
         [HttpPost]
         public ActionResult ProcessCOD(int orderId)
@@ -211,9 +246,21 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 order.OrderStatus = 0;   // Chờ duyệt
                 _dbContext.SaveChanges();
 
+                // Lấy thông tin order đầy đủ để dựng Email Hóa đơn
+                var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
+                string userEmail = GetLoggedUserEmail(fullOrder ?? order);
+                string msgText = "Đặt hàng thành công với phương thức COD!";
+
+                // Chỉ gửi Email Hóa đơn khi người dùng ĐÃ ĐĂNG NHẬP và có email hợp lệ
+                if (!string.IsNullOrWhiteSpace(userEmail))
+                {
+                    OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail);
+                    msgText = "Đặt hàng thành công! Hóa đơn điện tử đã được phát hành và gửi tới email " + userEmail;
+                }
+
                 return Json(new { 
                     success = true, 
-                    message = "Đặt hàng thành công với phương thức COD!", 
+                    message = msgText, 
                     redirectUrl = Url.Action("Index", "Home") 
                 });
             }
@@ -240,11 +287,22 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 order.OrderStatus = 0;   // Chờ duyệt / chuẩn bị hàng
                 _dbContext.SaveChanges();
 
+                // Lấy thông tin order đầy đủ để dựng Email Hóa đơn
+                var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
+                string userEmail = GetLoggedUserEmail(fullOrder ?? order);
                 string methodText = paymentMethod == 2 ? "Ví MoMo" : "Chuyển khoản Ngân hàng";
+                string msgText = $"Thanh toán qua {methodText} thành công!";
+
+                // Chỉ gửi Email Hóa đơn khi người dùng ĐÃ ĐĂNG NHẬP và có email hợp lệ
+                if (!string.IsNullOrWhiteSpace(userEmail))
+                {
+                    OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail);
+                    msgText = $"Thanh toán qua {methodText} thành công! Hóa đơn điện tử đã được phát hành và gửi tới email " + userEmail;
+                }
 
                 return Json(new { 
                     success = true, 
-                    message = $"Thanh toán qua {methodText} thành công!", 
+                    message = msgText, 
                     redirectUrl = Url.Action("Index", "Home") 
                 });
             }
@@ -270,6 +328,24 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
 
             return View();
+        }
+
+        // GET: /Order/CheckPaymentStatus?orderId=123 (Phục vụ Auto-Polling kiểm tra tiền về từ SePay VietinBank)
+        [HttpGet]
+        public ActionResult CheckPaymentStatus(int orderId)
+        {
+            var order = _dbContext.Order.FirstOrDefault(o => o.Id == orderId);
+            if (order == null)
+            {
+                return Json(new { isPaid = false, message = "Không tìm thấy đơn" }, JsonRequestBehavior.AllowGet);
+            }
+
+            return Json(new { 
+                isPaid = order.PaymentStatus == 1, 
+                paymentStatus = order.PaymentStatus, 
+                paymentMethod = order.PaymentMethod,
+                orderId = orderId
+            }, JsonRequestBehavior.AllowGet);
         }
 
         protected override void Dispose(bool disposing)

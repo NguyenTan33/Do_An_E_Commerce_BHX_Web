@@ -21,10 +21,17 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             var product = dbContext.Product.FirstOrDefault(p => p.Id == productId);
             if (product == null || rating > 5 || rating < 1) return;
 
+            // Đảm bảo cột dbo.Reviews.UserId trong SQL Server là NVARCHAR(128) để lưu GUID User
+            try
+            {
+                dbContext.Database.ExecuteSqlCommand("ALTER TABLE [dbo].[Reviews] ALTER COLUMN [UserId] NVARCHAR(128) NULL;");
+            }
+            catch { }
+
             var review = new Review
             {
                 ProductId = productId,
-                UserId = userId,
+                UserId = userId ?? "GUEST",
                 Rating = rating,
                 Comment = comment,
                 CreatedDate = DateTime.Now,

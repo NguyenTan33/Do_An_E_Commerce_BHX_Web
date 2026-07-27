@@ -1,4 +1,4 @@
-﻿using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Microsoft.AspNet.Identity;
 using System;
@@ -17,6 +17,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // GET: Admin/ManagePromotion
         public ActionResult Index(string tuKhoa, string trangThai)
         {
+            var voucherService = new Do_An_E_Commerce_BHX.Services.Implementations.VoucherService(_db);
+            voucherService.SeedSampleVouchersIfEmpty();
+
             var userId = User.Identity.GetUserId();
             var user = _db.Users.Find(userId);
             ViewBag.FullName = user?.FullName;
@@ -43,11 +46,25 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return View(ds.ToList());
         }
 
+        private void PopulateCategoriesDropdown(int? selectedCategoryId = null)
+        {
+            var categories = _db.Category.OrderBy(c => c.Name).ToList();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name", selectedCategoryId);
+        }
+
         // GET: Admin/ManagePromotion/ThemPromotion
         [HttpGet]
         public ActionResult ThemPromotion()
         {
-            return View();
+            PopulateCategoriesDropdown();
+            var model = new Promotion
+            {
+                EffectiveDate = DateTime.Now,
+                ExpiryDate = DateTime.Now.AddDays(30),
+                IsActive = true,
+                MinOrderAmount = 0
+            };
+            return View(model);
         }
 
         // POST: Admin/ManagePromotion/ThemPromotion
@@ -62,6 +79,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 if (checkCode != null)
                 {
                     ModelState.AddModelError("Code", "Mã khuyến mãi này đã tồn tại!");
+                    PopulateCategoriesDropdown(model.CategoryId);
                     return View(model);
                 }
 
@@ -72,6 +90,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
                 return RedirectToAction("Index");
             }
+            PopulateCategoriesDropdown(model.CategoryId);
             return View(model);
         }
 
@@ -84,6 +103,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             var promo = _db.Promotion.Find(id);
             if (promo == null) return HttpNotFound();
 
+            PopulateCategoriesDropdown(promo.CategoryId);
             return View(promo);
         }
 
@@ -102,12 +122,17 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     if (checkCode != null)
                     {
                         ModelState.AddModelError("Code", "Mã khuyến mãi này đã tồn tại!");
+                        PopulateCategoriesDropdown(model.CategoryId);
                         return View(model);
                     }
 
                     promo.Code = model.Code.ToUpper();
                     promo.DiscountValue = model.DiscountValue;
                     promo.percentDiscount = model.percentDiscount;
+                    promo.MinOrderAmount = model.MinOrderAmount;
+                    promo.CategoryId = model.CategoryId;
+                    promo.MaxDiscountAmount = model.MaxDiscountAmount;
+                    promo.Description = model.Description;
                     promo.EffectiveDate = model.EffectiveDate;
                     promo.ExpiryDate = model.ExpiryDate;
                     promo.IsActive = model.IsActive;
@@ -116,6 +141,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     return RedirectToAction("Index");
                 }
             }
+            PopulateCategoriesDropdown(model.CategoryId);
             return View(model);
         }
 

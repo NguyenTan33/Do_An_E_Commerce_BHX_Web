@@ -1,0 +1,301 @@
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+@using Do_An_E_Commerce_BHX.Models
+@using Do_An_E_Commerce_BHX.Models.Entities
+
+@{
+    var customer = ViewBag.Customer as ApplicationUser;
+    ViewData["Title"] = "Lịch Sử Đơn Hàng";
+    ViewData["Subtitle"] = "Chi tiết lịch sử mua hàng của " + (customer?.FullName ?? customer?.UserName);
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    string statusFilter = ViewBag.StatusFilter as string ?? "all";
+    int totalCount = ViewBag.TotalCount != null ? (int)ViewBag.TotalCount : 0;
+    int processingCount = ViewBag.ProcessingCount != null ? (int)ViewBag.ProcessingCount : 0;
+    int completedCount = ViewBag.CompletedCount != null ? (int)ViewBag.CompletedCount : 0;
+    int cancelledCount = ViewBag.CancelledCount != null ? (int)ViewBag.CancelledCount : 0;
+    int userPoints = customer != null ? customer.LoyaltyPoints : 0;
+}
+
+@section Styles {
+    <style>
+        .customer-card {
+            background: linear-gradient(135deg, #16233F 0%, #0F1A30 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #E5E1D8;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+            background: #fff;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+            color: #008848;
+        }
+
+        .tab-btn.active {
+            background: #008848;
+            color: #fff;
+            border-color: #008848;
+            box-shadow: 0 4px 10px rgba(0, 136, 72, 0.2);
+        }
+
+        .badge-count {
+            background: rgba(0,0,0,0.12);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .tab-btn.active .badge-count {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        .table-wrap {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .custom-table th {
+            background: #F4F6F8;
+            color: #444;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            padding: 14px 16px;
+            border-bottom: 2px solid #E5E1D8;
+        }
+
+        .custom-table td {
+            padding: 16px;
+            border-bottom: 1px solid #EEE;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .order-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #008848;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .st-0 { background: #fff3cd; color: #856404; } /* Chờ duyệt */
+        .st-1 { background: #cce5ff; color: #004085; } /* Đang chuẩn bị */
+        .st-2 { background: #e2e3e5; color: #383d41; } /* Đang giao */
+        .st-3 { background: #d4edda; color: #155724; } /* Thành công */
+        .st-4 { background: #f8d7da; color: #721c24; } /* Đã hủy */
+    </style>
+}
+
+<div class="header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="eyebrow"><a href="@Url.Action("Index", "ManageUser")" class="text-secondary text-decoration-none">← QUẢN LÝ NGƯỜI DÙNG</a> / LỊCH SỬ ĐƠN HÀNG</div>
+        <h2>ĐƠN HÀNG CỦA KHÁCH HÀNG</h2>
+    </div>
+    <a href="@Url.Action("Index", "ManageUser")" class="btn btn-outline-secondary btn-sm fw-bold">
+        <i class="fa-solid fa-arrow-left me-1"></i> Quay về danh sách
+    </a>
+</div>
+
+<!-- CẠN BANNER THÔNG TIN KHÁCH HÀNG -->
+<div class="customer-card">
+    <div class="row align-items-center g-3">
+        <div class="col-md-7 d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-white text-dark p-3 fs-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="fa-solid fa-user-circle text-success"></i>
+            </div>
+            <div>
+                <h4 class="m-0 fw-bold text-white">@(customer?.FullName ?? customer?.UserName)</h4>
+                <div class="text-white-50 small mt-1">
+                    <i class="fa-solid fa-envelope me-1"></i> @(customer?.Email ?? "N/A") &bull;
+                    <i class="fa-solid fa-phone me-1"></i> @(customer?.PhoneNumber ?? "N/A")
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 text-md-end border-start border-secondary ps-md-4">
+            <div class="small text-white-50 mb-1">Điểm tích lũy & Hạng thành viên:</div>
+            <div class="d-flex align-items-center justify-md-content-end gap-2">
+                <span class="fs-5 fw-bold text-warning"><i class="fa-solid fa-coins me-1"></i>@userPoints.ToString("N0") điểm</span>
+                @CustomerTierHelper.GetTierBadgeHtml(userPoints)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BỘ LỌC TABS -->
+<div class="filter-tabs">
+    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "all" })"
+       class="tab-btn @(statusFilter == "all" ? "active" : "")">
+        <i class="fa-solid fa-list"></i> Tất cả đơn hàng <span class="badge-count">@totalCount</span>
+    </a>
+
+    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "processing" })"
+       class="tab-btn @(statusFilter == "processing" ? "active" : "")">
+        <i class="fa-solid fa-truck-fast"></i> Đang giao / Đang xử lý <span class="badge-count">@processingCount</span>
+    </a>
+
+    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "completed" })"
+       class="tab-btn @(statusFilter == "completed" ? "active" : "")">
+        <i class="fa-solid fa-circle-check text-success"></i> Đã giao / Hoàn tất <span class="badge-count">@completedCount</span>
+    </a>
+
+    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "cancelled" })"
+       class="tab-btn @(statusFilter == "cancelled" ? "active" : "")">
+        <i class="fa-solid fa-circle-xmark text-danger"></i> Đã hủy <span class="badge-count">@cancelledCount</span>
+    </a>
+</div>
+
+<!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
+<div class="table-wrap">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Mã Đơn</th>
+                <th>Thời Gian Đặt</th>
+                <th>Người Nhận & Địa Chỉ</th>
+                <th>Thanh Toán</th>
+                <th>Trạng Thái Đơn</th>
+                <th style="text-align: right;">Tổng Tiền</th>
+                <th style="text-align: center;">Chi Tiết</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var order in Model)
+                {
+                    string statusText = "Chờ duyệt";
+                    string statusClass = "st-0";
+                    if (order.OrderStatus == 1) { statusText = "Đã duyệt / Chuẩn bị hàng"; statusClass = "st-1"; }
+                    else if (order.OrderStatus == 2) { statusText = "Đã đóng gói hàng"; statusClass = "st-1"; }
+                    else if (order.OrderStatus == 3) { statusText = "Đang giao hàng 🚚"; statusClass = "st-2"; }
+                    else if (order.OrderStatus == 4) { statusText = "Giao thành công ✅"; statusClass = "st-3"; }
+                    else if (order.OrderStatus == 5) { statusText = "Đã hủy ❌"; statusClass = "st-4"; }
+
+                    string payMethodText = order.PaymentMethod == 0 ? "COD (Tiền mặt)" : (order.PaymentMethod == 2 ? "MoMo" : "VietinBank");
+                    string payStatusText = order.PaymentStatus == 1 ? "<span class='text-success fw-bold'>Đã thu tiền</span>" : "<span class='text-warning fw-bold'>Chưa thu tiền</span>";
+
+                    int totalItems = order.OrderDetails != null ? order.OrderDetails.Sum(d => d.Quantity) : 0;
+
+                    <tr>
+                        <td>
+                            <span class="order-id">#@order.Id</span>
+                        </td>
+                        <td>
+                            <div>@order.OrderDate.ToString("dd/MM/yyyy")</div>
+                            <small class="text-muted">@order.OrderDate.ToString("HH:mm")</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold">@order.ReceiverName (@order.ReceiverPhone)</div>
+                            <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="@order.ShippingAddress">
+                                <i class="fa-solid fa-map-marker-alt text-danger me-1"></i>@order.ShippingAddress
+                            </small>
+                        </td>
+                        <td>
+                            <div>@payMethodText</div>
+                            <small>@Html.Raw(payStatusText)</small>
+                        </td>
+                        <td>
+                            <span class="status-badge @statusClass">@statusText</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="fw-bold text-danger fs-6">@order.TotalAmount.ToString("N0") ₫</div>
+                            <small class="text-muted">(@totalItems món)</small>
+                        </td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#orderDetail_@order.Id">
+                                <i class="fa-solid fa-eye me-1"></i> Xem món
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- BẢNG CHI TIẾT SẢN PHẨM MÓN ĐẶT (COLLAPSE) -->
+                    <tr id="orderDetail_@order.Id" class="collapse bg-light">
+                        <td colspan="7" class="p-3">
+                            <div class="p-3 bg-white border rounded-3 shadow-sm">
+                                <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-basket-shopping me-2"></i>Chi tiết các sản phẩm trong đơn hàng #@order.Id:</h6>
+                                @if (order.OrderDetails != null && order.OrderDetails.Any())
+                                {
+                                    <table class="table table-sm table-bordered m-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th style="text-align: center; width: 100px;">Số lượng</th>
+                                                <th style="text-align: right; width: 130px;">Đơn giá</th>
+                                                <th style="text-align: right; width: 140px;">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var detail in order.OrderDetails)
+                                            {
+                                                string pName = detail.Product != null ? detail.Product.Name : "Sản phẩm";
+                                                double total = detail.Price * detail.Quantity;
+                                                <tr>
+                                                    <td><strong>@pName</strong></td>
+                                                    <td style="text-align: center;">@detail.Quantity</td>
+                                                    <td style="text-align: right;">@detail.Price.ToString("N0") ₫</td>
+                                                    <td style="text-align: right;" class="fw-bold text-danger">@total.ToString("N0") ₫</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="text-muted small">Không có thông tin chi tiết sản phẩm.</div>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-folder-open fs-1 d-block mb-2 opacity-50"></i>
+                        Không tìm thấy đơn hàng nào thuộc trạng thái này!
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

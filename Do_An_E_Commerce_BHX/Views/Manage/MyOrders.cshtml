@@ -1,0 +1,507 @@
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+@using Do_An_E_Commerce_BHX.Models
+@using Do_An_E_Commerce_BHX.Models.Entities
+
+@{
+    Layout = null;
+    ViewBag.Title = "Lịch Sử Đơn Hàng Của Tôi";
+
+    var user = ViewBag.UserInfo as ApplicationUser;
+    string statusFilter = ViewBag.StatusFilter as string ?? "all";
+    int totalCount = ViewBag.TotalCount != null ? (int)ViewBag.TotalCount : 0;
+    int processingCount = ViewBag.ProcessingCount != null ? (int)ViewBag.ProcessingCount : 0;
+    int completedCount = ViewBag.CompletedCount != null ? (int)ViewBag.CompletedCount : 0;
+    int cancelledCount = ViewBag.CancelledCount != null ? (int)ViewBag.CancelledCount : 0;
+    int userPoints = user != null ? user.LoyaltyPoints : 0;
+    var reviewedProductIds = ViewBag.ReviewedProductIds as List<int> ?? new List<int>();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Bách Hóa Xanh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        :root {
+            --leaf: #20b04c;
+            --forest: #0e8133;
+            --forest-deep: #095420;
+            --bg: #f4f7f6;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --line: #e5e7eb;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .header-bar {
+            background: linear-gradient(135deg, var(--forest-deep), var(--forest));
+            padding: 16px 0;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .user-banner {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            border: 1px solid var(--line);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .tab-link {
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: var(--muted);
+            background: #fff;
+            border: 1px solid var(--line);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .tab-link:hover {
+            color: var(--forest);
+            border-color: var(--leaf);
+            background: #f0fdf4;
+        }
+
+        .tab-link.active {
+            background: var(--forest);
+            color: #fff;
+            border-color: var(--forest);
+            box-shadow: 0 4px 12px rgba(14, 129, 51, 0.25);
+        }
+
+        .badge-count {
+            background: rgba(0,0,0,0.08);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .tab-link.active .badge-count {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        .order-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+        }
+
+        .order-header {
+            background: #f9fafb;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .order-body {
+            padding: 24px;
+        }
+
+        .order-footer {
+            background: #fafafa;
+            padding: 16px 24px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--line);
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .status-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+        }
+
+        .st-0 { background: #fff3cd; color: #856404; } /* Chờ duyệt */
+        .st-1 { background: #cce5ff; color: #004085; } /* Đang chuẩn bị */
+        .st-2 { background: #e2e3e5; color: #383d41; } /* Đang giao */
+        .st-3 { background: #d4edda; color: #155724; } /* Thành công */
+        .st-4 { background: #f8d7da; color: #721c24; } /* Đã hủy */
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <div class="header-bar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Manage")" class="btn btn-outline-light btn-sm fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-arrow-left me-1"></i> Trở về Quản lý tài khoản
+            </a>
+            <h5 class="m-0 fw-bold"><i class="fa-solid fa-boxes-packing me-2"></i> LỊCH SỬ ĐƠN HÀNG CỦA TÔI</h5>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 text-dark">
+                <i class="fa-solid fa-store me-1"></i> Trang chủ
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>@TempData["Message"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- BANNER THÔNG TIN TÀI KHOẢN -->
+        <div class="user-banner">
+            <div class="row align-items-center g-3">
+                <div class="col-md-7 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success text-white p-3 fs-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="m-0 fw-bold">@(user?.FullName ?? user?.UserName)</h4>
+                        <div class="text-muted small mt-1">
+                            <i class="fa-solid fa-envelope me-1"></i> @(user?.Email ?? "Chưa có email") &bull;
+                            <i class="fa-solid fa-phone me-1"></i> @(user?.PhoneNumber ?? "Chưa có SĐT")
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 text-md-end border-start ps-md-4">
+                    <div class="small text-muted mb-1">Tích điểm thưởng & Hạng thành viên:</div>
+                    <div class="d-flex align-items-center justify-content-md-end gap-2">
+                        <span class="fs-5 fw-bold text-danger"><i class="fa-solid fa-coins text-warning me-1"></i>@userPoints.ToString("N0") điểm</span>
+                        @CustomerTierHelper.GetTierBadgeHtml(userPoints)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BỘ LỌC CÁC TAB TRẠNG THÁI -->
+        <div class="filter-tabs">
+            <a href="@Url.Action("MyOrders", "Manage", new { statusFilter = "all" })"
+               class="tab-link @(statusFilter == "all" ? "active" : "")">
+                <i class="fa-solid fa-list"></i> Tất cả đơn <span class="badge-count">@totalCount</span>
+            </a>
+
+            <a href="@Url.Action("MyOrders", "Manage", new { statusFilter = "processing" })"
+               class="tab-link @(statusFilter == "processing" ? "active" : "")">
+                <i class="fa-solid fa-truck-fast"></i> Đang giao / Đang xử lý <span class="badge-count">@processingCount</span>
+            </a>
+
+            <a href="@Url.Action("MyOrders", "Manage", new { statusFilter = "completed" })"
+               class="tab-link @(statusFilter == "completed" ? "active" : "")">
+                <i class="fa-solid fa-circle-check text-success"></i> Đã giao / Hoàn tất <span class="badge-count">@completedCount</span>
+            </a>
+
+            <a href="@Url.Action("MyOrders", "Manage", new { statusFilter = "cancelled" })"
+               class="tab-link @(statusFilter == "cancelled" ? "active" : "")">
+                <i class="fa-solid fa-circle-xmark text-danger"></i> Đã hủy <span class="badge-count">@cancelledCount</span>
+            </a>
+        </div>
+
+        <!-- DANH SÁCH THẺ ĐƠN HÀNG CỦA KHÁCH -->
+        @if (Model != null && Model.Any())
+        {
+            foreach (var order in Model)
+            {
+                string statusText = "Chờ duyệt";
+                string statusClass = "st-0";
+                if (order.OrderStatus == 1) { statusText = "Đã duyệt / Chuẩn bị hàng"; statusClass = "st-1"; }
+                else if (order.OrderStatus == 2) { statusText = "Đã đóng gói hàng"; statusClass = "st-1"; }
+                else if (order.OrderStatus == 3) { statusText = "Đang giao hàng 🚚"; statusClass = "st-2"; }
+                else if (order.OrderStatus == 4) { statusText = "Giao thành công ✅"; statusClass = "st-3"; }
+                else if (order.OrderStatus == 5) { statusText = "Đã hủy ❌"; statusClass = "st-4"; }
+
+                string payMethodText = order.PaymentMethod == 0 ? "Thanh toán COD khi nhận hàng" : (order.PaymentMethod == 2 ? "Ví MoMo" : "Chuyển khoản VietinBank");
+                string payStatusText = order.PaymentStatus == 1 ? "<span class='text-success fw-bold'><i class='fa-solid fa-check-double me-1'></i>Đã thanh toán</span>" : "<span class='text-warning fw-bold'><i class='fa-solid fa-clock me-1'></i>Chờ thu tiền</span>";
+
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <span class="fw-bold text-success fs-6 me-2">Đơn hàng #@order.Id</span>
+                            <span class="text-muted small"><i class="fa-solid fa-calendar-alt me-1"></i>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div>
+                            <span class="status-pill @statusClass me-2">@statusText</span>
+                        </div>
+                    </div>
+
+                    <div class="order-body">
+                        <div class="mb-3 p-3 bg-light rounded-3 border">
+                            <div class="row g-2 small">
+                                <div class="col-md-6">
+                                    <span class="text-muted">Người nhận:</span> <strong class="text-dark">@order.ReceiverName (@order.ReceiverPhone)</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted">Phương thức:</span> <strong>@payMethodText</strong> (@Html.Raw(payStatusText))
+                                </div>
+                                <div class="col-12 mt-1">
+                                    <span class="text-muted">Địa chỉ giao:</span> <span><i class="fa-solid fa-location-dot text-danger me-1"></i>@order.ShippingAddress</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DANH SÁCH MÓN ĂN/SẢN PHẨM TRONG ĐƠN -->
+                        <h6 class="fw-bold text-secondary mb-2 fs-6"><i class="fa-solid fa-basket-shopping me-1"></i> Sản phẩm đã đặt:</h6>
+                        @if (order.OrderDetails != null && order.OrderDetails.Any())
+                        {
+                            foreach (var detail in order.OrderDetails)
+                            {
+                                string pName = detail.Product != null ? detail.Product.Name : "Sản phẩm Bách Hóa Xanh";
+                                string imgUrl = detail.Product != null && !string.IsNullOrEmpty(detail.Product.URLImage) ? detail.Product.URLImage : "/Content/images/no-image.png";
+                                double total = detail.Price * detail.Quantity;
+
+                                <div class="product-item">
+                                    <img src="@imgUrl" alt="@pName" class="product-img" onerror="this.src='/Content/images/no-image.png';" />
+                                    <div class="flex-grow-1">
+                                        <h6 class="m-0 fw-bold text-dark fs-6">@pName</h6>
+                                        <div class="text-muted small mt-1">Số lượng: x<strong class="text-dark">@detail.Quantity</strong></div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-danger">@total.ToString("N0") VNĐ</div>
+                                        <div class="text-muted small mb-2">@detail.Price.ToString("N0") ₫ / món</div>
+                                        @if (order.OrderStatus == 4)
+                                        {
+                                            if (reviewedProductIds.Contains(detail.ProductId))
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-1">
+                                                    <i class="fa-solid fa-check-circle me-1"></i>Đã đánh giá
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" 
+                                                        class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm text-dark btn-review-item"
+                                                        data-product-id="@detail.ProductId"
+                                                        data-product-name="@pName"
+                                                        data-product-img="@imgUrl">
+                                                    <i class="fa-solid fa-star me-1 text-danger"></i>Đánh giá
+                                                </button>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="order-footer">
+                        <div>
+                            @if (order.OrderStatus == 0)
+                            {
+                                using (Html.BeginForm("CancelOrder", "Manage", FormMethod.Post, new { @class = "d-inline" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@order.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn HỦY đơn hàng #@order.Id này không?');">
+                                        <i class="fa-solid fa-ban me-1"></i> Hủy đơn hàng này
+                                    </button>
+                                }
+                            }
+                        </div>
+                        <div class="text-end">
+                            <span class="text-secondary small me-2">Tổng tiền thanh toán:</span>
+                            <span class="fs-4 fw-bold text-danger">@order.TotalAmount.ToString("N0") VNĐ</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+                <i class="fa-solid fa-box-open fs-1 text-muted opacity-50 mb-3"></i>
+                <h5 class="fw-bold text-secondary">Bạn chưa có đơn hàng nào thuộc trạng thái này!</h5>
+                <p class="text-muted small mb-4">Hãy tiếp tục mua sắm các thực phẩm tươi ngon tại Bách Hóa Xanh nhé.</p>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-success rounded-pill px-4 fw-bold">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> Mua sắm ngay
+                </a>
+            </div>
+        }
+
+    </div>
+
+    <!-- MODAL ĐÁNH GIÁ SẢN PHẨM SAU KHI GIAO THÀNH CÔNG -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold m-0"><i class="fa-solid fa-star text-warning me-2"></i> Đánh Giá Sản Phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-light rounded-3 border">
+                        <img id="reviewModalImg" src="" alt="" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;" />
+                        <div>
+                            <h6 id="reviewModalName" class="fw-bold m-0 text-dark">Tên sản phẩm</h6>
+                            <span class="text-muted small">Chia sẻ cảm nhận của bạn về chất lượng sản phẩm</span>
+                        </div>
+                    </div>
+
+                    <form id="formReview">
+                        <input type="hidden" id="reviewProductId" value="" />
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block fw-bold mb-2">Chọn mức độ hài lòng (Số sao):</label>
+                            <div class="star-rating fs-3 text-warning">
+                                <i class="fa-solid fa-star star-btn" data-val="1" style="cursor:pointer;"></i>
+                                <i class="fa-solid fa-star star-btn" data-val="2" style="cursor:pointer;"></i>
+                                <i class="fa-solid fa-star star-btn" data-val="3" style="cursor:pointer;"></i>
+                                <i class="fa-solid fa-star star-btn" data-val="4" style="cursor:pointer;"></i>
+                                <i class="fa-solid fa-star star-btn" data-val="5" style="cursor:pointer;"></i>
+                            </div>
+                            <input type="hidden" id="reviewRatingVal" value="5" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Viết nhận xét đánh giá:</label>
+                            <textarea id="reviewComment" class="form-control" rows="3" placeholder="Sản phẩm rất tươi ngon, đóng gói cẩn thận..."></textarea>
+                        </div>
+
+                        <button type="submit" id="btnSubmitReview" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow">
+                            <i class="fa-solid fa-paper-plane me-2"></i> GỬI ĐÁNH GIÁ NGAY
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var currentRating = 5;
+
+            // Xử lý chọn sao đánh giá
+            $('.star-btn').on('click', function () {
+                currentRating = parseInt($(this).data('val'));
+                $('#reviewRatingVal').val(currentRating);
+                $('.star-btn').each(function (idx) {
+                    if (idx < currentRating) {
+                        $(this).removeClass('text-muted fa-regular').addClass('text-warning fa-solid');
+                    } else {
+                        $(this).removeClass('text-warning fa-solid').addClass('text-muted fa-regular');
+                    }
+                });
+            });
+
+            // Mở Modal Đánh Giá
+            $('.btn-review-item').on('click', function () {
+                var btn = $(this);
+                var pId = btn.data('product-id');
+                var pName = btn.data('product-name');
+                var pImg = btn.data('product-img');
+
+                $('#reviewProductId').val(pId);
+                $('#reviewModalName').text(pName);
+                $('#reviewModalImg').attr('src', pImg);
+                $('#reviewComment').val('');
+                currentRating = 5;
+                $('#reviewRatingVal').val(5);
+                $('.star-btn').removeClass('text-muted fa-regular').addClass('text-warning fa-solid');
+
+                var modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+                modal.show();
+            });
+
+            // Gửi Đánh Giá qua AJAX
+            $('#formReview').on('submit', function (e) {
+                e.preventDefault();
+                var productId = $('#reviewProductId').val();
+                var rating = $('#reviewRatingVal').val();
+                var comment = $('#reviewComment').val();
+                var btn = $('#btnSubmitReview');
+
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> Đang gửi...');
+
+                $.ajax({
+                    url: '@Url.Action("PostReview", "Product")',
+                    type: 'POST',
+                    data: { productId: productId, rating: rating, comment: comment },
+                    success: function (res) {
+                        if (res.success) {
+                            alert("🎉 CẢM ƠN BẠN ĐÃ ĐÁNH GIÁ SẢN PHẨM!\nĐánh giá của bạn đã được ghi nhận.");
+                            location.reload();
+                        } else {
+                            alert(res.message || "Không thể gửi đánh giá!");
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-paper-plane me-2"></i> GỬI ĐÁNH GIÁ NGAY');
+                        }
+                    },
+                    error: function (xhr, status, err) {
+                        alert("Lỗi khi gửi đánh giá: " + (xhr.responseText || err));
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-paper-plane me-2"></i> GỬI ĐÁNH GIÁ NGAY');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

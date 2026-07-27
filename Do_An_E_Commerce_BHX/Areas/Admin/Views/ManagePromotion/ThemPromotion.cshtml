@@ -1,8 +1,8 @@
-﻿@model Do_An_E_Commerce_BHX.Models.Entities.Promotion
+@model Do_An_E_Commerce_BHX.Models.Entities.Promotion
 
 @{
     ViewData["Title"] = "Thêm mã khuyến mãi";
-    ViewData["Subtitle"] = "Thiết lập chương trình giảm giá mới";
+    ViewData["Subtitle"] = "Thiết lập chương trình giảm giá Shopee-style mới";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
@@ -19,7 +19,7 @@
         }
 
         .form-container {
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto;
         }
 
@@ -50,7 +50,7 @@
                 margin-bottom: 8px;
             }
 
-        .form-control {
+        .form-control, .form-select {
             height: 44px;
             border: 1px solid var(--line);
             border-radius: 6px;
@@ -61,7 +61,7 @@
             transition: border-color 0.15s ease;
         }
 
-            .form-control:focus {
+            .form-control:focus, .form-select:focus {
                 border-color: var(--navy);
             }
 
@@ -99,6 +99,7 @@
             padding: 12px 20px;
             border-radius: 6px;
             text-decoration: none;
+            display: inline-block;
         }
     </style>
 }
@@ -114,23 +115,48 @@
             @Html.AntiForgeryToken()
             @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
+            <!-- MÃ CODE & MÔ TẢ -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mã khuyến mãi (Code) (*)</label>
+                    @Html.TextBoxFor(m => m.Code, new { @class = "form-control", placeholder = "VD: DAUAN50K, BHXFREE0K...", required = "required", style = "text-transform: uppercase; font-family:'JetBrains Mono'; font-weight:bold;" })
+                    @Html.ValidationMessageFor(m => m.Code, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    <label>Danh mục áp dụng (Để trống = Tất cả danh mục)</label>
+                    @Html.DropDownListFor(m => m.CategoryId, ViewBag.Categories as SelectList, "-- Tất cả sản phẩm --", new { @class = "form-select" })
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>Mã khuyến mãi (Code) (*)</label>
-                @Html.TextBoxFor(m => m.Code, new { @class = "form-control", placeholder = "VD: TET2026, FREESHIP...", required = "required", style = "text-transform: uppercase; font-family:'JetBrains Mono'; font-weight:bold;" })
-                @Html.ValidationMessageFor(m => m.Code, "", new { @class = "text-danger" })
+                <label>Mô tả ngắn hiển thị khách hàng</label>
+                @Html.TextBoxFor(m => m.Description, new { @class = "form-control", placeholder = "VD: Đơn từ 50k - Giảm 15% tối đa 30k dành riêng cho Dầu ăn" })
+            </div>
+
+            <!-- ĐIỀU KIỆN ĐƠN HÀNG TỐI THIỂU & MỨC GIẢM -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Đơn tối thiểu (VNĐ) (* 0 = Đơn từ 0đ)</label>
+                    @Html.TextBoxFor(m => m.MinOrderAmount, new { @class = "form-control", type = "number", placeholder = "VD: 0, 50000, 200000", Value = Model.MinOrderAmount })
+                </div>
+                <div class="form-group">
+                    <label>Số tiền giảm trực tiếp (VNĐ)</label>
+                    @Html.TextBoxFor(m => m.DiscountValue, new { @class = "form-control", type = "number", placeholder = "VD: 20000" })
+                </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Mức giảm (VNĐ)</label>
-                    @Html.TextBoxFor(m => m.DiscountValue, new { @class = "form-control", type = "number", placeholder = "VD: 50000", Value = "0" })
+                    <label>Giảm theo phần trăm (%)</label>
+                    @Html.TextBoxFor(m => m.percentDiscount, new { @class = "form-control", type = "number", step = "0.01", placeholder = "VD: 15" })
                 </div>
                 <div class="form-group">
-                    <label>Giảm theo phần trăm (%)</label>
-                    @Html.TextBoxFor(m => m.percentDiscount, new { @class = "form-control", type = "number", step = "0.01", placeholder = "VD: 10", Value = "0" })
+                    <label>Giảm tối đa (VNĐ) (Đối với %)</label>
+                    @Html.TextBoxFor(m => m.MaxDiscountAmount, new { @class = "form-control", type = "number", placeholder = "VD: 30000 (0 = Không giới hạn)" })
                 </div>
             </div>
 
+            <!-- THỜI GIAN HIỆU LỰC -->
             <div class="form-row">
                 <div class="form-group">
                     <label>Hiệu lực từ ngày (*)</label>

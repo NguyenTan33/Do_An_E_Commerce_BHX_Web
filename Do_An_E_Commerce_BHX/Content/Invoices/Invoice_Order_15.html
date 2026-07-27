@@ -1,0 +1,91 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .header { background: #008848; padding: 25px 30px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
+        .content { padding: 30px; }
+        .section-title { font-size: 15px; font-weight: bold; color: #008848; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .info-table td { padding: 6px 0; font-size: 14px; vertical-align: top; }
+        .info-label { color: #666; width: 160px; font-weight: 500; }
+        .info-value { color: #111; font-weight: 600; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .items-table th { background: #f8f9fa; color: #555; text-align: left; padding: 10px; font-size: 13px; border-bottom: 2px solid #dee2e6; }
+        .items-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #eee; }
+        .total-box { background: #f9fbf9; border: 1px solid #e0f2f1; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px; }
+        .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+        .total-final { font-size: 18px; font-weight: bold; color: #d32f2f; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 5px; }
+        .footer { background: #f1f3f5; padding: 20px 30px; text-align: center; font-size: 13px; color: #666; border-top: 1px solid #e9ecef; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>BÁCH HÓA XANH ONLINE</h1>
+            <p>Hóa đơn mua hàng điện tử dành cho quý khách</p>
+        </div>
+        <div class='content'>
+            <div style='background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 25px;'>
+                <h3 style='margin:0; color: #2e7d32;'>🧾 HÓA ĐƠN MUA HÀNG</h3>
+                <p style='margin: 5px 0 0; color: #388e3c; font-size: 14px;'>Mã đơn hàng: <strong style='font-size: 16px;'>#15</strong></p>
+            </div>
+
+            <div class='section-title'>THÔNG TIN ĐƠN HÀNG</div>
+            <table class='info-table'>
+                <tr><td class='info-label'>Mã đơn hàng:</td><td class='info-value'>#15</td></tr>
+                <tr><td class='info-label'>Ngày mua hàng:</td><td class='info-value'>27/07/2026 22:45</td></tr>
+                <tr><td class='info-label'>Phương thức thanh toán:</td><td class='info-value'>Thanh toán khi nhận hàng (COD)</td></tr>
+                <tr><td class='info-label'>Trạng thái thanh toán:</td><td class='info-value'><span style='color: #ed6c02; font-weight: bold;'>Chờ thu tiền khi giao hàng</span></td></tr>
+            </table>
+
+            <div class='section-title'>THÔNG TIN KHÁCH HÀNG & GIAO HÀNG</div>
+            <table class='info-table'>
+                <tr><td class='info-label'>Người nhận hàng:</td><td class='info-value'>Từ Thắng</td></tr>
+                <tr><td class='info-label'>Số điện thoại:</td><td class='info-value'>0923045530</td></tr>
+                <tr><td class='info-label'>Địa chỉ giao hàng:</td><td class='info-value'>Huflit</td></tr>
+                
+            </table>
+
+            <div class='section-title'>CHI TIẾT MÓN HÀNG HÓA ĐƠN</div>
+            <table class='items-table'>
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style='text-align: center;'>Số lượng</th>
+                        <th style='text-align: right;'>Đơn giá</th>
+                        <th style='text-align: right;'>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bánh xốp Kitkat phủ socola cây 17g</strong></td>
+                        <td style='text-align: center;'>1</td>
+                        <td style='text-align: right;'>28.512 ₫</td>
+                        <td style='text-align: right; font-weight: bold;'>28.512 ₫</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class='total-box'>
+                <div class='total-row'><span>Tiền hàng:</span><strong>28.512 ₫</strong></div>
+                <div class='total-row'><span>Phí giao hàng:</span><strong>35.000 ₫</strong></div><div class='total-row' style='color: #2e7d32;'><span>Mã giảm giá:</span><strong>-25.661 ₫</strong></div>
+                <div class='total-row total-final'><span>TỔNG TIỀN THANH TOÁN:</span><span>37.851 ₫</span></div>
+            </div>
+
+            <p style='font-size: 13px; color: #666; text-align: center; margin-top: 20px;'>
+                Đây là email tự động gửi hóa đơn mua hàng. Quý khách không cần thao tác bấm xác nhận.
+            </p>
+        </div>
+        <div class='footer'>
+            <p style='margin: 0 0 5px; font-weight: bold; color: #008848;'>HỆ THỐNG SIÊU THỊ BÁCH HÓA XANH ONLINE</p>
+            <p style='margin: 0;'>Hotline hỗ trợ: 1900 1908 - Email: cskh@bachhoaxanh.com</p>
+        </div>
+    </div>
+</body>
+</html>

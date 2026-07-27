@@ -1,0 +1,237 @@
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.UserPromotion>
+@using Do_An_E_Commerce_BHX.Models
+@using Do_An_E_Commerce_BHX.Models.Entities
+
+@{
+    Layout = null;
+    ViewBag.Title = "Ví Mã Giảm Giá Của Tôi";
+
+    var user = ViewBag.UserInfo as ApplicationUser;
+    var availableToSave = ViewBag.AvailableToSave as List<Promotion> ?? new List<Promotion>();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Bách Hóa Xanh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        :root {
+            --leaf: #20b04c;
+            --forest: #0e8133;
+            --forest-deep: #095420;
+            --bg: #f4f7f6;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --line: #e5e7eb;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .header-bar {
+            background: linear-gradient(135deg, var(--forest-deep), var(--forest));
+            padding: 16px 0;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .voucher-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px dashed #20b04c;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .voucher-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .voucher-left {
+            background: linear-gradient(135deg, #20b04c 0%, #0e8133 100%);
+            color: #fff;
+            padding: 20px;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .voucher-right {
+            padding: 18px 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .badge-cat {
+            background: #e8f5e9;
+            color: #0e8133;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <div class="header-bar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Manage")" class="btn btn-outline-light btn-sm fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-arrow-left me-1"></i> Trở về Quản lý tài khoản
+            </a>
+            <h5 class="m-0 fw-bold"><i class="fa-solid fa-ticket me-2 text-warning"></i> VÍ MÃ GIẢM GIÁ CỦA TÔI</h5>
+            <a href="@Url.Action("Index", "Cart")" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 text-dark">
+                <i class="fa-solid fa-cart-shopping me-1"></i> Đến giỏ hàng
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>@TempData["Message"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- NHẬP MÃ THỦ CÔNG -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-plus-circle text-success me-2"></i>Lưu thêm mã giảm giá mới</h5>
+            @using (Html.BeginForm("SaveVoucher", "Manage", FormMethod.Post, new { @class = "row g-2 align-items-center" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="col-md-9">
+                    <input type="text" name="code" class="form-control form-control-lg rounded-3" placeholder="Nhập mã voucher (Ví dụ: DAUAN50K, BHXFREE0K...)" style="text-transform: uppercase;" required />
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-3 shadow-sm">
+                        <i class="fa-solid fa-bookmark me-1"></i> Lưu Vào Ví
+                    </button>
+                </div>
+            }
+        </div>
+
+        <!-- MÃ ĐÃ LƯU TRONG VÍ CÁ NHÂN -->
+        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-wallet text-success me-2"></i>Mã giảm giá đang có trong Ví của bạn (@(Model?.Count() ?? 0))</h5>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row">
+                @foreach (var uv in Model)
+                {
+                    var p = uv.Promotion;
+                    if (p == null) { continue; }
+
+                    string catText = p.Category != null ? $"Dành riêng {p.Category.Name}" : "Tất cả sản phẩm";
+                    string minOrderText = p.MinOrderAmount > 0 ? $"Đơn tối thiểu {p.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
+                    string valueText = p.percentDiscount > 0 ? $"Giảm {p.percentDiscount}%" : $"Giảm {p.DiscountValue:N0}đ";
+
+                    <div class="col-md-6">
+                        <div class="voucher-card">
+                            <div class="voucher-left">
+                                <i class="fa-solid fa-tags fs-2 mb-2"></i>
+                                <span class="fw-extrabold fs-6">@p.Code</span>
+                                <small class="mt-1 opacity-75">@valueText</small>
+                            </div>
+                            <div class="voucher-right">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="badge-cat"><i class="fa-solid fa-basket-shopping me-1"></i>@catText</span>
+                                        <span class="text-muted small"><i class="fa-solid fa-clock me-1"></i>HSD: @p.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark m-0 mt-2">@(p.Description ?? p.Code)</h6>
+                                    <div class="text-danger small fw-bold mt-1"><i class="fa-solid fa-circle-info me-1"></i>@minOrderText</div>
+                                </div>
+
+                                <div class="text-end mt-3">
+                                    <a href="@Url.Action("Index", "Cart", new { coupon = p.Code })" class="btn btn-sm btn-success fw-bold rounded-pill px-3 shadow-sm">
+                                        <i class="fa-solid fa-cart-shopping me-1"></i> DÙNG NGAY
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4 bg-white rounded-4 border shadow-sm mb-4">
+                <i class="fa-solid fa-ticket fs-1 text-muted opacity-50 mb-2"></i>
+                <h6 class="fw-bold text-secondary">Bạn chưa lưu mã giảm giá nào vào Ví!</h6>
+                <p class="text-muted small mb-0">Hãy bấm lưu các mã gợi ý bên dưới để áp dụng mua sắm ngay.</p>
+            </div>
+        }
+
+        <!-- GỢI Ý CÁC MÃ ĐANG PHÁT HÀNH -->
+        @if (availableToSave != null && availableToSave.Any())
+        {
+            <h5 class="fw-bold text-dark mt-4 mb-3"><i class="fa-solid fa-gift text-danger me-2"></i>Mã giảm giá hot đang phát hành (Bấm lưu nhanh)</h5>
+            <div class="row g-3">
+                @foreach (var p in availableToSave)
+                {
+                    string catText = p.Category != null ? $"Dành riêng {p.Category.Name}" : "Tất cả sản phẩm";
+                    string minOrderText = p.MinOrderAmount > 0 ? $"Đơn tối thiểu {p.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
+
+                    <div class="col-md-6">
+                        <div class="card p-3 border rounded-3 bg-white shadow-sm d-flex flex-row align-items-center justify-content-between">
+                            <div>
+                                <span class="badge bg-warning text-dark fw-bold me-2">@p.Code</span>
+                                <span class="small text-muted me-2">@catText</span>
+                                <div class="fw-bold text-dark small mt-1">@(p.Description ?? p.Code) &bull; <span class="text-danger">@minOrderText</span></div>
+                            </div>
+                            @using (Html.BeginForm("SaveVoucher", "Manage", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="code" value="@p.Code" />
+                                <button type="submit" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 text-nowrap">
+                                    <i class="fa-solid fa-bookmark me-1"></i> Lưu mã
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

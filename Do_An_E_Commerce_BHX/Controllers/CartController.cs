@@ -22,13 +22,21 @@ namespace Do_An_E_Commerce_BHX.Controllers
         }
 
         // 1. Render Trang Giỏ Hàng
-        public ActionResult Index()
+        public ActionResult Index(string coupon = null)
         {
-            string userId =GetCurrentUserId();
+            string userId = GetCurrentUserId();
             var cart = _cartService.GetCartByUserId(userId);
 
             // Lấy tổng tiền chưa discount
             ViewBag.TotalPrice = _orderService.CalculatePrice(userId);
+
+            // Gợi ý danh sách mã giảm giá khả dụng theo Shopee
+            var voucherService = new VoucherService(_dbContext);
+            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<Do_An_E_Commerce_BHX.Models.Entities.CartDetail>();
+            var suggestedVouchers = voucherService.GetSuggestedVouchersForCart(cartItems, userId);
+
+            ViewBag.SuggestedVouchers = suggestedVouchers;
+            ViewBag.AppliedCoupon = coupon;
 
             return View(cart);
         }
@@ -109,40 +117,32 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { success = false, message = "Vui lòng nhập mã giảm giá!" });
             }
 
+            string userId = GetCurrentUserId();
+            var cart = _cartService.GetCartByUserId(userId);
+            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<Do_An_E_Commerce_BHX.Models.Entities.CartDetail>();
+
             var codeUpper = couponCode.Trim().ToUpper();
-            var now = System.DateTime.Now;
-            var promotion = _dbContext.Promotion.FirstOrDefault(p => p.Code.ToUpper() == codeUpper && p.IsActive);
+            var promotion = _dbContext.Promotion.Include("Category").FirstOrDefault(p => p.Code.ToUpper() == codeUpper);
 
             if (promotion == null)
             {
-                return Json(new { success = false, message = "Mã giảm giá không tồn tại hoặc đã bị khóa!" });
+                return Json(new { success = false, message = $"Mã giảm giá '{couponCode}' không tồn tại trên hệ thống!" });
             }
 
-            if (promotion.EffectiveDate > now || promotion.ExpiryDate < now)
-            {
-                return Json(new { success = false, message = "Mã giảm giá đã hết hạn hoặc chưa đến thời gian áp dụng!" });
-            }
+            var voucherService = new VoucherService(_dbContext);
+            var eval = voucherService.EvaluateVoucher(promotion, cartItems, userId);
 
-            decimal discountAmount = 0;
-            if (promotion.percentDiscount > 0)
+            if (!eval.IsEligible)
             {
-                decimal rate = promotion.percentDiscount;
-                if (rate > 1) rate = rate / 100m; // Ví dụ: 90% -> 0.90
-                discountAmount = subTotal * rate;
+                return Json(new { success = false, message = eval.ReasonIfNotEligible });
             }
-            else if (promotion.DiscountValue > 0)
-            {
-                discountAmount = promotion.DiscountValue;
-            }
-
-            if (discountAmount > subTotal) discountAmount = subTotal;
 
             return Json(new
             {
                 success = true,
-                message = $"Áp dụng mã {promotion.Code} thành công!",
+                message = $"🎉 Áp dụng thành công mã {promotion.Code}! Được giảm {eval.CalculatedDiscount:N0} VNĐ.",
                 code = promotion.Code,
-                discountAmount = discountAmount
+                discountAmount = (decimal)eval.CalculatedDiscount
             });
         }
 

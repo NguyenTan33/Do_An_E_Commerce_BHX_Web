@@ -1,4 +1,4 @@
-﻿@model Do_An_E_Commerce_BHX.Models.Entities.Cart
+@model Do_An_E_Commerce_BHX.Models.Entities.Cart
 
 @{
     Layout = null;
@@ -451,12 +451,16 @@
                         @if (isAuthenticated)
                         {
                             <div class="d-flex align-items-center justify-content-between p-3 bg-amber-light rounded-3 mb-3 border border-warning">
-                                <div>
-                                    <i class="fa-solid fa-crown text-warning fs-4 me-2"></i>
-                                    <span>Điểm tích lũy hiện tại:</span>
-                                    <strong class="text-danger fs-5 ms-1" id="user-points-balance">@loyaltyPoints</strong> điểm
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div>
+                                            <span class="text-secondary">Điểm tích lũy:</span>
+                                            <strong class="text-danger fs-5 ms-1" id="user-points-balance">@loyaltyPoints</strong> điểm
+                                        </div>
+                                        @Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(loyaltyPoints)
+                                    </div>
+                                    <span class="badge bg-warning text-dark fw-bold">100 điểm = 1.000 VNĐ</span>
                                 </div>
-                                <span class="badge bg-warning text-dark fw-bold">100 điểm = 1.000 VNĐ</span>
                             </div>
 
                             if (loyaltyPoints > 0)

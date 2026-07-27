@@ -1,4 +1,4 @@
-﻿@model Do_An_E_Commerce_BHX.Models.Entities.Product
+@model Do_An_E_Commerce_BHX.Models.Entities.Product
 
 @{
     ViewBag.Title = Model.Name + " - Chi tiết sản phẩm";
@@ -43,7 +43,66 @@
         </div>
     </div>
 
-    <!-- LUỒNG BÌNH LUẬN & HỎI ĐÁP TRAO ĐỔI VỚI ADMIN (CHUẨN 100% ẢNH MẪU BÁCH HÓA XANH) -->
+    <!-- KHUNG ĐÁNH GIÁ TỪ KHÁCH HÀNG ĐÃ MUA (PHÍA TRÊN PHẦN HỎI ĐÁP) -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <h4 class="fw-bold text-dark m-0"><i class="fa-solid fa-star text-warning me-2"></i>Đánh giá từ khách hàng đã mua</h4>
+            <span class="badge bg-warning text-dark fw-bold px-3 py-2 fs-6">
+                <i class="fa-solid fa-star me-1"></i>@avgRating / 5 (@reviewCount đánh giá)
+            </span>
+        </div>
+
+        <div id="reviews-container">
+            @if (reviews != null && reviews.Any())
+            {
+                foreach (var r in reviews)
+                {
+                    string rUserName = "Khách hàng";
+                    if (!string.IsNullOrEmpty(r.UserId) && r.UserId != "GUEST")
+                    {
+                        using (var db = new Do_An_E_Commerce_BHX.Models.ApplicationDbContext())
+                        {
+                            var u = db.Users.FirstOrDefault(x => x.Id == r.UserId);
+                            if (u != null) { rUserName = !string.IsNullOrEmpty(u.FullName) ? u.FullName : u.UserName; }
+                        }
+                    }
+
+                    <div class="p-3 mb-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="fw-bold text-dark fs-6">
+                                <i class="fa-solid fa-user-circle text-success me-1"></i>@rUserName
+                                <span class="ms-2 text-warning fs-6">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= r.Rating)
+                                        {
+                                            <i class="fa-solid fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star text-muted"></i>
+                                        }
+                                    }
+                                </span>
+                            </div>
+                            <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>@r.CreatedDate.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <div class="text-dark mt-2 ms-4">
+                            <i class="fa-solid fa-quote-left text-muted me-2 opacity-50"></i><strong>@r.Comment</strong>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="fa-solid fa-star-half-stroke fs-2 d-block mb-2 opacity-50"></i>Chưa có đánh giá nào cho sản phẩm này.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- LUỒNG BÌNH LUẬN & HỎI ĐÁP TRAO ĐỔI VỚI ADMIN -->
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
         <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-comments text-primary me-2"></i>Bình luận</h4>
         

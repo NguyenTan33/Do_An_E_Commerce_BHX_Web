@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Areas.Admin.Controllers.UserViewModel>
+@model IEnumerable<Do_An_E_Commerce_BHX.Areas.Admin.Controllers.UserViewModel>
 
 @{
     ViewData["Title"] = "Quản lý người dùng";
@@ -450,6 +450,7 @@
             <tr>
                 <th>Người dùng</th>
                 <th>Số điện thoại</th>
+                <th>Hạng Thành Viên</th>
                 <th>Phân quyền</th>
                 <th>Trạng thái</th>
                 <th style="text-align:right;">Thao tác</th>
@@ -469,6 +470,12 @@
                         </td>
                         <td style="font-family:'JetBrains Mono'; font-size: 13.5px;">
                             @(string.IsNullOrEmpty(user.PhoneNumber) ? "N/A" : user.PhoneNumber)
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column align-items-start gap-1">
+                                @Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(user.LoyaltyPoints)
+                                <small class="text-muted fw-bold" style="font-size: 12px;"><i class="fa-solid fa-coins text-warning me-1"></i>@user.LoyaltyPoints.ToString("N0") điểm</small>
+                            </div>
                         </td>
                         <td>
                             @if (user.Roles != null && user.Roles.Any())
@@ -494,6 +501,15 @@
                             }
                         </td>
                         <td class="action-cell">
+                            <!-- Nút Xem Lịch Sử Đơn Hàng -->
+                            <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = user.Id })" class="icon-btn history" title="Xem lịch sử đơn hàng của khách hàng" style="background:#e8f5e9; color:#008848; border-color:#c8e6c9;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                            </a>
+
                             <!-- Nút Reset Mật khẩu -->
                             <button type="button" class="icon-btn key" title="Đặt lại mật khẩu"
                                     onclick="openResetPassModal('@user.Id', '@user.Email')">

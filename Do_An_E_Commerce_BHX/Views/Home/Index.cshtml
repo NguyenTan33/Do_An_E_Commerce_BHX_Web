@@ -845,6 +845,14 @@
                     </div>
                 </div>
 
+                <!-- KHUNG ĐÁNH GIÁ TỪ KHÁCH HÀNG ĐÃ MUA (PHÍA TRÊN PHẦN HỎI ĐÁP) -->
+                <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-star text-warning me-2"></i>Đánh giá từ khách hàng đã mua</h5>
+                    <div id="pmd-reviews-container">
+                        <!-- Render qua JS -->
+                    </div>
+                </div>
+
                 <!-- LUỒNG BÌNH LUẬN & HỎI ĐÁP TRAO ĐỔI VỚI ADMIN -->
                 <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
                     <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-comments text-primary me-2"></i>Bình luận</h5>
@@ -1040,6 +1048,7 @@
                         $('#pmd-stock').html(d.quantity > 0 ? '<span class="text-success fw-bold">Còn hàng (' + d.quantity + ')</span>' : '<span class="text-danger fw-bold">Hết hàng</span>');
                         $('#pmd-description').text(d.description || 'Sản phẩm tươi ngon, đảm bảo chất lượng từ Bách Hóa Xanh.');
 
+                        renderReviewsList(d.reviews);
                         renderQuestionsList(d.questions, res.isAdmin);
                     } else {
                         $('#pmd-description').text(res.message || "Không nạp được thông tin chi tiết sản phẩm!");
@@ -1048,6 +1057,43 @@
                 error: function (xhr, status, err) {
                     $('#pmd-description').text("Lỗi nạp chi tiết sản phẩm: " + (xhr.responseText || err));
                 }
+            });
+        }
+
+        // Render danh sách Đánh Giá từ khách hàng
+        function renderReviewsList(reviews) {
+            var container = $('#pmd-reviews-container');
+            container.empty();
+
+            if (!reviews || reviews.length === 0) {
+                container.html('<div class="text-center py-3 text-muted"><i class="fa-solid fa-star-half-stroke fs-3 d-block mb-1 opacity-50"></i>Chưa có đánh giá nào cho sản phẩm này.</div>');
+                return;
+            }
+
+            $.each(reviews, function (i, r) {
+                var stars = '';
+                for (var s = 1; s <= 5; s++) {
+                    if (s <= r.rating) {
+                        stars += '<i class="fa-solid fa-star text-warning"></i>';
+                    } else {
+                        stars += '<i class="fa-regular fa-star text-muted"></i>';
+                    }
+                }
+
+                var html = '<div class="p-3 mb-3 bg-light rounded-3 border">' +
+                    '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<div class="fw-bold text-dark fs-6">' +
+                    '<i class="fa-solid fa-user-circle text-success me-1"></i>' + r.userName + ' ' +
+                    '<span class="ms-2 fs-6">' + stars + '</span>' +
+                    '</div>' +
+                    '<small class="text-muted"><i class="fa-regular fa-clock me-1"></i>' + r.createdDate + '</small>' +
+                    '</div>' +
+                    '<div class="text-dark mt-2 ms-4">' +
+                    '<i class="fa-solid fa-quote-left text-muted me-2 opacity-50"></i><strong>' + (r.comment || 'Không có nhận xét') + '</strong>' +
+                    '</div>' +
+                    '</div>';
+
+                container.append(html);
             });
         }
 

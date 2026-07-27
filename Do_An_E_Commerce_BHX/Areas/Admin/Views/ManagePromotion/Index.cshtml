@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Promotion>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Promotion>
 
 @{
     ViewData["Title"] = "Quản lý Khuyến mãi";
@@ -374,9 +374,10 @@
             <tr>
                 <th>Mã giảm giá</th>
                 <th>Mức giảm</th>
+                <th>Điều kiện đơn</th>
+                <th>Danh mục áp dụng</th>
                 <th>Hiệu lực từ</th>
                 <th>Hết hạn vào</th>
-                <th>Ngày tạo</th>
                 <th>Trạng thái</th>
                 <th style="text-align:right;">Thao tác</th>
             </tr>
@@ -387,13 +388,22 @@
                 foreach (var item in Model)
                 {
                     bool isExpired = item.ExpiryDate < DateTime.Now;
+                    string minOrderText = item.MinOrderAmount > 0 ? $"Đơn từ {item.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
+                    string catText = item.Category != null ? item.Category.Name : "Tất cả sản phẩm";
 
                     <tr>
-                        <td class="code-cell">@item.Code</td>
+                        <td>
+                            <div class="code-cell">@item.Code</div>
+                            <small class="text-muted d-block opacity-75">@(item.Description ?? item.Code)</small>
+                        </td>
                         <td class="money-cell" style="color: var(--red);">
                             @if (item.percentDiscount > 0)
                             {
                                 <span>- @item.percentDiscount.ToString("0.##") %</span>
+                                if (item.MaxDiscountAmount > 0)
+                                {
+                                    <small class="d-block text-muted" style="font-size: 11px;">(Tối đa @item.MaxDiscountAmount.ToString("N0")đ)</small>
+                                }
                             }
                             else if (item.DiscountValue > 0)
                             {
@@ -404,9 +414,10 @@
                                 <span style="color: var(--muted);">0 ₫</span>
                             }
                         </td>
+                        <td><span class="badge bg-light text-dark border">@minOrderText</span></td>
+                        <td><span class="badge bg-success bg-opacity-10 text-success border border-success">@catText</span></td>
                         <td class="date-cell">@item.EffectiveDate.ToString("dd/MM/yyyy HH:mm")</td>
                         <td class="date-cell">@item.ExpiryDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td class="date-cell">@item.DateCreated.ToString("dd/MM/yyyy")</td>
                         <td>
                             @if (!item.IsActive)
                             {

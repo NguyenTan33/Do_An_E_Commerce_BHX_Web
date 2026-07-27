@@ -116,6 +116,27 @@ namespace Do_An_E_Commerce_BHX.Controllers
             double avgRating = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating), 1) : 5.0;
             int reviewCount = reviews.Count;
 
+            var reviewList = reviews.OrderByDescending(r => r.CreatedDate).Select(r => {
+                string rName = "Khách hàng";
+                if (!string.IsNullOrEmpty(r.UserId) && r.UserId != "GUEST")
+                {
+                    var user = _dbContext.Users.FirstOrDefault(u => u.Id == r.UserId);
+                    if (user != null)
+                    {
+                        rName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.UserName;
+                    }
+                }
+
+                return new
+                {
+                    id = r.Id,
+                    userName = rName,
+                    rating = r.Rating,
+                    comment = r.Comment,
+                    createdDate = r.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                };
+            }).ToList();
+
             var questions = _dbContext.Question
                 .Where(q => q.ProductId == productId)
                 .OrderByDescending(q => q.CreatedDate)
@@ -162,6 +183,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     categoryName = category != null ? category.Name : "Nhu yếu phẩm",
                     avgRating = avgRating,
                     reviewCount = reviewCount,
+                    reviews = reviewList,
                     questions = questionList
                 }
             }, JsonRequestBehavior.AllowGet);
