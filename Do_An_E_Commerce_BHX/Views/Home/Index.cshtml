@@ -10,7 +10,7 @@
     bool soldOut = item.Quantity <= 0;
     string img = string.IsNullOrEmpty(item.URLImage) ? "/Content/images/no-image.png" : item.URLImage;
     <div class="product-card @(soldOut ? "is-sold-out" : "")">
-        <div class="product-media">
+        <div class="product-media btn-open-detail" data-id="@item.Id" style="cursor: pointer;" title="Bấm xem chi tiết sản phẩm">
             <img src="@img" alt="@item.Name" loading="lazy" onerror="this.src='/Content/images/no-image.png'" />
             <div class="badge-stack">
                 @if (item.IsHot)
@@ -24,11 +24,23 @@
             }
         </div>
         <div class="product-body">
-            <h4 class="product-name" title="@item.Name">@item.Name</h4>
+            <h4 class="product-name btn-open-detail" data-id="@item.Id" style="cursor: pointer;" title="@item.Name">@item.Name</h4>
             <div class="product-price">@item.Price.ToString("N0") ₫</div>
-            <button type="button" class="btn-add-cart" data-id="@item.Id" @(soldOut ? "disabled" : "")>
-                <i class="fa-solid fa-cart-plus"></i> @(soldOut ? "Hết hàng" : "Thêm vào giỏ")
-            </button>
+            
+            <!-- ĐÁNH GIÁ SAO & SỐ LƯỢNG ĐÁNH GIÁ -->
+            <div class="product-rating my-1 d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                <span class="text-warning fw-bold"><i class="fa-solid fa-star"></i> 5.0</span>
+                <span class="text-muted small">(12 đánh giá)</span>
+            </div>
+
+            <div class="d-flex gap-1 mt-2">
+                <button type="button" class="btn btn-sm btn-outline-success w-50 btn-open-detail fw-bold" data-id="@item.Id" style="border-radius: 6px;">
+                    <i class="fa-solid fa-eye me-1"></i> Chi tiết
+                </button>
+                <button type="button" class="btn-add-cart w-50" data-id="@item.Id" @(soldOut ? "disabled" : "")>
+                    <i class="fa-solid fa-cart-plus"></i> @(soldOut ? "Hết" : "Mua")
+                </button>
+            </div>
         </div>
     </div>
 }
@@ -706,6 +718,75 @@
     }
 </section>
 
+<!-- MODAL OVERLAY TRANG GHI ĐÈ CHI TIẾT SẢN PHẨM & BÌNH LUẬN QTV -->
+<div class="modal fade" id="homeProductDetailModal" tabindex="-1" aria-labelledby="homeProductDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title font-weight-bold" id="homeProductDetailModalLabel">
+                    <i class="fa-solid fa-circle-info text-warning me-2"></i><span id="pmd-name">Chi tiết sản phẩm</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <!-- KHUNG THÔNG TIN SẢN PHẨM -->
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-4 bg-white">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-5 text-center border-end">
+                            <img id="pmd-image" src="" class="img-fluid rounded-3 p-2 border" style="max-height: 240px; object-fit: contain;" />
+                        </div>
+                        <div class="col-md-7">
+                            <span class="badge bg-success bg-opacity-10 text-success fw-bold p-2 mb-2" id="pmd-category"></span>
+                            <h3 class="fw-bold text-dark mb-2" id="pmd-title"></h3>
+                            
+                            <!-- ĐÁNH GIÁ SAO -->
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="text-warning fs-5 fw-bold"><i class="fa-solid fa-star"></i> <span id="pmd-avg-rating">5.0</span> / 5</div>
+                                <span class="text-muted small">(<span id="pmd-review-count">0</span> đánh giá)</span>
+                            </div>
+
+                            <div class="text-danger fw-bold fs-2 mb-3" id="pmd-price"></div>
+
+                            <div class="p-3 bg-light rounded-3 border">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Mô tả sản phẩm:</span>
+                                <p id="pmd-description" class="text-dark small m-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LUỒNG BÌNH LUẬN & HỎI ĐÁP TRAO ĐỔI VỚI ADMIN (CHUẨN 100% ẢNH MẪU BÁCH HÓA XANH) -->
+                <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-comments text-primary me-2"></i>Bình luận</h5>
+                    
+                    <!-- Ô nhập câu hỏi / bình luận của khách -->
+                    <div class="mb-4">
+                        <input type="hidden" id="pmd-current-id" value="0" />
+                        <textarea id="pmd-question-input" rows="3" class="form-control rounded-3 p-3 border-2" placeholder="Mời bạn bình luận hoặc đặt câu hỏi"></textarea>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button type="button" id="btnPostQuestion" class="btn btn-primary px-4 fw-bold shadow-sm rounded-3">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Gửi bình luận
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Danh sách bình luận & phản hồi Admin QTV -->
+                    <h6 class="fw-bold text-dark mb-3">Tất cả bình luận & hỏi đáp:</h6>
+                    <div id="pmd-questions-container">
+                        <!-- Render từ Javascript -->
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-white border-top">
+                <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -764,6 +845,132 @@
                 error: function (xhr, status, err) {
                     alert("Lỗi hệ thống khi thêm vào giỏ hàng: " + (xhr.responseText || err));
                     btn.prop("disabled", false).html('<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ');
+                }
+            });
+        });
+
+        // Xử lý mở Modal Chi Tiết Sản Phẩm khi bấm nút "Chi tiết" hoặc bấm vào hình/tên sản phẩm
+        $(document).on('click', '.btn-open-detail', function (e) {
+            e.preventDefault();
+            var productId = $(this).data('id');
+            loadProductDetailModal(productId);
+        });
+
+        function loadProductDetailModal(productId) {
+            var detailModal = new bootstrap.Modal(document.getElementById('homeProductDetailModal'));
+
+            $.ajax({
+                url: '@Url.Action("GetProductDetailJson", "Product")',
+                type: 'GET',
+                data: { productId: productId },
+                success: function (res) {
+                    if (res.success && res.data) {
+                        var d = res.data;
+                        $('#pmd-current-id').val(d.id);
+                        $('#pmd-name').text(d.name);
+                        $('#pmd-title').text(d.name);
+                        $('#pmd-image').attr('src', d.imageUrl);
+                        $('#pmd-category').text('Danh mục: ' + d.categoryName);
+                        $('#pmd-avg-rating').text(d.avgRating);
+                        $('#pmd-review-count').text(d.reviewCount);
+                        $('#pmd-price').text(d.price.toLocaleString('vi-VN') + ' ₫');
+                        $('#pmd-stock').html(d.quantity > 0 ? '<span class="text-success fw-bold">Còn hàng (' + d.quantity + ')</span>' : '<span class="text-danger fw-bold">Hết hàng</span>');
+                        $('#pmd-description').text(d.description);
+
+                        // Render bình luận & trả lời QTV
+                        renderQuestionsList(d.questions, res.isAdmin);
+
+                        detailModal.show();
+                    } else {
+                        alert(res.message || "Không nạp được thông tin chi tiết sản phẩm!");
+                    }
+                },
+                error: function (xhr, status, err) {
+                    alert("Lỗi nạp chi tiết sản phẩm: " + (xhr.responseText || err));
+                }
+            });
+        }
+
+        function renderQuestionsList(questions, isAdmin) {
+            var container = $('#pmd-questions-container');
+            container.empty();
+
+            if (!questions || questions.length === 0) {
+                container.html('<div class="text-center py-4 text-muted"><i class="fa-solid fa-comment-slash fs-2 d-block mb-2"></i>Chưa có bình luận nào. Hãy là người đầu tiên đặt câu hỏi!</div>');
+                return;
+            }
+
+            $.each(questions, function (i, q) {
+                var html = '<div class="border-bottom pb-3 mb-3">' +
+                    '<div class="fw-bold text-dark fs-6 mb-1">' + q.userName + '</div>' +
+                    '<div class="text-dark mb-2">' + q.content + '</div>' +
+                    '<div class="d-flex align-items-center gap-3 small text-muted mb-2">' +
+                    '<span><i class="fa-regular fa-clock me-1"></i>' + q.createdDate + '</span>' +
+                    '<span class="text-primary fw-bold" style="cursor:pointer;"><i class="fa-regular fa-thumbs-up me-1"></i>Thích</span>' +
+                    '</div>';
+
+                // Nếu đã có phản hồi từ Admin -> Hiển thị khung trả lời QTV màu vàng chuẩn như hình mẫu Bách Hóa Xanh
+                if (q.answer && q.answer.trim().length > 0) {
+                    html += '<div class="bg-light border rounded-3 p-3 ms-3 mt-2">' +
+                        '<div class="d-flex align-items-center gap-2 mb-2">' +
+                        '<div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 14px;"><i class="fa-solid fa-leaf"></i></div>' +
+                        '<div class="fw-bold text-dark">' + (q.answerBy || "Nguyễn Thị Ngọc Điều") + '</div>' +
+                        '<span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size: 11px;">QTV</span>' +
+                        '</div>' +
+                        '<div class="text-dark small mb-2 ms-4">' + q.answer + '</div>' +
+                        '<div class="small text-muted ms-4"><i class="fa-regular fa-clock me-1"></i>Hỗ trợ Bách Hóa Xanh</div>' +
+                        '</div>';
+                } else if (isAdmin) {
+                    // Nếu là Admin đăng nhập và chưa trả lời -> Hiển thị ô Trả lời trực tiếp
+                    html += '<div class="ms-3 mt-2 bg-warning bg-opacity-10 border border-warning p-2 rounded-3">' +
+                        '<div class="small fw-bold text-dark mb-1"><i class="fa-solid fa-user-shield text-warning me-1"></i>Trả lời với tư cách QTV:</div>' +
+                        '<div class="input-group">' +
+                        '<input type="text" class="form-control form-control-sm admin-answer-input" placeholder="Nhập câu trả lời tư vấn cho khách..." />' +
+                        '<button type="button" class="btn btn-sm btn-warning fw-bold btn-submit-admin-answer" data-qid="' + q.id + '">Gửi QTV</button>' +
+                        '</div>' +
+                        '</div>';
+                }
+
+                html += '</div>';
+                container.append(html);
+            });
+        }
+
+        // Gửi bình luận mới của khách
+        $(document).on('click', '#btnPostQuestion', function () {
+            var productId = $('#pmd-current-id').val();
+            var content = $('#pmd-question-input').val().trim();
+
+            if (!content) {
+                alert("Vui lòng nhập nội dung bình luận!");
+                return;
+            }
+
+            $.post('@Url.Action("PostQuestion", "Product")', { productId: productId, content: content }, function (res) {
+                alert(res.message);
+                if (res.success) {
+                    $('#pmd-question-input').val('');
+                    loadProductDetailModal(productId);
+                }
+            });
+        });
+
+        // Admin bấm gửi trả lời QTV
+        $(document).on('click', '.btn-submit-admin-answer', function () {
+            var questionId = $(this).data('qid');
+            var answerInput = $(this).closest('.input-group').find('.admin-answer-input');
+            var answer = answerInput.val().trim();
+            var productId = $('#pmd-current-id').val();
+
+            if (!answer) {
+                alert("Vui lòng nhập nội dung trả lời QTV!");
+                return;
+            }
+
+            $.post('@Url.Action("PostAnswerAdmin", "Product")', { questionId: questionId, answer: answer }, function (res) {
+                alert(res.message);
+                if (res.success) {
+                    loadProductDetailModal(productId);
                 }
             });
         });

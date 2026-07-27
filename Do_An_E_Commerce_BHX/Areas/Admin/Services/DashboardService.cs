@@ -1,4 +1,4 @@
-﻿using Do_An_E_Commerce_BHX.Areas.Admin.ViewModels;
+using Do_An_E_Commerce_BHX.Areas.Admin.ViewModels;
 using Do_An_E_Commerce_BHX.Models;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
             db = context;
         }
 
-        public DashboardViewModel GetDashboard(string period, DateTime? startDate, DateTime? endDate, int? categoryId)
+        public DashboardViewModel GetDashboard(string period, DateTime? startDate, DateTime? endDate, int? categoryId, int? status = null, int? paymentMethod = null)
         {
             var vm = new DashboardViewModel();
             var today = DateTime.Today;
@@ -53,42 +53,59 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
                 }
             }
 
-            // 2. KHỞI TẠO CÁC QUERY THEO KỲ VÀ DANH MỤC
-            // Query Đơn hàng
+            // 2. KHỞI TẠO CÁC QUERY THEO KỲ VÀ BỘ LỌC
+            // Query Đơn hàng theo ngày
             var orderQuery = db.Order.Where(o => o.OrderDate >= start && o.OrderDate <= end);
 
-            // Query Chi tiết đơn hàng (Dùng để tính doanh thu, biểu đồ, top SP) - Chỉ tính đơn đã giao thành công (Status = 3)
+            // Query Chi tiết đơn hàng (Thành công = OrderStatus 4, hoặc theo status lọc)
+            int targetSuccessStatus = status.HasValue ? status.Value : 4; // Mặc định đơn thành công là 4
             var orderDetailQuery = db.OrderDetail
                 .Include(od => od.Order)
                 .Include(od => od.Product)
-                .Where(od => od.Order.OrderStatus == 3 && od.Order.OrderDate >= start && od.Order.OrderDate <= end);
+                .Where(od => od.Order.OrderDate >= start && od.Order.OrderDate <= end);
 
-            // Nếu có lọc thêm theo Danh mục cụ thể
+            // Nếu người dùng chọn Lọc Trạng thái cụ thể
+            if (status.HasValue && status.Value >= 0)
+            {
+                orderQuery = orderQuery.Where(o => o.OrderStatus == status.Value);
+                orderDetailQuery = orderDetailQuery.Where(od => od.Order.OrderStatus == status.Value);
+            }
+            else
+            {
+                // Mặc định tính doanh thu chi tiết từ các đơn THÀNH CÔNG (OrderStatus = 4)
+                orderDetailQuery = orderDetailQuery.Where(od => od.Order.OrderStatus == 4);
+            }
+
+            // Nếu người dùng chọn Lọc Hình thức thanh toán (0 = COD, 1 = Ngân hàng, 2 = MoMo)
+            if (paymentMethod.HasValue && paymentMethod.Value >= 0)
+            {
+                orderQuery = orderQuery.Where(o => o.PaymentMethod == paymentMethod.Value);
+                orderDetailQuery = orderDetailQuery.Where(od => od.Order.PaymentMethod == paymentMethod.Value);
+            }
+
+            // Nếu người dùng chọn Lọc Danh mục sản phẩm
             if (categoryId.HasValue && categoryId.Value > 0)
             {
-                // Chỉ lấy những đơn hàng có mua sản phẩm thuộc danh mục này
                 orderQuery = orderQuery.Where(o => o.OrderDetails.Any(od => od.Product.CategoryId == categoryId.Value));
-                // Chỉ lấy chi tiết đơn của danh mục này để tính doanh thu
                 orderDetailQuery = orderDetailQuery.Where(od => od.Product.CategoryId == categoryId.Value);
             }
 
             // 3. THỐNG KÊ TỔNG QUAN (Toàn thời gian)
-            vm.TotalRevenue = db.Order.Where(x => x.OrderStatus == 3).Sum(x => (double?)x.TotalAmount) ?? 0;
+            vm.TotalRevenue = db.Order.Where(x => x.OrderStatus == 4).Sum(x => (double?)x.TotalAmount) ?? 0;
             vm.TotalProducts = db.Product.Count();
             vm.TotalCategories = db.Category.Count();
             vm.TotalCustomers = db.Users.Count();
             vm.LowStockProducts = db.Product.Count(x => x.Quantity < 10);
 
             // 4. THỐNG KÊ THEO KỲ LỌC
-            // Doanh thu trong kỳ (dựa vào chi tiết đơn để chính xác khi lọc theo danh mục)
             vm.PeriodRevenue = orderDetailQuery.Sum(x => (double?)(x.Quantity * x.Price)) ?? 0;
 
             vm.FilteredTotalOrders = orderQuery.Count();
-            vm.FilteredSuccessOrders = orderQuery.Count(x => x.OrderStatus == 3);
-            vm.FilteredPendingOrders = orderQuery.Count(x => x.OrderStatus == 0 || x.OrderStatus == 1 || x.OrderStatus == 2);
-            vm.FilteredCancelOrders = orderQuery.Count(x => x.OrderStatus == 4);
+            vm.FilteredSuccessOrders = orderQuery.Count(x => x.OrderStatus == 4);
+            vm.FilteredPendingOrders = orderQuery.Count(x => x.OrderStatus == 0 || x.OrderStatus == 1 || x.OrderStatus == 2 || x.OrderStatus == 3);
+            vm.FilteredCancelOrders = orderQuery.Count(x => x.OrderStatus == 5);
 
-            // 5. TOP SẢN PHẨM BÁN CHẠY (Theo kỳ lọc)
+            // 5. TOP SẢN PHẨM BÁN CHẠY
             vm.TopProducts = orderDetailQuery
                 .GroupBy(x => new { x.ProductId, x.Product.Name })
                 .Select(g => new TopProductVM
@@ -101,7 +118,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
                 .Take(10)
                 .ToList();
 
-            // 6. TỶ TRỌNG DANH MỤC (Theo kỳ lọc)
+            // 6. TỶ TRỌNG DANH MỤC
             vm.CategoryRevenue = orderDetailQuery
                 .GroupBy(x => x.Product.Category.Name)
                 .Select(g => new CategoryRevenueVM
@@ -112,11 +129,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
                 .OrderByDescending(x => x.Revenue)
                 .ToList();
 
-            // 7. DỮ LIỆU BIỂU ĐỒ (Động: Nhóm theo ngày hoặc tháng tùy độ dài kỳ lọc)
+            // 7. DỮ LIỆU BIỂU ĐỒ DOANH THU (Nhóm theo ngày hoặc tháng)
             vm.RevenueChart = new List<RevenueChartVM>();
             int totalDays = (int)(end - start).TotalDays;
 
-            if (totalDays <= 35) // Nếu lọc dưới 35 ngày -> Vẽ biểu đồ theo ngày
+            if (totalDays <= 35) // Vẽ biểu đồ theo ngày
             {
                 var groupedByDay = orderDetailQuery
                     .GroupBy(x => DbFunctions.TruncateTime(x.Order.OrderDate))
@@ -130,7 +147,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
                     vm.RevenueChart.Add(new RevenueChartVM { Label = d.ToString("dd/MM"), Revenue = rev });
                 }
             }
-            else // Nếu lọc khoảng thời gian quá dài -> Vẽ biểu đồ theo tháng
+            else // Vẽ biểu đồ theo tháng
             {
                 var groupedByMonth = orderDetailQuery
                     .GroupBy(x => new { x.Order.OrderDate.Year, x.Order.OrderDate.Month })

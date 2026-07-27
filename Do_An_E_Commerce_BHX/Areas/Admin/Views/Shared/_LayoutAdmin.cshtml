@@ -53,8 +53,8 @@
             </li>
             <li>
                 <a href="@Url.Action("Index", "ManageReview")" class="@ActiveClass("ManageReview")">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-                    Đánh giá sản phẩm
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Hỏi đáp & Rep QTV
                 </a>
             </li>
         </ul>
@@ -91,7 +91,7 @@
             <li>
                 <a href="@Url.Action("Index", "ManageOrder")" class="@ActiveClass("ManageOrder")">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-                    Duyệt Đơn Hàng
+                    Quản Lý Đơn Hàng
                 </a>
             </li>
             <li>
@@ -106,15 +106,26 @@
                     Giao Hàng
                 </a>
             </li>
-            
         </ul>
 
         <div class="sidebar-footer">
             <div class="admin-chip">
-                <div class="avatar">@(User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name) ? User.Identity.Name.Substring(0, Math.Min(2, User.Identity.Name.Length)).ToUpper() : "AD")</div>
+                @{
+                    string adminName = "Quản trị viên";
+                    if (ViewBag.FullName != null && !string.IsNullOrWhiteSpace(ViewBag.FullName.ToString()))
+                    {
+                        adminName = ViewBag.FullName.ToString();
+                    }
+                    else if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
+                    {
+                        adminName = User.Identity.Name;
+                    }
+                    string initial = !string.IsNullOrEmpty(adminName) ? adminName.Substring(0, Math.Min(2, adminName.Length)).ToUpper() : "AD";
+                }
+                <div class="avatar">@initial</div>
                 <div>
-                    <div style="font-size:13.5px;font-weight:600;">@(ViewBag.FullName ?? "Quản trị viên")</div>
-                    <small>Quản trị viên</small>
+                    <div style="font-size:13.5px;font-weight:600;">@adminName</div>
+                    <small>Quản trị viên (Admin)</small>
                 </div>
             </div>
         </div>
@@ -122,18 +133,20 @@
 
     <!-- ============ MAIN CONTENT ============ -->
     <div class="main">
-        <div class="topbar">
-            <div class="page-title">
-                @(ViewData["Title"] ?? "Bảng điều khiển")
-                @if (ViewData["Subtitle"] != null)
-                {
-                    <span>@ViewData["Subtitle"]</span>
-                }
+        <div class="main">
+            <div class="topbar">
+                <div class="page-title">
+                    @(ViewData["Title"] ?? "Bảng điều khiển")
+                    @if (ViewData["Subtitle"] != null)
+                    {
+                        <span>@ViewData["Subtitle"]</span>
+                    }
+                </div>
             </div>
-        </div>
 
-        <div class="content">
-            @RenderBody()
+            <div class="content">
+                @RenderBody()
+            </div>
         </div>
     </div>
 

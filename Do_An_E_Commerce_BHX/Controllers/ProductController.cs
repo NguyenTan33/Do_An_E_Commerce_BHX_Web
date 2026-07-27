@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
@@ -66,16 +66,15 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                // Lấy Id nếu đã đăng nhập, nếu là Guest thì userId = null
                 string userId = GetCurrentUserId();
-
                 customerSupportService.AddReview(productId, userId, rating, comment);
 
                 return Json(new { success = true, message = "Cảm ơn bạn đã đánh giá sản phẩm!" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                string msg = ex.InnerException != null ? (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message) : ex.Message;
+                return Json(new { success = false, message = "Lỗi: " + msg });
             }
         }
 
@@ -85,11 +84,107 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                string userId = GetCurrentUserId() ;
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập nội dung bình luận!" });
+                }
 
-                customerSupportService.AddQuestion(productId, userId, content);
+                string userId = GetCurrentUserId();
+                customerSupportService.AddQuestion(productId, userId, content.Trim());
 
-                return Json(new { success = true, message = "Đã gửi câu hỏi! Admin sẽ trả lời sớm nhất." });
+                return Json(new { success = true, message = "Đã gửi bình luận/câu hỏi thành công! QTV sẽ phản hồi sớm nhất." });
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.InnerException != null ? (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message) : ex.Message;
+                return Json(new { success = false, message = "Lỗi: " + msg });
+            }
+        }
+
+        // 3. GET: /Product/GetProductDetailJson?productId=123 (Lấy JSON chi tiết sản phẩm + lượt đánh giá + hỏi đáp QTV)
+        [HttpGet]
+        public ActionResult GetProductDetailJson(int productId)
+        {
+            var product = _dbContext.Product.Find(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" }, JsonRequestBehavior.AllowGet);
+            }
+
+            var category = _dbContext.Category.Find(product.CategoryId);
+            var reviews = _dbContext.Review.Where(r => r.ProductId == productId).ToList();
+            double avgRating = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating), 1) : 5.0;
+            int reviewCount = reviews.Count;
+
+            var questions = _dbContext.Question
+                .Where(q => q.ProductId == productId)
+                .OrderByDescending(q => q.CreatedDate)
+                .ToList();
+
+            var questionList = questions.Select(q => {
+                string senderName = "Khách hàng";
+                if (q.UserId > 0)
+                {
+                    string uidStr = q.UserId.ToString();
+                    var user = _dbContext.Users.FirstOrDefault(u => u.Id == uidStr);
+                    if (user != null)
+                    {
+                        senderName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.UserName;
+                    }
+                }
+
+                return new
+                {
+                    id = q.Id,
+                    userId = q.UserId.ToString(),
+                    userName = senderName,
+                    content = q.Content,
+                    createdDate = q.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                    answer = q.Answer,
+                    answerBy = "Bách Hóa Xanh"
+                };
+            }).ToList();
+
+            bool isAdmin = User.IsInRole("Admin");
+
+            return Json(new
+            {
+                success = true,
+                isAdmin = isAdmin,
+                data = new
+                {
+                    id = product.Id,
+                    name = product.Name,
+                    price = product.Price,
+                    quantity = product.Quantity,
+                    description = product.Description ?? "Sản phẩm tươi ngon, đảm bảo chất lượng chính hãng từ Bách Hóa Xanh.",
+                    imageUrl = string.IsNullOrEmpty(product.URLImage) ? "/Content/images/no-image.png" : product.URLImage,
+                    categoryName = category != null ? category.Name : "Nhu yếu phẩm",
+                    avgRating = avgRating,
+                    reviewCount = reviewCount,
+                    questions = questionList
+                }
+            }, JsonRequestBehavior.AllowGet);
+        }
+
+        // 4. POST: /Product/PostAnswerAdmin (Admin trả lời bình luận / câu hỏi)
+        [HttpPost]
+        public ActionResult PostAnswerAdmin(int questionId, string answer)
+        {
+            try
+            {
+                if (!User.IsInRole("Admin"))
+                {
+                    return Json(new { success = false, message = "Bạn cần đăng nhập quyền Admin để phản hồi!" });
+                }
+
+                if (string.IsNullOrWhiteSpace(answer))
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập nội dung câu trả lời!" });
+                }
+
+                customerSupportService.AddAnswer(questionId, answer.Trim());
+                return Json(new { success = true, message = "Đã đăng phản hồi QTV thành công!" });
             }
             catch (Exception ex)
             {

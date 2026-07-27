@@ -337,6 +337,7 @@
     <Content Include="Areas\Admin\Views\ManageOrder\PackingDetail.cshtml" />
     <Content Include="Areas\Admin\Views\ManageOrder\DeliveryList.cshtml" />
     <Content Include="Areas\Admin\Views\ManageOrder\History.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageReview\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

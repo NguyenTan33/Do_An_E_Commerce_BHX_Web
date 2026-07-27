@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
@@ -79,6 +79,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
             switch (result)
             {
                 case SignInStatus.Success:
+                    var user = await UserManager.FindByEmailAsync(model.Email) ?? await UserManager.FindByNameAsync(model.Email);
+                    if (user != null && await UserManager.IsInRoleAsync(user.Id, "Admin"))
+                    {
+                        return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
+                    }
                     return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:
                     return View("Lockout");
@@ -86,7 +91,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
                 case SignInStatus.Failure:
                 default:
-                    ModelState.AddModelError("", "Invalid login attempt.");
+                    ModelState.AddModelError("", "Tên đăng nhập hoặc mật khẩu không chính xác.");
                     return View(model);
             }
         }
@@ -445,7 +450,12 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
         private ActionResult RedirectToLocal(string returnUrl)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            if (User != null && User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
+            }
+
+            if (Url.IsLocalUrl(returnUrl) && !string.IsNullOrEmpty(returnUrl))
             {
                 return Redirect(returnUrl);
             }
