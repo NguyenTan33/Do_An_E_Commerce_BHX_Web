@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /Admin/
+Disallow: /Account/
+
+Sitemap: https://tangreenbasket-001-site1.ktempurl.com/sitemap.xml

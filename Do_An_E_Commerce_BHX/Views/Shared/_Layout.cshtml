@@ -567,6 +567,12 @@
                     @{ Html.RenderAction("CartSummary", "Cart"); }
                 </div>
 
+                <!-- NÚT TRA CỨU ĐƠN HÀNG KẾ BÊN GIỎ HÀNG -->
+                <a href="@Url.Action("Track", "Order")" class="d-inline-flex align-items-center gap-1 text-decoration-none fw-bold ms-2 px-3 py-1 bg-light border rounded-pill" style="font-size: 0.8125rem; color: #163B2E;" title="Tra cứu đơn hàng bằng SĐT hoặc Mã đơn">
+                    <i class="fa-solid fa-magnifying-glass-location text-warning fs-6"></i>
+                    <span class="d-none d-md-inline">Tra cứu đơn</span>
+                </a>
+
                 <div class="header-spacer"></div>
                 @* Giỏ hàng dùng chung: xem HomeController/CartController snippet gửi kèm để hoạt động trên mọi trang *@
                 <div class="header-account">

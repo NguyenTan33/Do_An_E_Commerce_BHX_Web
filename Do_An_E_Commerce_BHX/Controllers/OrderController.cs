@@ -1,4 +1,5 @@
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
@@ -346,6 +347,82 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 paymentMethod = order.PaymentMethod,
                 orderId = orderId
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        // GET: /Order/Track (Trang Tra cứu đơn hàng bằng SĐT hoặc Mã đơn)
+        [AllowAnonymous]
+        [HttpGet]
+        public ActionResult Track(string query = "")
+        {
+            ViewBag.InitialQuery = query;
+            return View();
+        }
+
+        // POST: /Order/SearchOrderJson (AJAX tra cứu đơn hàng)
+        [AllowAnonymous]
+        [HttpPost]
+        public ActionResult SearchOrderJson(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Json(new { success = false, message = "Vui lòng nhập Số điện thoại nhận hàng hoặc Mã đơn hàng!" });
+            }
+
+            string cleanQuery = query.Trim().Replace("#", "");
+            var qOrders = _dbContext.Order.AsQueryable();
+
+            int parsedOrderId = 0;
+            bool isNumericId = int.TryParse(cleanQuery, out parsedOrderId);
+
+            if (isNumericId && parsedOrderId > 0)
+            {
+                qOrders = qOrders.Where(o => o.Id == parsedOrderId || (o.ReceiverPhone != null && o.ReceiverPhone.Contains(cleanQuery)));
+            }
+            else
+            {
+                qOrders = qOrders.Where(o => o.ReceiverPhone != null && o.ReceiverPhone.Contains(cleanQuery));
+            }
+
+            var orders = qOrders
+                .Include("OrderDetails.Product")
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            if (!orders.Any())
+            {
+                return Json(new { success = false, message = $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!" });
+            }
+
+            var orderList = orders.Select(o => new
+            {
+                id = o.Id,
+                orderDate = o.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                receiverName = o.ReceiverName,
+                receiverPhone = o.ReceiverPhone,
+                shippingAddress = o.ShippingAddress,
+                totalAmount = o.TotalAmount,
+                discountAmount = o.DiscountAmount,
+                shippingFee = o.ShippingFee,
+                orderStatus = o.OrderStatus,
+                orderStatusText = o.OrderStatus == 0 ? "Chờ duyệt" :
+                                 o.OrderStatus == 1 ? "Đã duyệt" :
+                                 o.OrderStatus == 2 ? "Đã đóng gói" :
+                                 o.OrderStatus == 3 ? "Đang giao hàng" :
+                                 o.OrderStatus == 4 ? "Giao thành công" : "Đã hủy",
+                paymentMethod = o.PaymentMethod == 0 ? "COD (Tiền mặt)" : "Chuyển khoản VietinBank",
+                paymentStatus = o.PaymentStatus == 1 ? "Đã thanh toán" : "Chưa thanh toán",
+                items = o.OrderDetails != null ? o.OrderDetails.Select(d => new
+                {
+                    productId = d.ProductId,
+                    productName = d.Product != null ? d.Product.Name : "Sản phẩm #" + d.ProductId,
+                    productImage = d.Product != null && !string.IsNullOrEmpty(d.Product.URLImage) ? d.Product.URLImage : "/Content/images/no-image.png",
+                    quantity = d.Quantity,
+                    price = d.Price,
+                    total = d.Price * d.Quantity
+                }).ToList() : null
+            }).ToList();
+
+            return Json(new { success = true, count = orderList.Count, orders = orderList });
         }
 
         protected override void Dispose(bool disposing)
