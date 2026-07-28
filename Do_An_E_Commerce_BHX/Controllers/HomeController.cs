@@ -8,6 +8,7 @@ using Do_An_E_Commerce_BHX.Models;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
+    [AllowAnonymous]
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext db = new ApplicationDbContext();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
@@ -26,6 +26,9 @@ namespace Do_An_E_Commerce_BHX
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
                 LoginPath = new PathString("/Account/Login"),
+                CookieName = "BHX_Auth_Cookie",
+                ExpireTimeSpan = TimeSpan.FromDays(14),
+                SlidingExpiration = true,
                 Provider = new CookieAuthenticationProvider
                 {
                     // Enables the application to validate the security stamp when the user logs in.
