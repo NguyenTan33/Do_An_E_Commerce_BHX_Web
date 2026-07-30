@@ -43,29 +43,36 @@
         </div>
     </div>
 
-    <!-- METRIC CARDS -->
+    <!-- METRIC CARDS ANALYTICS -->
     <div class="row g-3 mb-4">
+        <!-- CARD 1: TỔNG LƯỢT XEM TRANG (PAGE VIEWS) -->
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
-                <div class="text-muted small fw-bold text-uppercase">Tổng lượt tương tác</div>
-                <div class="fs-2 fw-bold text-primary mt-1">@Model.TotalEvents.ToString("N0")</div>
-                <small class="text-muted"><i class="fa-solid fa-bolt text-warning me-1"></i>Sự kiện được ghi nhận</small>
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info">
+                <div class="text-muted small fw-bold text-uppercase">Tổng lượt xem trang</div>
+                <div class="fs-2 fw-bold text-info mt-1">@Model.TotalPageViews.ToString("N0")</div>
+                <small class="text-muted"><i class="fa-solid fa-clock text-info me-1"></i>Hôm nay: <strong>@Model.TodayPageViews.ToString("N0")</strong> lượt xem</small>
             </div>
         </div>
+
+        <!-- CARD 2: KHÁCH TRUY CẬP ĐỘC LẬP (UNIQUE VISITORS) -->
         <div class="col-md-3 col-sm-6">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
-                <div class="text-muted small fw-bold text-uppercase">Số phiên làm việc (Sessions)</div>
-                <div class="fs-2 fw-bold text-success mt-1">@Model.TotalSessions.ToString("N0")</div>
-                <small class="text-muted"><i class="fa-solid fa-users text-success me-1"></i>Phiên người dùng độc lập</small>
+                <div class="text-muted small fw-bold text-uppercase">Khách truy cập độc lập</div>
+                <div class="fs-2 fw-bold text-success mt-1">@Model.TotalUniqueVisitors.ToString("N0")</div>
+                <small class="text-muted"><i class="fa-solid fa-users text-success me-1"></i>Phiên người dùng (Sessions)</small>
             </div>
         </div>
+
+        <!-- CARD 3: THỜI GIAN XEM TRANG TB -->
         <div class="col-md-3 col-sm-6">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
                 <div class="text-muted small fw-bold text-uppercase">Thời gian xem trang TB</div>
                 <div class="fs-2 fw-bold text-warning mt-1">@Model.AvgDwellSeconds.ToString("N1")s</div>
-                <small class="text-muted"><i class="fa-solid fa-stopwatch text-warning me-1"></i>Dwell Time active tab</small>
+                <small class="text-muted"><i class="fa-solid fa-stopwatch text-warning me-1"></i>Dwell Time (Active tab)</small>
             </div>
         </div>
+
+        <!-- CARD 4: RAGE CLICKS -->
         <div class="col-md-3 col-sm-6">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
                 <div class="text-muted small fw-bold text-uppercase">Cú nhấp bực bội (Rage Clicks)</div>

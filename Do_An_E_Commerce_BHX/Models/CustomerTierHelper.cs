@@ -24,11 +24,11 @@ namespace Do_An_E_Commerce_BHX.Models
             }
             else if (points >= 12000)
             {
-                html = "<span class=\"badge bg-info text-dark px-2 py-1 shadow-sm fw-bold\"><i class=\"fa-solid fa-gem text-primary me-1\"></i>Hạng Kim Cương</span>";
+                html = "<span class=\"badge bg-info text-dark px-2 py-1 shadow-sm fw-bold\"><i class=\"fa-solid fa-gem me-1\"></i>Hạng Kim Cương</span>";
             }
             else if (points >= 7000)
             {
-                html = "<span class=\"badge bg-warning text-dark px-2 py-1 shadow-sm fw-bold\"><i class=\"fa-solid fa-medal text-danger me-1\"></i>Hạng Vàng</span>";
+                html = "<span class=\"badge bg-warning text-dark px-2 py-1 shadow-sm fw-bold\"><i class=\"fa-solid fa-medal me-1\"></i>Hạng Vàng</span>";
             }
             else if (points >= 3000)
             {
@@ -40,7 +40,7 @@ namespace Do_An_E_Commerce_BHX.Models
             }
             else
             {
-                html = "<span class=\"badge bg-light text-dark border px-2 py-1 fw-bold\"><i class=\"fa-solid fa-user me-1\"></i>Thành Viên</span>";
+                html = "<span class=\"badge bg-dark text-white border border-secondary px-2 py-1 fw-bold\"><i class=\"fa-solid fa-user text-info me-1\"></i>Thành Viên</span>";
             }
 
             return new HtmlString(html);

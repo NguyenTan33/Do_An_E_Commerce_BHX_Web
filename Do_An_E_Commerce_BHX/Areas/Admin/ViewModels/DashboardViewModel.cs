@@ -12,6 +12,13 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.ViewModels
         public int TotalCustomers { get; set; }
         public int LowStockProducts { get; set; }
 
+        // Thống kê Lượt truy cập Website (Visitor Statistics)
+        public int TotalPageViews { get; set; }      // Tổng số lượt xem trang (Toàn thời gian)
+        public int TotalUniqueVisitors { get; set; } // Tổng số khách độc lập (Toàn thời gian)
+        public int TodayPageViews { get; set; }       // Lượt xem trang hôm nay
+        public int PeriodPageViews { get; set; }     // Lượt xem trang theo kỳ lọc
+        public int PeriodUniqueVisitors { get; set; } // Khách độc lập theo kỳ lọc
+
         // Thống kê theo kỳ lọc (Filtered)
         public double PeriodRevenue { get; set; } // Doanh thu trong kỳ lọc
         public int FilteredTotalOrders { get; set; }

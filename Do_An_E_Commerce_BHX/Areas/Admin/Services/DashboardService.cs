@@ -97,6 +97,24 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
             vm.TotalCustomers = db.Users.Count();
             vm.LowStockProducts = db.Product.Count(x => x.Quantity < 10);
 
+            // Thống kê lượt truy cập Website ngầm qua UserBehaviorLog
+            try
+            {
+                vm.TotalPageViews = db.UserBehaviorLog.Count();
+                vm.TotalUniqueVisitors = db.UserBehaviorLog.Select(x => x.SessionId).Distinct().Count();
+                vm.TodayPageViews = db.UserBehaviorLog.Count(x => x.CreatedDate >= today);
+                vm.PeriodPageViews = db.UserBehaviorLog.Count(x => x.CreatedDate >= start && x.CreatedDate <= end);
+                vm.PeriodUniqueVisitors = db.UserBehaviorLog.Where(x => x.CreatedDate >= start && x.CreatedDate <= end).Select(x => x.SessionId).Distinct().Count();
+            }
+            catch
+            {
+                vm.TotalPageViews = 0;
+                vm.TotalUniqueVisitors = 0;
+                vm.TodayPageViews = 0;
+                vm.PeriodPageViews = 0;
+                vm.PeriodUniqueVisitors = 0;
+            }
+
             // 4. THỐNG KÊ THEO KỲ LỌC
             vm.PeriodRevenue = orderDetailQuery.Sum(x => (double?)(x.Quantity * x.Price)) ?? 0;
 

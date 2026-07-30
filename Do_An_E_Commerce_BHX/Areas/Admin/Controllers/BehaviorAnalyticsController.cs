@@ -22,6 +22,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             public int TotalEvents { get; set; }
             public int TotalSessions { get; set; }
+            public int TotalPageViews { get; set; }        // Lượt xem trang theo kỳ lọc
+            public int TotalUniqueVisitors { get; set; }   // Khách độc lập theo kỳ lọc
+            public int TodayPageViews { get; set; }        // Lượt xem hôm nay
             public double AvgDwellSeconds { get; set; }
             public int TotalRageClicks { get; set; }
 
@@ -99,10 +102,17 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             var logs = qLogs.ToList();
 
+            var today = DateTime.Today;
+            int pageViewsCount = logs.Count(l => l.EventType == "PageView" || l.EventType == "PageLoadSpeed");
+            if (pageViewsCount == 0) pageViewsCount = logs.Count;
+
             var vm = new BehaviorAnalyticsViewModel
             {
                 TotalEvents = logs.Count,
                 TotalSessions = logs.Select(l => l.SessionId).Distinct().Count(),
+                TotalPageViews = pageViewsCount,
+                TotalUniqueVisitors = logs.Select(l => l.SessionId).Distinct().Count(),
+                TodayPageViews = _db.UserBehaviorLog.Count(l => l.CreatedDate >= today),
                 TotalRageClicks = logs.Count(l => l.EventType == "RageClick")
             };
 

@@ -27,6 +27,7 @@
             {
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(m => m.Id)
+                @Html.HiddenFor(m => m.Email)
                 @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
 
                 <div class="mb-4">
@@ -48,7 +49,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-shield-halved me-1"></i>Vai trò (Role) (*)</label>
-                        @Html.DropDownListFor(m => m.RoleName, ViewBag.Roles as SelectList, "-- Chọn vai trò --", new { @class = "form-select bg-dark text-white border-secondary fw-bold", required = "required" })
+                        @Html.DropDownListFor(m => m.SelectedRole, ViewBag.Roles as SelectList, "-- Chọn vai trò --", new { @class = "form-select bg-dark text-white border-secondary fw-bold", required = "required" })
                     </div>
                 </div>
 

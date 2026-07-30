@@ -160,14 +160,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
+                    // Tự động đảm bảo Role "User" tồn tại & gán cho tài khoản mới
+                    await EnsureDefaultUserRoleAssignedAsync(user.Id);
+
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
                     
-                    // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
-                    // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-
                     return RedirectToAction("Index", "Home");
                 }
                 AddErrors(result);
@@ -379,6 +376,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     result = await UserManager.AddLoginAsync(user.Id, info.Login);
                     if (result.Succeeded)
                     {
+                        await EnsureDefaultUserRoleAssignedAsync(user.Id);
                         await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
                         return RedirectToLocal(returnUrl);
                     }
@@ -388,6 +386,31 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             ViewBag.ReturnUrl = returnUrl;
             return View(model);
+        }
+
+        // Helper private method: Tự động tạo Role "User" nếu chưa có và gán cho tài khoản mới đăng ký
+        private async Task EnsureDefaultUserRoleAssignedAsync(string userId)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    var roleStore = new Microsoft.AspNet.Identity.EntityFramework.RoleStore<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>(db);
+                    var roleManager = new RoleManager<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>(roleStore);
+
+                    if (!await roleManager.RoleExistsAsync("User"))
+                    {
+                        await roleManager.CreateAsync(new Microsoft.AspNet.Identity.EntityFramework.IdentityRole("User"));
+                    }
+                }
+
+                var roles = await UserManager.GetRolesAsync(userId);
+                if (!roles.Contains("User"))
+                {
+                    await UserManager.AddToRoleAsync(userId, "User");
+                }
+            }
+            catch { }
         }
 
         //

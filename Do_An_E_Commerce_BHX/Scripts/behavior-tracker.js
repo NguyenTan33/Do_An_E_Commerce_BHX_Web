@@ -56,6 +56,14 @@
         }
     };
 
+    // Tự động ghi nhận lượt truy cập trang (PageView) ngay khi mở web
+    try {
+        sendLog({
+            EventType: 'PageView',
+            TargetName: window.location.pathname || '/'
+        });
+    } catch (e) { }
+
     // 3. TỰ ĐỘNG ĐO THỜI GIAN LƯU LẠI TRANG (PAGE DWELL TIME) & VISIBILITY API
     function updateActiveDwellTime() {
         if (isTabActive) {

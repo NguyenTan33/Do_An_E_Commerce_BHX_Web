@@ -70,7 +70,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManagePromotion/ThemPromotion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ThemPromotion(Promotion model)
+        public ActionResult ThemPromotion(Promotion model, string DiscountType)
         {
             if (ModelState.IsValid)
             {
@@ -84,6 +84,16 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
 
                 model.Code = model.Code.ToUpper();
+
+                if (DiscountType == "PERCENT")
+                {
+                    model.percentDiscount = model.DiscountValue;
+                    model.DiscountValue = 0;
+                }
+                else
+                {
+                    model.percentDiscount = 0;
+                }
 
                 _db.Promotion.Add(model);
                 _db.SaveChanges();
@@ -110,7 +120,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManagePromotion/SuaPromotion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SuaPromotion(Promotion model)
+        public ActionResult SuaPromotion(Promotion model, string DiscountType)
         {
             if (ModelState.IsValid)
             {
@@ -127,8 +137,18 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     }
 
                     promo.Code = model.Code.ToUpper();
-                    promo.DiscountValue = model.DiscountValue;
-                    promo.percentDiscount = model.percentDiscount;
+
+                    if (DiscountType == "PERCENT")
+                    {
+                        promo.percentDiscount = model.DiscountValue;
+                        promo.DiscountValue = 0;
+                    }
+                    else
+                    {
+                        promo.DiscountValue = model.DiscountValue;
+                        promo.percentDiscount = 0;
+                    }
+
                     promo.MinOrderAmount = model.MinOrderAmount;
                     promo.CategoryId = model.CategoryId;
                     promo.MaxDiscountAmount = model.MaxDiscountAmount;

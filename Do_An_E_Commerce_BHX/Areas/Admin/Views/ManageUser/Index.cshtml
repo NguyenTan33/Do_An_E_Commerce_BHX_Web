@@ -6,6 +6,8 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
+
+
 <div class="dash-page">
 
     <!-- ===== PAGE HEADER ===== -->
@@ -104,7 +106,9 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column align-items-start gap-1">
-                                        @Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(user.LoyaltyPoints)
+                                        <div class="adm-custom-tier">
+                                            @Html.Raw(Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(user.LoyaltyPoints))
+                                        </div>
                                         <small style="font-size: 12px; color: var(--adm-gold); font-weight: 600;">
                                             <i class="fa-solid fa-coins me-1"></i>@user.LoyaltyPoints.ToString("N0") điểm
                                         </small>

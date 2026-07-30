@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
 
 @{
     ViewData["Title"] = "Quản lý đơn hàng";
@@ -195,24 +195,28 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex gap-1 justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-info text-dark fw-bold" onclick="openOrderDetailModal(@item.Id)" title="Xem chi tiết đơn hàng #@item.Id">
+                                            <i class="fa-solid fa-eye me-1"></i> Chi tiết
+                                        </button>
+
                                         @if (item.OrderStatus == 0)
                                         {
                                             <button type="button" class="btn btn-sm btn-success btn-approve" data-id="@item.Id" title="Duyệt đơn hàng">
-                                                <i class="fa-solid fa-check"></i>
+                                                <i class="fa-solid fa-check"></i> Duyệt
                                             </button>
                                         }
 
                                         @if (item.OrderStatus == 1)
                                         {
                                             <a href="@Url.Action("PackingDetail", "ManageOrder", new { id = item.Id })" class="btn btn-sm btn-warning text-dark fw-bold" title="Soạn đơn">
-                                                <i class="fa-solid fa-box-open"></i>
+                                                <i class="fa-solid fa-box-open"></i> Soạn
                                             </a>
                                         }
 
                                         @if (item.OrderStatus != 4 && item.OrderStatus != 5)
                                         {
                                             <button type="button" class="btn btn-sm btn-outline-warning btn-cancel" data-id="@item.Id" title="Hủy đơn & Hoàn tồn kho">
-                                                <i class="fa-solid fa-ban"></i>
+                                                <i class="fa-solid fa-ban"></i> Hủy
                                             </button>
                                         }
 
@@ -240,9 +244,123 @@
     </div>
 </div>
 
+<!-- MODAL XEM CHI TIẾT ĐƠN HÀNG -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <div class="modal-header border-secondary" style="background: var(--adm-surface-2);">
+                <h5 class="modal-title text-warning fw-bold d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> CHI TIẾT ĐƠN HÀNG <span id="modalOrderId" class="text-gold font-monospace"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3 mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255,255,255,0.02);">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Thời gian đặt: <strong id="modalOrderDate" class="text-white"></strong></div>
+                        <div class="text-muted small mt-1">Khách nhận: <strong id="modalReceiver" class="text-info"></strong></div>
+                        <div class="text-muted small mt-1">SĐT liên hệ: <strong id="modalPhone" class="text-danger"></strong></div>
+                        <div class="text-muted small mt-1">Nhân viên soạn: <strong id="modalPackedBy" class="text-warning"></strong></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Phương thức: <strong id="modalPayment" class="text-warning"></strong></div>
+                        <div class="text-muted small mt-1">Địa chỉ giao: <strong id="modalAddress" class="text-white"></strong></div>
+                        <div class="text-muted small mt-1">Nhân viên giao: <strong id="modalDeliveredBy" class="text-info"></strong></div>
+                    </div>
+                </div>
+
+                <!-- DANH SÁCH MÓN ĂN TRONG ĐƠN -->
+                <h6 class="fw-bold text-warning mb-3"><i class="fa-solid fa-boxes-stacked me-1"></i>Sản phẩm trong đơn:</h6>
+                <div class="table-responsive mb-3 border border-secondary rounded-3">
+                    <table class="table table-dark table-hover align-middle mb-0" id="modalItemsTable">
+                        <thead class="table-secondary text-white">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Đơn giá</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end pe-3">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3 border border-warning" style="background: rgba(240, 180, 41, 0.08);">
+                    <span class="fw-bold text-white fs-6">TỔNG THÀNH TIỀN ĐƠN HÀNG:</span>
+                    <span id="modalFinalTotal" class="fw-bold text-warning fs-4 font-monospace"></span>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // JS mở Modal Chi Tiết Đơn Hàng từ Quản lý đơn
+        function openOrderDetailModal(orderId) {
+            var modalEl = document.getElementById('orderDetailModal');
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            document.getElementById('modalOrderId').textContent = '#' + orderId;
+            document.getElementById('modalOrderDate').textContent = 'Đang nạp...';
+            document.getElementById('modalReceiver').textContent = '...';
+            document.getElementById('modalPhone').textContent = '...';
+            document.getElementById('modalPayment').textContent = '...';
+            document.getElementById('modalAddress').textContent = '...';
+            document.getElementById('modalPackedBy').textContent = '...';
+            document.getElementById('modalDeliveredBy').textContent = '...';
+            document.getElementById('modalFinalTotal').textContent = '0 ₫';
+            
+            var tbody = document.querySelector('#modalItemsTable tbody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-warning"><i class="fa-solid fa-spinner fa-spin me-2"></i>Đang nạp dữ liệu chi tiết đơn hàng...</td></tr>';
+            
+            modal.show();
+
+            fetch('@Url.Action("GetOrderDetailJson", "ManageOrder")?id=' + orderId)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data) {
+                        var d = res.data;
+                        document.getElementById('modalOrderDate').textContent = d.orderDate;
+                        document.getElementById('modalReceiver').textContent = d.receiverName;
+                        document.getElementById('modalPhone').textContent = d.receiverPhone;
+                        document.getElementById('modalPayment').textContent = d.paymentMethod + ' (' + d.paymentStatus + ')';
+                        document.getElementById('modalAddress').textContent = d.shippingAddress;
+                        document.getElementById('modalPackedBy').textContent = d.packedBy || 'N/A';
+                        document.getElementById('modalDeliveredBy').textContent = d.deliveredBy || 'N/A';
+                        document.getElementById('modalFinalTotal').textContent = d.totalAmount.toLocaleString('vi-VN') + ' ₫';
+
+                        tbody.innerHTML = '';
+                        if (d.items && d.items.length > 0) {
+                            d.items.forEach(function(item) {
+                                var tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>
+                                        <div class="fw-bold text-white">${item.productName}</div>
+                                        <small class="text-muted">Mã vạch: ${item.barcode || 'N/A'}</small>
+                                    </td>
+                                    <td class="text-center text-warning font-monospace">${item.price.toLocaleString('vi-VN')} ₫</td>
+                                    <td class="text-center font-monospace fw-bold">x${item.quantity}</td>
+                                    <td class="text-end pe-3 text-emerald font-monospace fw-bold">${item.total.toLocaleString('vi-VN')} ₫</td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Không có danh sách món.</td></tr>';
+                        }
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Không tải được thông tin đơn hàng!</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi kết nối máy chủ!</td></tr>';
+                });
+        }
+
         $(document).ready(function () {
             $('#checkAll').on('change', function () {
                 $('.order-check').prop('checked', $(this).is(':checked'));

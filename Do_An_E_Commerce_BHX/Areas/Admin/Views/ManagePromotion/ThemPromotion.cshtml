@@ -4,6 +4,8 @@
     ViewData["Title"] = "Thêm mã khuyến mãi";
     ViewData["Subtitle"] = "Thiết lập chương trình giảm giá Voucher mới";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    string nowVal = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+    string endVal = DateTime.Now.AddDays(30).ToString("yyyy-MM-ddTHH:mm");
 }
 
 <div class="container-fluid py-3" style="max-width: 850px;">
@@ -28,7 +30,7 @@
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
 
-                <!-- CODE VOUCHER & TÊN KHUYẾN MÃI -->
+                <!-- CODE VOUCHER & MÔ TẢ CHƯƠNG TRÌNH -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-5">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-key me-1"></i>Mã Voucher (Code) (*)</label>
@@ -36,9 +38,9 @@
                         @Html.ValidationMessageFor(m => m.Code, "", new { @class = "text-danger small mt-1 d-block" })
                     </div>
                     <div class="col-md-7">
-                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-heading me-1"></i>Tên chương trình (*)</label>
-                        @Html.TextBoxFor(m => m.Title, new { @class = "form-control form-control-lg bg-dark text-white border-secondary", placeholder = "VD: Giảm 20k đơn từ 200k...", required = "required" })
-                        @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger small mt-1 d-block" })
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-align-left me-1"></i>Mô tả chương trình (*)</label>
+                        @Html.TextBoxFor(m => m.Description, new { @class = "form-control form-control-lg bg-dark text-white border-secondary", placeholder = "VD: Giảm 20k đơn từ 200k...", required = "required" })
+                        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger small mt-1 d-block" })
                     </div>
                 </div>
 
@@ -46,11 +48,10 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-percent me-1"></i>Loại giảm giá (*)</label>
-                        @Html.DropDownListFor(m => m.DiscountType, new List<SelectListItem>
-                        {
-                            new SelectListItem { Text = "Giảm theo số tiền cố định (VNĐ)", Value = "AMOUNT" },
-                            new SelectListItem { Text = "Giảm theo phần trăm (%)", Value = "PERCENT" }
-                        }, new { @class = "form-select bg-dark text-white border-secondary fw-bold" })
+                        <select name="DiscountType" class="form-select bg-dark text-white border-secondary fw-bold">
+                            <option value="AMOUNT">Giảm theo số tiền cố định (VNĐ)</option>
+                            <option value="PERCENT">Giảm theo phần trăm (%)</option>
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-calculator me-1"></i>Mức giảm (*)</label>
@@ -71,15 +72,15 @@
                     </div>
                 </div>
 
-                <!-- SỐ LƯỢNG LƯỢT DÙNG & SỐ LƯỢT/KHÁCH -->
+                <!-- SỐ LƯỢNG LƯỢT DÙNG & DANH MỤC ÁP DỤNG -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-ticket-simple me-1"></i>Số lượt phát hành (*)</label>
                         @Html.TextBoxFor(m => m.UsageLimit, new { type = "number", min = "1", @class = "form-control bg-dark text-white border-secondary", placeholder = "VD: 100", required = "required" })
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-user-lock me-1"></i>Lượt dùng tối đa / Khách hàng</label>
-                        @Html.TextBoxFor(m => m.PerUserLimit, new { type = "number", min = "1", @class = "form-control bg-dark text-white border-secondary", placeholder = "1" })
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-layer-group me-1"></i>Áp dụng cho danh mục</label>
+                        @Html.DropDownListFor(m => m.CategoryId, (SelectList)ViewBag.Categories, "-- Tất cả danh mục sản phẩm --", new { @class = "form-select bg-dark text-white border-secondary" })
                     </div>
                 </div>
 
@@ -87,20 +88,15 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-regular fa-calendar-check me-1"></i>Ngày bắt đầu (*)</label>
-                        <input type="datetime-local" name="StartDate" class="form-control bg-dark text-white border-secondary" required />
+                        <input type="datetime-local" name="EffectiveDate" value="@nowVal" class="form-control bg-dark text-white border-secondary" required />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-regular fa-calendar-xmark me-1"></i>Ngày kết thúc (*)</label>
-                        <input type="datetime-local" name="EndDate" class="form-control bg-dark text-white border-secondary" required />
+                        <input type="datetime-local" name="ExpiryDate" value="@endVal" class="form-control bg-dark text-white border-secondary" required />
                     </div>
                 </div>
 
-                <!-- MÔ TẢ & TRẠNG THÁI -->
-                <div class="mb-4">
-                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-align-left me-1"></i>Mô tả chương trình</label>
-                    @Html.TextAreaFor(m => m.Description, new { rows = "3", @class = "form-control bg-dark text-white border-secondary", placeholder = "Nhập điều kiện áp dụng voucher..." })
-                </div>
-
+                <!-- TRẠNG THÁI -->
                 <div class="mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255, 255, 255, 0.03);">
                     <label class="form-check-label text-success fw-bold cursor-pointer">
                         @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input me-2", @checked = "checked" }) Kích hoạt voucher ngay lập tức

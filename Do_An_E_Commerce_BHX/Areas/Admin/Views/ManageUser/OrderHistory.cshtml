@@ -4,8 +4,8 @@
 
 @{
     var customer = ViewBag.Customer as ApplicationUser;
-    ViewData["Title"] = "Lịch Sử Đơn Hàng";
-    ViewData["Subtitle"] = "Chi tiết lịch sử mua hàng của " + (customer?.FullName ?? customer?.UserName);
+    ViewData["Title"] = "Lịch Sử Đơn Hàng Khách Hàng";
+    ViewData["Subtitle"] = "Chi tiết tất cả đơn hàng của " + (customer?.FullName ?? customer?.UserName);
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 
     string statusFilter = ViewBag.StatusFilter as string ?? "all";
@@ -18,460 +18,424 @@
 
 @section Styles {
     <style>
-        /* Customer Card */
-        .customer-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: #f8fafc;
+        /* ===== ADMIN DARK THEME - CUSTOMER ORDER HISTORY ===== */
+        .history-card {
+            background: linear-gradient(135deg, var(--adm-surface-2) 0%, #161B22 100%);
+            border: 1px solid var(--adm-border);
             border-radius: 16px;
             padding: 24px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
-            .customer-card::after {
-                content: '';
-                position: absolute;
-                top: -50%;
-                right: -10%;
-                width: 300px;
-                height: 300px;
-                background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-                border-radius: 50%;
-            }
+        .history-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(240, 180, 41, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-        .avatar-circle {
+        .user-avatar-circle {
             width: 64px;
             height: 64px;
-            background: #ffffff;
+            background: var(--adm-surface-3);
+            border: 2px solid var(--adm-gold);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            color: #10b981;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 26px;
+            color: var(--adm-gold);
+            box-shadow: 0 0 15px rgba(240, 180, 41, 0.2);
         }
 
-        /* Filter Tabs */
-        .filter-wrapper {
-            background: #ffffff;
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 24px;
+        /* Filter Tabs Dark */
+        .adm-tabs-bar {
             display: inline-flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
+            background: var(--adm-surface);
+            border: 1px solid var(--adm-border);
+            padding: 8px;
+            border-radius: 14px;
+            margin-bottom: 24px;
         }
 
-        .tab-btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #64748b;
+        .adm-tab-item {
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13.5px;
+            color: var(--adm-text-2);
             background: transparent;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 1px solid transparent;
         }
 
-            .tab-btn:hover {
-                color: #059669;
-                background: #f1f5f9;
-            }
+        .adm-tab-item:hover {
+            color: var(--adm-gold);
+            background: var(--adm-surface-2);
+        }
 
-            .tab-btn.active {
-                background: #10b981;
-                color: #ffffff;
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            }
+        .adm-tab-item.active {
+            background: var(--adm-gold);
+            color: #0D1117 !important;
+            box-shadow: 0 2px 10px rgba(240, 180, 41, 0.3);
+        }
 
-        .badge-count {
-            background: #e2e8f0;
-            color: #475569;
+        .tab-counter {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--adm-text);
             padding: 2px 8px;
             border-radius: 12px;
-            font-size: 12px;
-            font-weight: 700;
-            transition: all 0.3s ease;
+            font-size: 11.5px;
+            font-weight: 800;
         }
 
-        .tab-btn.active .badge-count {
-            background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+        .adm-tab-item.active .tab-counter {
+            background: #0D1117;
+            color: var(--adm-gold);
         }
 
-        /* Table Design */
-        .table-card {
-            background: #ffffff;
+        /* Table Styling Dark Theme */
+        .history-table-card {
+            background: var(--adm-surface);
+            border: 1px solid var(--adm-border);
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
-        .custom-table {
+        .adm-hist-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
+            color: var(--adm-text);
         }
 
-            .custom-table th {
-                background: #f8fafc;
-                color: #475569;
-                font-weight: 600;
-                text-transform: uppercase;
-                font-size: 12px;
-                letter-spacing: 0.5px;
-                padding: 16px;
-                border-bottom: 1px solid #e2e8f0;
-            }
-
-            .custom-table td {
-                padding: 16px;
-                border-bottom: 1px solid #f1f5f9;
-                vertical-align: middle;
-                font-size: 14px;
-                color: #334155;
-            }
-
-            .custom-table tbody tr {
-                transition: background-color 0.2s ease;
-            }
-
-                .custom-table tbody tr.main-row:hover {
-                    background-color: #f8fafc;
-                }
-
-        .order-id {
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        .adm-hist-table th {
+            background: var(--adm-surface-2);
+            color: var(--adm-text-2);
             font-weight: 700;
-            color: #059669;
-            background: #ecfdf5;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        /* Modern Badges */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
+            text-transform: uppercase;
             font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            border-bottom: 1px solid var(--adm-border);
         }
 
-        .st-0 {
-            background: #fef9c3;
-            color: #ca8a04;
+        .adm-hist-table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+            vertical-align: middle;
+            font-size: 13.5px;
         }
-        /* Chờ duyệt */
-        .st-1 {
-            background: #e0f2fe;
-            color: #0284c7;
+
+        .adm-hist-table tbody tr.main-row:hover {
+            background-color: rgba(255, 255, 255, 0.02);
         }
-        /* Chuẩn bị/Đóng gói */
-        .st-2 {
-            background: #ede9fe;
-            color: #7c3aed;
+
+        .order-mono-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            color: var(--adm-gold);
+            font-size: 14px;
         }
-        /* Đang giao */
-        .st-3 {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-        /* Thành công */
-        .st-4 {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        /* Đã hủy */
 
         /* Expand Button */
-        .btn-expand {
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #475569;
+        .btn-toggle-detail {
+            border: 1px solid var(--adm-border-2);
+            background: var(--adm-surface-2);
+            color: var(--adm-text);
             border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
+            padding: 6px 14px;
+            font-size: 12.5px;
+            font-weight: 700;
+            transition: all 0.2s ease;
         }
 
-            .btn-expand:hover {
-                background: #f1f5f9;
-                color: #0f172a;
-                border-color: #cbd5e1;
-            }
+        .btn-toggle-detail:hover {
+            background: var(--adm-gold);
+            color: #0D1117;
+            border-color: var(--adm-gold);
+        }
 
-            .btn-expand[aria-expanded="true"] .chevron-icon {
-                transform: rotate(180deg);
-            }
+        .btn-toggle-detail[aria-expanded="true"] .chevron-icon {
+            transform: rotate(180deg);
+        }
 
         .chevron-icon {
             transition: transform 0.3s ease;
         }
 
-        /* Detail Collapse Area */
+        /* Detail Area */
         .detail-row td {
             padding: 0 !important;
             border-bottom: none;
         }
 
-        .detail-card {
-            background: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
-            padding: 24px;
+        .detail-dark-card {
+            background: #11151C;
+            border-bottom: 2px solid var(--adm-border);
+            padding: 20px;
         }
 
         .detail-inner-box {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: var(--adm-surface);
+            border: 1px solid var(--adm-border);
             border-radius: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
             overflow: hidden;
-        }
-
-        .table-details th {
-            background: #f1f5f9;
-            font-size: 13px;
-            color: #64748b;
         }
     </style>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item"><a href="@Url.Action("Index", "ManageUser")" class="text-decoration-none text-muted"><i class="fa-solid fa-users me-1"></i> Quản lý người dùng</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Lịch sử đơn hàng</li>
-            </ol>
-        </nav>
-        <h3 class="fw-bold text-dark m-0">Đơn Hàng Của Khách Khàng</h3>
-    </div>
-    <a href="@Url.Action("Index", "ManageUser")" class="btn btn-light border shadow-sm fw-bold">
-        <i class="fa-solid fa-arrow-left me-2"></i> Quay lại
-    </a>
-</div>
+<div class="dash-page">
 
-<!-- THÔNG TIN KHÁCH HÀNG -->
-<div class="customer-card">
-    <div class="row align-items-center g-4">
-        <div class="col-md-7 d-flex align-items-center gap-4">
-            <div class="avatar-circle">
-                <i class="fa-solid fa-user-tie"></i>
+    <!-- PAGE HEADER BAR -->
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3" style="border-bottom: 1px solid var(--adm-border);">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "ManageUser")" class="text-decoration-none text-muted"><i class="fa-solid fa-users me-1"></i> Quản lý người dùng</a></li>
+                    <li class="breadcrumb-item active text-warning" aria-current="page">Lịch sử đơn hàng</li>
+                </ol>
+            </nav>
+            <h3 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-warning"></i> Lịch Sử Đơn Hàng Của Khách Khàng
+            </h3>
+        </div>
+        <a href="@Url.Action("Index", "ManageUser")" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+            <i class="fa-solid fa-arrow-left me-2"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- THÔNG TIN KHÁCH HÀNG CARD -->
+    <div class="history-card">
+        <div class="row align-items-center g-4">
+            <div class="col-md-7 d-flex align-items-center gap-4">
+                <div class="user-avatar-circle">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <div style="z-index: 1;">
+                    <h4 class="m-0 fw-bold text-white mb-1">@(customer?.FullName ?? customer?.UserName)</h4>
+                    <div class="small d-flex flex-wrap gap-3" style="color: var(--adm-text-2);">
+                        <span><i class="fa-solid fa-envelope me-1 text-info"></i> @(customer?.Email ?? "Chưa cập nhật")</span>
+                        <span><i class="fa-solid fa-phone me-1 text-danger"></i> @(customer?.PhoneNumber ?? "Chưa cập nhật")</span>
+                    </div>
+                </div>
             </div>
-            <div style="z-index: 1;">
-                <h4 class="m-0 fw-bold mb-1">@(customer?.FullName ?? customer?.UserName)</h4>
-                <div class="text-slate-300 small d-flex flex-wrap gap-3" style="color: #cbd5e1;">
-                    <span><i class="fa-solid fa-envelope me-1 opacity-75"></i> @(customer?.Email ?? "Chưa cập nhật")</span>
-                    <span><i class="fa-solid fa-phone me-1 opacity-75"></i> @(customer?.PhoneNumber ?? "Chưa cập nhật")</span>
+            <div class="col-md-5 text-md-end border-start border-secondary border-opacity-25 ps-md-4" style="z-index: 1;">
+                <div class="small text-uppercase tracking-wider mb-1" style="color: var(--adm-text-2); font-size: 11.5px;">Tích điểm & Hạng thành viên</div>
+                <div class="d-flex align-items-center justify-content-md-end gap-3">
+                    <div class="fs-4 fw-bold font-monospace d-flex align-items-center" style="color: var(--adm-gold);">
+                        <i class="fa-solid fa-coins me-2"></i>@userPoints.ToString("N0") <span class="fs-6 ms-1 fw-normal text-muted">điểm</span>
+                    </div>
+                    <div>
+                        @CustomerTierHelper.GetTierBadgeHtml(userPoints)
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-5 text-md-end border-start border-secondary border-opacity-25 ps-md-4" style="z-index: 1;">
-            <div class="small text-uppercase tracking-wider mb-2" style="color: #94a3b8; font-size: 12px; letter-spacing: 0.5px;">Thành viên & Điểm thưởng</div>
-            <div class="d-flex align-items-center justify-content-md-end gap-3">
-                <div class="fs-5 fw-bold text-warning d-flex align-items-center">
-                    <i class="fa-solid fa-coins me-2"></i>@userPoints.ToString("N0") <span class="fs-6 ms-1 fw-normal text-white">điểm</span>
-                </div>
-                <div>
-                    @CustomerTierHelper.GetTierBadgeHtml(userPoints)
-                </div>
-            </div>
-        </div>
     </div>
-</div>
 
-<!-- BỘ LỌC TABS -->
-<div class="filter-wrapper">
-    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "all" })"
-       class="tab-btn @(statusFilter == "all" ? "active" : "")">
-        <i class="fa-solid fa-layer-group"></i> Tất cả
-        <span class="badge-count">@totalCount</span>
-    </a>
+    <!-- BỘ LỌC TABS STATUS -->
+    <div class="adm-tabs-bar">
+        <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "all" })"
+           class="adm-tab-item @(statusFilter == "all" ? "active" : "")">
+            <i class="fa-solid fa-layer-group"></i> Tất cả đơn
+            <span class="tab-counter">@totalCount</span>
+        </a>
 
-    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "processing" })"
-       class="tab-btn @(statusFilter == "processing" ? "active" : "")">
-        <i class="fa-solid fa-boxes-packing"></i> Đang xử lý
-        <span class="badge-count">@processingCount</span>
-    </a>
+        <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "processing" })"
+           class="adm-tab-item @(statusFilter == "processing" ? "active" : "")">
+            <i class="fa-solid fa-boxes-packing"></i> Đang xử lý
+            <span class="tab-counter">@processingCount</span>
+        </a>
 
-    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "completed" })"
-       class="tab-btn @(statusFilter == "completed" ? "active" : "")">
-        <i class="fa-solid fa-check-double"></i> Đã hoàn tất
-        <span class="badge-count">@completedCount</span>
-    </a>
+        <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "completed" })"
+           class="adm-tab-item @(statusFilter == "completed" ? "active" : "")">
+            <i class="fa-solid fa-check-double"></i> Đã hoàn tất
+            <span class="tab-counter">@completedCount</span>
+        </a>
 
-    <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "cancelled" })"
-       class="tab-btn @(statusFilter == "cancelled" ? "active" : "")">
-        <i class="fa-solid fa-ban"></i> Đã hủy
-        <span class="badge-count">@cancelledCount</span>
-    </a>
-</div>
+        <a href="@Url.Action("OrderHistory", "ManageUser", new { userId = customer?.Id, statusFilter = "cancelled" })"
+           class="adm-tab-item @(statusFilter == "cancelled" ? "active" : "")">
+            <i class="fa-solid fa-ban"></i> Đã hủy
+            <span class="tab-counter">@cancelledCount</span>
+        </a>
+    </div>
 
-<!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
-<div class="table-card">
-    <div class="table-responsive">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th style="width: 100px;">Mã Đơn</th>
-                    <th>Thời Gian</th>
-                    <th style="width: 25%;">Giao Đến</th>
-                    <th>Thanh Toán</th>
-                    <th>Trạng Thái</th>
-                    <th style="text-align: right;">Tổng Tiền</th>
-                    <th style="text-align: center; width: 120px;">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var order in Model)
+    <!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
+    <div class="history-table-card">
+        <div class="table-responsive">
+            <table class="adm-hist-table">
+                <thead>
+                    <tr>
+                        <th class="ps-4" style="width: 110px;">Mã Đơn</th>
+                        <th>Thời Gian Đặt</th>
+                        <th style="width: 25%;">Địa Chỉ Giao</th>
+                        <th>Thanh Toán</th>
+                        <th>Trạng Thái</th>
+                        <th class="text-end" style="width: 140px;">Tổng Tiền</th>
+                        <th class="text-center" style="width: 120px;">Chi Tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
                     {
-                        string statusText = "Chờ duyệt";
-                        string statusClass = "st-0";
-                        string statusIcon = "fa-clock";
+                        foreach (var order in Model)
+                        {
+                            string payMethodText = order.PaymentMethod == 0 ? "Tiền mặt (COD)" : (order.PaymentMethod == 2 ? "Ví MoMo" : "VietQR Ngân hàng");
+                            int totalItems = order.OrderDetails != null ? order.OrderDetails.Sum(d => d.Quantity) : 0;
 
-                        if (order.OrderStatus == 1) { statusText = "Đã duyệt"; statusClass = "st-1"; statusIcon = "fa-clipboard-check"; }
-                        else if (order.OrderStatus == 2) { statusText = "Đóng gói"; statusClass = "st-1"; statusIcon = "fa-box-open"; }
-                        else if (order.OrderStatus == 3) { statusText = "Đang giao"; statusClass = "st-2"; statusIcon = "fa-truck-fast"; }
-                        else if (order.OrderStatus == 4) { statusText = "Thành công"; statusClass = "st-3"; statusIcon = "fa-check-circle"; }
-                        else if (order.OrderStatus == 5) { statusText = "Đã hủy"; statusClass = "st-4"; statusIcon = "fa-xmark-circle"; }
+                            <tr class="main-row">
+                                <td class="ps-4">
+                                    <span class="order-mono-id">#@order.Id</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-white">@order.OrderDate.ToString("dd/MM/yyyy")</div>
+                                    <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>@order.OrderDate.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info mb-1"><i class="fa-regular fa-user me-1"></i>@order.ReceiverName</div>
+                                    <div class="small text-danger fw-bold mb-1"><i class="fa-solid fa-phone me-1"></i>@order.ReceiverPhone</div>
+                                    <div class="small text-muted text-truncate" style="max-width: 240px;" title="@order.ShippingAddress">
+                                        <i class="fa-solid fa-location-dot text-warning me-1"></i>@order.ShippingAddress
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mb-1"><span class="badge bg-dark border border-secondary text-light">@payMethodText</span></div>
+                                    <div>
+                                        @if (order.PaymentStatus == 1)
+                                        {
+                                            <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Đã thanh toán</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Chưa thanh toán</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (order.OrderStatus == 4)
+                                    {
+                                        <span class="badge bg-success fs-6"><i class="fa-solid fa-circle-check me-1"></i>Thành công</span>
+                                    }
+                                    else if (order.OrderStatus == 5)
+                                    {
+                                        <span class="badge bg-danger fs-6"><i class="fa-solid fa-xmark me-1"></i>Đã hủy</span>
+                                    }
+                                    else if (order.OrderStatus == 3)
+                                    {
+                                        <span class="badge bg-info text-dark fs-6"><i class="fa-solid fa-truck-fast me-1"></i>Đang giao</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark fs-6"><i class="fa-solid fa-boxes-packing me-1"></i>Đang xử lý</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="fw-bold font-monospace fs-6" style="color: var(--adm-gold);">@order.TotalAmount.ToString("N0") ₫</div>
+                                    <small class="text-muted">@totalItems món</small>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-toggle-detail" data-bs-toggle="collapse" data-bs-target="#orderDetail_@order.Id" aria-expanded="false">
+                                        Chi tiết <i class="fa-solid fa-chevron-down ms-1 chevron-icon"></i>
+                                    </button>
+                                </td>
+                            </tr>
 
-                        string payMethodText = order.PaymentMethod == 0 ? "Tiền mặt (COD)" : (order.PaymentMethod == 2 ? "Ví MoMo" : "Chuyển khoản");
-                        string payMethodIcon = order.PaymentMethod == 0 ? "fa-money-bill-wave text-success" : (order.PaymentMethod == 2 ? "fa-wallet text-danger" : "fa-building-columns text-primary");
-
-                        string payStatusBadge = order.PaymentStatus == 1
-                            ? "<span class='badge bg-success bg-opacity-10 text-success border border-success border-opacity-25'>Đã thanh toán</span>"
-                            : "<span class='badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 text-dark'>Chưa thanh toán</span>";
-
-                        int totalItems = order.OrderDetails != null ? order.OrderDetails.Sum(d => d.Quantity) : 0;
-
-                        <tr class="main-row">
-                            <td>
-                                <span class="order-id">#@order.Id</span>
-                            </td>
-                            <td>
-                                <div class="fw-bold text-dark">@order.OrderDate.ToString("dd/MM/yyyy")</div>
-                                <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>@order.OrderDate.ToString("HH:mm")</small>
-                            </td>
-                            <td>
-                                <div class="fw-bold text-dark mb-1">@order.ReceiverName</div>
-                                <div class="small text-muted mb-1"><i class="fa-solid fa-phone text-secondary me-1"></i>@order.ReceiverPhone</div>
-                                <div class="small text-muted d-block text-truncate" style="max-width: 220px;" title="@order.ShippingAddress" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-location-dot text-danger opacity-75 me-1"></i>@order.ShippingAddress
-                                </div>
-                            </td>
-                            <td>
-                                <div class="mb-1"><i class="fa-solid @payMethodIcon me-2"></i>@payMethodText</div>
-                                <div>@Html.Raw(payStatusBadge)</div>
-                            </td>
-                            <td>
-                                <span class="status-badge @statusClass">
-                                    <i class="fa-solid @statusIcon"></i> @statusText
-                                </span>
-                            </td>
-                            <td style="text-align: right;">
-                                <div class="fw-bold text-danger" style="font-size: 15px;">@order.TotalAmount.ToString("N0") ₫</div>
-                                <small class="text-muted">@totalItems sản phẩm</small>
-                            </td>
-                            <td style="text-align: center;">
-                                <button type="button" class="btn-expand" data-bs-toggle="collapse" data-bs-target="#orderDetail_@order.Id" aria-expanded="false">
-                                    Chi tiết <i class="fa-solid fa-chevron-down ms-1 chevron-icon"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- COLLAPSE CHI TIẾT SẢN PHẨM -->
-                        <tr class="detail-row">
-                            <td colspan="7">
-                                <div id="orderDetail_@order.Id" class="collapse">
-                                    <div class="detail-card">
-                                        <div class="detail-inner-box">
-                                            <div class="p-3 border-bottom d-flex align-items-center bg-light">
-                                                <i class="fa-solid fa-basket-shopping text-success fs-5 me-2"></i>
-                                                <h6 class="m-0 fw-bold text-dark">Danh sách sản phẩm - Đơn #@order.Id</h6>
-                                            </div>
-
-                                            @if (order.OrderDetails != null && order.OrderDetails.Any())
-                                            {
-                                                <table class="table table-borderless table-details m-0 align-middle">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="ps-4">Tên Sản Phẩm</th>
-                                                            <th style="text-align: center; width: 120px;">Số Lượng</th>
-                                                            <th style="text-align: right; width: 150px;">Đơn Giá</th>
-                                                            <th style="text-align: right; width: 180px;" class="pe-4">Thành Tiền</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach (var detail in order.OrderDetails)
-                                                        {
-                                                            string pName = detail.Product != null ? detail.Product.Name : "Sản phẩm không xác định";
-                                                            double total = detail.Price * detail.Quantity;
-
-                                                            <tr class="border-top">
-                                                                <td class="ps-4 fw-medium text-dark">@pName</td>
-                                                                <td style="text-align: center;">
-                                                                    <span class="badge bg-secondary bg-opacity-10 text-dark border">x @detail.Quantity</span>
-                                                                </td>
-                                                                <td style="text-align: right;" class="text-muted">@detail.Price.ToString("N0") ₫</td>
-                                                                <td style="text-align: right;" class="pe-4 fw-bold text-danger">@total.ToString("N0") ₫</td>
-                                                            </tr>
-                                                        }
-                                                    </tbody>
-                                                </table>
-                                            }
-                                            else
-                                            {
-                                                <div class="p-4 text-center text-muted">
-                                                    <i class="fa-regular fa-folder-open fs-3 mb-2 opacity-50"></i>
-                                                    <p class="m-0">Không có dữ liệu chi tiết cho đơn hàng này.</p>
+                            <!-- COLLAPSE CHI TIẾT SẢN PHẨM -->
+                            <tr class="detail-row">
+                                <td colspan="7">
+                                    <div id="orderDetail_@order.Id" class="collapse">
+                                        <div class="detail-dark-card">
+                                            <div class="detail-inner-box">
+                                                <div class="p-3 border-bottom border-secondary d-flex align-items-center justify-content-between" style="background: var(--adm-surface-2);">
+                                                    <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+                                                        <i class="fa-solid fa-basket-shopping"></i> Danh Sách Sản Phẩm - Đơn <span class="font-monospace">#@order.Id</span>
+                                                    </h6>
+                                                    <span class="text-muted small">Thời gian: @order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
                                                 </div>
-                                            }
+
+                                                @if (order.OrderDetails != null && order.OrderDetails.Any())
+                                                {
+                                                    <div class="table-responsive">
+                                                        <table class="table table-dark table-hover align-middle m-0">
+                                                            <thead>
+                                                                <tr class="table-secondary text-white">
+                                                                    <th class="ps-4">Tên Sản Phẩm</th>
+                                                                    <th class="text-center" style="width: 120px;">Số Lượng</th>
+                                                                    <th class="text-end" style="width: 150px;">Đơn Giá</th>
+                                                                    <th class="text-end pe-4" style="width: 180px;">Thành Tiền</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var detail in order.OrderDetails)
+                                                                {
+                                                                    string pName = detail.Product != null ? detail.Product.Name : "Sản phẩm";
+                                                                    double total = detail.Price * detail.Quantity;
+
+                                                                    <tr>
+                                                                        <td class="ps-4 fw-bold text-white">@pName</td>
+                                                                        <td class="text-center font-monospace">
+                                                                            <span class="badge bg-secondary">x @detail.Quantity</span>
+                                                                        </td>
+                                                                        <td class="text-end font-monospace text-warning">@detail.Price.ToString("N0") ₫</td>
+                                                                        <td class="text-end pe-4 font-monospace fw-bold text-emerald">@total.ToString("N0") ₫</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="p-4 text-center text-muted">
+                                                        <i class="fa-regular fa-folder-open fs-3 mb-2 opacity-50 text-warning"></i>
+                                                        <p class="m-0">Không có dữ liệu chi tiết cho đơn hàng này.</p>
+                                                    </div>
+                                                }
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="py-5 text-center">
+                                <i class="fa-solid fa-receipt fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                                <h5 class="text-white fw-bold">Không Tìm Thấy Đơn Hàng</h5>
+                                <p class="text-muted mb-0">Khách hàng chưa phát sinh đơn hàng nào thuộc trạng thái này.</p>
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7">
-                            <div class="py-5 text-center d-flex flex-column align-items-center justify-content-center">
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                                    <i class="fa-solid fa-inbox fs-1 text-muted opacity-50"></i>
-                                </div>
-                                <h5 class="text-dark fw-bold">Không có đơn hàng nào</h5>
-                                <p class="text-muted">Khách hàng chưa có đơn hàng nào trong trạng thái này.</p>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
 
 @section Scripts {
-    <script>// Khởi tạo Bootstrap Tooltip (Nếu địa chỉ quá dài)
+    <script>
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
-        })</script>
+        })
+    </script>
 }
