@@ -1,4 +1,4 @@
-﻿@model Do_An_E_Commerce_BHX.Areas.Admin.ViewModels.DashboardViewModel
+@model Do_An_E_Commerce_BHX.Areas.Admin.ViewModels.DashboardViewModel
 
 @{
     ViewData["Title"] = "Báo cáo Doanh thu & Dashboard";
@@ -11,105 +11,590 @@
     string selectedEndDate = ViewBag.SelectedEndDate as string ?? "";
 }
 
-<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
+@section Styles {
 <style>
-    /* ===== CUSTOM CSS CHO ADMIN ĐỒNG BỘ ===== */
-    .admin-card {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        background-color: #fff;
+    /* ================================================
+       ADMIN DASHBOARD — Power Dark Theme (Redesign)
+       ================================================ */
+
+    .dash-page {
+        padding: 0;
     }
 
-    .btn-custom {
+    /* --- Page Header --- */
+    .dash-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    }
+
+    .dash-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--adm-text);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
+        letter-spacing: -0.4px;
+    }
+
+    .dash-title i {
+        color: var(--adm-gold);
+        filter: drop-shadow(0 0 8px rgba(240, 180, 41, 0.4));
+    }
+
+    .dash-subtitle {
+        font-size: 13px;
+        color: var(--adm-text-2);
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
+
+    .dash-period-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(240, 180, 41, 0.12);
+        border: 1px solid rgba(240, 180, 41, 0.35);
+        color: var(--adm-gold);
+        font-size: 12.5px;
+        font-weight: 700;
+        padding: 8px 18px;
+        border-radius: 20px;
+        white-space: nowrap;
+        box-shadow: 0 2px 10px rgba(240, 180, 41, 0.1);
+    }
+
+    /* --- Filter Panel --- */
+    .dash-filter {
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        transition: border-color 0.2s ease;
+    }
+
+    .dash-filter:hover {
+        border-color: var(--adm-border-2);
+    }
+
+    .dash-filter-header {
+        background: linear-gradient(90deg, var(--adm-surface-2) 0%, rgba(33, 38, 45, 0.6) 100%);
+        border-bottom: 1px solid var(--adm-border);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dash-filter-header i {
+        color: var(--adm-blue);
+        font-size: 15px;
+    }
+
+    .dash-filter-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin: 0;
+        letter-spacing: 0.2px;
+    }
+
+    .dash-filter-body {
+        padding: 20px;
+    }
+
+    /* Filter action buttons */
+    .dash-filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--adm-border);
+        flex-wrap: wrap;
+    }
+
+    .btn-filter-reset {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: transparent;
+        border: 1px solid var(--adm-border-2);
+        color: var(--adm-text-2);
+        padding: 9px 20px;
         border-radius: 8px;
-        transition: all 0.2s ease-in-out;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
 
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
+    .btn-filter-reset:hover {
+        background: var(--adm-surface-2);
+        color: var(--adm-text);
+        border-color: var(--adm-gold);
+    }
 
-    /* Bảng dữ liệu */
-    .table-custom th {
-        background-color: #f4f6f9;
-        color: #495057;
-        font-size: 0.85rem;
+    .btn-filter-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--adm-gold) 0%, #D69E2E 100%);
+        border: none;
+        color: var(--adm-text-inv);
+        padding: 10px 26px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 14px rgba(240,180,41,0.35);
+        letter-spacing: 0.4px;
+    }
+
+    .btn-filter-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 22px rgba(240,180,41,0.5);
+        background: linear-gradient(135deg, #F5C03A 0%, #E0AE30 100%);
+    }
+
+    .btn-filter-submit:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    /* --- KPI Grid --- */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: linear-gradient(145deg, var(--adm-surface) 0%, rgba(22, 27, 34, 0.85) 100%);
+        border: 1px solid var(--adm-border);
+        border-radius: 14px;
+        padding: 20px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3.5px;
+        background: var(--kpi-color);
+        border-radius: 14px 14px 0 0;
+        box-shadow: 0 0 10px var(--kpi-color);
+    }
+
+    .kpi-card:hover {
+        border-color: var(--kpi-color);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 15px color-mix(in srgb, var(--kpi-color) 20%, transparent);
+    }
+
+    .kpi-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .kpi-label {
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 16px 12px;
+        letter-spacing: 0.1em;
+        color: var(--adm-text-2);
+        margin-bottom: 8px;
     }
 
-    .table-custom td {
-        vertical-align: middle;
-        padding: 16px 12px;
-        border-bottom: 1px solid #f1f3f5;
-        transition: background-color 0.2s;
+    .kpi-value {
+        font-size: clamp(18px, 2vw, 24px);
+        font-weight: 800;
+        color: var(--adm-text);
+        line-height: 1.1;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -0.5px;
+        word-break: break-word;
     }
 
-    .table-custom tbody tr:hover {
-        background-color: #f8f9fa;
+    .kpi-unit {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--adm-text-2);
+        margin-left: 4px;
     }
 
-    /* Widgets Thống kê hiện đại */
-    .widget-card {
-        transition: all 0.3s;
-    }
-
-        .widget-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-    .icon-box {
-        width: 54px;
-        height: 54px;
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+        background: color-mix(in srgb, var(--kpi-color) 15%, transparent);
+        color: var(--kpi-color);
+        border: 1px solid color-mix(in srgb, var(--kpi-color) 25%, transparent);
+        transition: transform 0.25s ease;
+    }
+
+    .kpi-card:hover .kpi-icon {
+        transform: scale(1.08) rotate(3deg);
+    }
+
+    .kpi-sub {
+        font-size: 12px;
+        color: var(--adm-text-2);
+        padding-top: 12px;
+        border-top: 1px solid var(--adm-border);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    /* KPI Color Variants */
+    .kpi-gold   { --kpi-color: var(--adm-gold); }
+    .kpi-blue   { --kpi-color: var(--adm-blue); }
+    .kpi-green  { --kpi-color: var(--adm-emerald); }
+    .kpi-red    { --kpi-color: var(--adm-red); }
+
+    /* --- Charts & Tables Grid --- */
+    .dash-grid-2 {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    /* --- Panel (Chart / Table container) --- */
+    .dash-panel {
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
         border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s ease;
     }
 
-    /* Làm đẹp select tag */
-    .form-select, .form-control {
-        border-radius: 8px;
-        border: 1px solid #ced4da;
+    .dash-panel:hover {
+        border-color: var(--adm-border-2);
     }
 
-        .form-select:focus, .form-control:focus {
-            border-color: #198754;
-            box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    .dash-panel-header {
+        background: linear-gradient(90deg, var(--adm-surface-2) 0%, rgba(33, 38, 45, 0.6) 100%);
+        border-bottom: 1px solid var(--adm-border);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .dash-panel-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--adm-text);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+    }
+
+    .dash-panel-title i {
+        color: var(--adm-gold);
+        font-size: 15px;
+    }
+
+    .dash-panel-body {
+        padding: 20px;
+        flex: 1;
+        position: relative;
+    }
+
+    .dash-panel-body.no-pad {
+        padding: 0;
+    }
+
+    .chart-wrap {
+        position: relative;
+        min-height: 320px;
+        width: 100%;
+    }
+
+    /* --- Tables inside Panels --- */
+    .dash-panel table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .dash-panel table thead th {
+        background: var(--adm-surface-2);
+        color: var(--adm-text-2);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-bottom: 1px solid var(--adm-border);
+        padding: 12px 18px;
+        white-space: nowrap;
+    }
+
+    .dash-panel table tbody td {
+        color: var(--adm-text);
+        border-bottom: 1px solid var(--adm-border);
+        padding: 12px 18px;
+        vertical-align: middle;
+        font-size: 13.5px;
+        transition: background 0.15s ease;
+    }
+
+    .dash-panel table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .dash-panel table tbody tr:hover td {
+        background: rgba(88, 166, 255, 0.04);
+    }
+
+    /* Product name cell */
+    .prod-name {
+        font-weight: 600;
+        color: var(--adm-text);
+        max-width: 210px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Badges & Text */
+    .badge-sold {
+        background: rgba(63, 185, 80, 0.12);
+        color: var(--adm-emerald);
+        border: 1px solid rgba(63, 185, 80, 0.3);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .text-revenue {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--adm-gold);
+    }
+
+    .text-revenue-green {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--adm-emerald);
+    }
+
+    .cat-icon {
+        color: var(--adm-text-3);
+        font-size: 12px;
+        margin-right: 8px;
+    }
+
+    /* Rank badges */
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .rank-1 { background: linear-gradient(135deg, var(--adm-gold), #D69E2E); color: #0D1117; box-shadow: 0 2px 8px rgba(240,180,41,0.4); }
+    .rank-2 { background: rgba(139,148,158,0.2); color: var(--adm-text); border: 1px solid var(--adm-border-2); }
+    .rank-3 { background: rgba(255,166,87,0.2); color: var(--adm-orange); border: 1px solid rgba(255,166,87,0.35); }
+    .rank-n { background: var(--adm-surface-2); color: var(--adm-text-3); border: 1px solid var(--adm-border); }
+
+    .period-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--adm-surface-3);
+        border: 1px solid var(--adm-border);
+        color: var(--adm-text-2);
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 20px;
+    }
+
+    /* Category table rank bar */
+    .cat-bar-wrap {
+        flex: 1;
+        background: var(--adm-surface-2);
+        border-radius: 4px;
+        overflow: hidden;
+        height: 7px;
+        margin: 0 12px;
+    }
+
+    .cat-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--adm-emerald), rgba(63,185,80,0.5));
+        border-radius: 4px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Empty state */
+    .adm-empty-row {
+        text-align: center;
+        padding: 48px 20px !important;
+        color: var(--adm-text-3);
+    }
+
+    .adm-empty-row i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 12px;
+        opacity: 0.35;
+        color: var(--adm-gold);
+    }
+
+    .adm-empty-row p {
+        font-size: 13.5px;
+        color: var(--adm-text-2);
+        margin: 0;
+    }
+
+    /* ================================================
+       RESPONSIVE BREAKPOINTS (Fluid Design)
+       ================================================ */
+    @@media (max-width: 1200px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
-</style>
+    }
 
-<div class="container-fluid py-3">
-    <!-- TIÊU ĐỀ TRANG -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    @@media (max-width: 991px) {
+        .dash-grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .dash-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .dash-period-badge {
+            align-self: flex-start;
+        }
+
+        .dash-filter-actions {
+            justify-content: stretch;
+        }
+
+        .btn-filter-reset, .btn-filter-submit {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .kpi-card {
+            padding: 14px;
+        }
+
+        .kpi-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 1.1rem;
+        }
+
+        .kpi-value {
+            font-size: 17px;
+        }
+
+        .dash-title {
+            font-size: 18px;
+        }
+    }
+
+    @@media (max-width: 380px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+}
+
+<div class="dash-page">
+
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="dash-header">
         <div>
-            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-chart-pie text-success me-2"></i>Tổng Quan Doanh Thu (Dashboard)</h3>
-            <p class="text-muted mb-0 mt-1 fs-6">Thống kê biểu đồ doanh số, đơn hàng và phân tích chuyên sâu</p>
+            <h3 class="dash-title">
+                <i class="fa-solid fa-chart-pie"></i>
+                Tổng Quan Doanh Thu
+            </h3>
+            <p class="dash-subtitle">Thống kê biểu đồ doanh số, đơn hàng và phân tích chuyên sâu</p>
         </div>
-        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fs-6 px-3 py-2 rounded-pill shadow-sm">
-            <i class="fa-solid fa-clock me-1"></i> Kỳ lọc: @Model.CurrentPeriodInfo
-        </span>
+        <div class="dash-period-badge">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            Kỳ lọc: @Model.CurrentPeriodInfo
+        </div>
     </div>
 
-    <!-- KHUNG BỘ LỌC BÁO CÁO NÂNG CAO -->
-    <div class="card admin-card border border-light mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-            <h5 class="m-0 fw-bold text-dark"><i class="fa-solid fa-filter text-primary me-2"></i>Bộ Lọc Báo Cáo</h5>
+    <!-- ===== BỘ LỌC BÁO CÁO ===== -->
+    <div class="dash-filter">
+        <div class="dash-filter-header">
+            <i class="fa-solid fa-sliders"></i>
+            <h5 class="dash-filter-title">Bộ Lọc Báo Cáo</h5>
         </div>
-        <div class="card-body p-4">
+        <div class="dash-filter-body">
             <form method="get" action="@Url.Action("Index", "AdminDashboard")" id="filterForm">
                 <div class="row g-3 align-items-end">
-                    <!-- 1. Thời gian lọc (Period) -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small text-uppercase"><i class="fa-solid fa-calendar-days me-1 text-primary"></i>Khoảng thời gian</label>
+                    <!-- 1. Khoảng thời gian -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <label class="form-label">
+                            <i class="fa-solid fa-calendar-days me-1" style="color:var(--adm-blue);"></i>
+                            Khoảng thời gian
+                        </label>
                         <select name="period" id="periodSelect" class="form-select" onchange="toggleCustomDates()">
                             <option value="" @(string.IsNullOrEmpty(selectedPeriod) ? "selected" : "")>Tháng này</option>
                             <option value="today" @(selectedPeriod == "today" ? "selected" : "")>Hôm nay</option>
@@ -120,220 +605,270 @@
                     </div>
 
                     <!-- 2. Danh mục sản phẩm -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small text-uppercase"><i class="fa-solid fa-layer-group me-1 text-success"></i>Danh mục sản phẩm</label>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <label class="form-label">
+                            <i class="fa-solid fa-layer-group me-1" style="color:var(--adm-emerald);"></i>
+                            Danh mục sản phẩm
+                        </label>
                         @Html.DropDownList("categoryId", (SelectList)ViewBag.CategoryId, "-- Tất cả danh mục --", new { @class = "form-select" })
                     </div>
 
                     <!-- 3. Trạng thái đơn hàng -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small text-uppercase"><i class="fa-solid fa-list-check me-1 text-warning"></i>Trạng thái đơn hàng</label>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <label class="form-label">
+                            <i class="fa-solid fa-list-check me-1" style="color:var(--adm-orange);"></i>
+                            Trạng thái đơn hàng
+                        </label>
                         @Html.DropDownList("status", statusList, new { @class = "form-select" })
                     </div>
 
                     <!-- 4. Hình thức thanh toán -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small text-uppercase"><i class="fa-solid fa-wallet me-1 text-info"></i>Thanh toán</label>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <label class="form-label">
+                            <i class="fa-solid fa-wallet me-1" style="color:var(--adm-purple);"></i>
+                            Thanh toán
+                        </label>
                         @Html.DropDownList("paymentMethod", paymentMethodList, new { @class = "form-select" })
                     </div>
 
-                    <!-- Tùy chọn ngày (Hiển thị khi chọn Tùy chọn ngày) -->
-                    <div class="col-md-3 custom-date" style="display: @(selectedPeriod == "custom" ? "block" : "none");">
-                        <label class="form-label fw-bold text-secondary small text-uppercase">Từ ngày</label>
+                    <!-- Tùy chọn ngày custom -->
+                    <div class="col-12 col-sm-6 col-xl-3 custom-date" style="display: @(selectedPeriod == "custom" ? "block" : "none");">
+                        <label class="form-label">Từ ngày</label>
                         <input type="date" name="startDate" class="form-control" value="@selectedStartDate" />
                     </div>
 
-                    <div class="col-md-3 custom-date" style="display: @(selectedPeriod == "custom" ? "block" : "none");">
-                        <label class="form-label fw-bold text-secondary small text-uppercase">Đến ngày</label>
+                    <div class="col-12 col-sm-6 col-xl-3 custom-date" style="display: @(selectedPeriod == "custom" ? "block" : "none");">
+                        <label class="form-label">Đến ngày</label>
                         <input type="date" name="endDate" class="form-control" value="@selectedEndDate" />
                     </div>
+                </div>
 
-                    <!-- Nút xem báo cáo -->
-                    <div class="col-12 mt-4 d-flex justify-content-end gap-2">
-                        <a href="@Url.Action("Index", "AdminDashboard")" class="btn btn-outline-secondary btn-custom px-4 fw-bold">
-                            <i class="fa-solid fa-rotate-left me-1"></i> Tải lại
-                        </a>
-                        <button type="submit" class="btn btn-success btn-custom px-5 fw-bold shadow-sm">
-                            <i class="fa-solid fa-chart-line me-1"></i> XEM BÁO CÁO
-                        </button>
-                    </div>
+                <div class="dash-filter-actions">
+                    <a href="@Url.Action("Index", "AdminDashboard")" class="btn-filter-reset">
+                        <i class="fa-solid fa-rotate-left"></i> Tải lại
+                    </a>
+                    <button type="submit" class="btn-filter-submit">
+                        <i class="fa-solid fa-chart-line"></i> XEM BÁO CÁO
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 4 WIDGET CARD THỐNG KÊ TỔNG QUAN (Modern Dashboard Style) -->
-    <div class="row g-3 mb-4">
-        <!-- Widget 1 -->
-        <div class="col-md-3">
-            <div class="card admin-card widget-card border-start border-success border-4 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="small text-muted text-uppercase fw-bold letter-spacing-1">Doanh thu kỳ lọc</div>
-                            <h3 class="fw-bold text-dark m-0 mt-2">@Model.PeriodRevenue.ToString("N0") <span class="fs-6">đ</span></h3>
-                        </div>
-                        <div class="icon-box bg-success bg-opacity-10">
-                            <i class="fa-solid fa-money-bill-trend-up fs-3 text-success"></i>
-                        </div>
+    <!-- ===== 4 KPI CARDS ===== -->
+    <div class="kpi-grid">
+
+        <!-- KPI 1: Doanh thu kỳ lọc -->
+        <div class="kpi-card kpi-gold">
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Doanh thu kỳ lọc</div>
+                    <div class="kpi-value">
+                        @Model.PeriodRevenue.ToString("N0")
+                        <span class="kpi-unit">đ</span>
                     </div>
                 </div>
+                <div class="kpi-icon">
+                    <i class="fa-solid fa-money-bill-trend-up"></i>
+                </div>
+            </div>
+            <div class="kpi-sub">
+                <i class="fa-solid fa-circle-info"></i>
+                Doanh thu trong kỳ lọc đã chọn
             </div>
         </div>
 
-        <!-- Widget 2 -->
-        <div class="col-md-3">
-            <div class="card admin-card widget-card border-start border-primary border-4 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <div class="small text-muted text-uppercase fw-bold letter-spacing-1">Đơn hàng kỳ lọc</div>
-                            <h3 class="fw-bold text-dark m-0 mt-2">@Model.FilteredTotalOrders <span class="fs-6 fw-normal">đơn</span></h3>
-                        </div>
-                        <div class="icon-box bg-primary bg-opacity-10">
-                            <i class="fa-solid fa-cart-shopping fs-3 text-primary"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 pt-2 border-top small text-muted">
-                        Thành công: <strong class="text-success">@Model.FilteredSuccessOrders</strong> |
-                        Hủy: <strong class="text-danger">@Model.FilteredCancelOrders</strong>
+        <!-- KPI 2: Đơn hàng kỳ lọc -->
+        <div class="kpi-card kpi-blue">
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Đơn hàng kỳ lọc</div>
+                    <div class="kpi-value">
+                        @Model.FilteredTotalOrders
+                        <span class="kpi-unit">đơn</span>
                     </div>
                 </div>
+                <div class="kpi-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </div>
+            </div>
+            <div class="kpi-sub">
+                <i class="fa-solid fa-check-circle" style="color:var(--adm-emerald);"></i>
+                Thành công: <strong style="color:var(--adm-emerald);">@Model.FilteredSuccessOrders</strong>
+                &nbsp;&nbsp;
+                <i class="fa-solid fa-xmark" style="color:var(--adm-red);"></i>
+                Hủy: <strong style="color:var(--adm-red);">@Model.FilteredCancelOrders</strong>
             </div>
         </div>
 
-        <!-- Widget 3 -->
-        <div class="col-md-3">
-            <div class="card admin-card widget-card border-start border-info border-4 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <div class="small text-muted text-uppercase fw-bold letter-spacing-1">Doanh thu toàn TG</div>
-                            <h3 class="fw-bold text-info m-0 mt-2">@Model.TotalRevenue.ToString("N0") <span class="fs-6 fw-normal">đ</span></h3>
-                        </div>
-                        <div class="icon-box bg-info bg-opacity-10">
-                            <i class="fa-solid fa-vault fs-3 text-info"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 pt-2 border-top small text-muted">
-                        Tất cả các đơn giao thành công
+        <!-- KPI 3: Doanh thu toàn thời gian -->
+        <div class="kpi-card kpi-green">
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Doanh thu toàn TG</div>
+                    <div class="kpi-value">
+                        @Model.TotalRevenue.ToString("N0")
+                        <span class="kpi-unit">đ</span>
                     </div>
                 </div>
+                <div class="kpi-icon">
+                    <i class="fa-solid fa-vault"></i>
+                </div>
+            </div>
+            <div class="kpi-sub">
+                <i class="fa-solid fa-circle-dot" style="color:var(--adm-emerald);"></i>
+                Tất cả đơn giao thành công
             </div>
         </div>
 
-        <!-- Widget 4 -->
-        <div class="col-md-3">
-            <div class="card admin-card widget-card border-start border-danger border-4 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <div class="small text-muted text-uppercase fw-bold letter-spacing-1">Sản phẩm sắp hết</div>
-                            <h3 class="fw-bold text-danger m-0 mt-2">@Model.LowStockProducts <span class="fs-6 fw-normal">SP</span></h3>
-                        </div>
-                        <div class="icon-box bg-danger bg-opacity-10">
-                            <i class="fa-solid fa-triangle-exclamation fs-3 text-danger"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 pt-2 border-top small text-muted">
-                        Số lượng &lt; 10, cần nhập thêm
+        <!-- KPI 4: Sản phẩm sắp hết hàng -->
+        <div class="kpi-card kpi-red">
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Sản phẩm sắp hết</div>
+                    <div class="kpi-value">
+                        @Model.LowStockProducts
+                        <span class="kpi-unit">SP</span>
                     </div>
                 </div>
+                <div class="kpi-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="kpi-sub">
+                <i class="fa-solid fa-exclamation-circle" style="color:var(--adm-red);"></i>
+                Số lượng &lt; 10 — cần nhập thêm ngay
             </div>
         </div>
     </div>
 
-    <!-- KHUNG BIỂU ĐỒ & BẢNG SẢN PHẨM BÁN CHẠY -->
-    <div class="row g-4 mb-4">
-        <!-- CỘT TRÁI: BIỂU ĐỒ DOANH THU CHART.JS -->
-        <div class="col-lg-7">
-            <div class="card admin-card border border-light h-100">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="m-0 fw-bold text-dark"><i class="fa-solid fa-chart-area text-success me-2"></i>Biểu Đồ Xu Hướng Doanh Thu</h5>
-                    <span class="badge bg-light text-dark border px-2 py-1">@Model.CurrentPeriodInfo</span>
-                </div>
-                <div class="card-body p-3" style="position: relative; min-height: 350px;">
+    <!-- ===== BIỂU ĐỒ + TOP SẢN PHẨM ===== -->
+    <div class="dash-grid-2">
+
+        <!-- CỘT TRÁI: Biểu đồ doanh thu -->
+        <div class="dash-panel">
+            <div class="dash-panel-header">
+                <h5 class="dash-panel-title">
+                    <i class="fa-solid fa-chart-area"></i>
+                    Biểu Đồ Xu Hướng Doanh Thu
+                </h5>
+                <span class="period-pill">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    @Model.CurrentPeriodInfo
+                </span>
+            </div>
+            <div class="dash-panel-body">
+                <div class="chart-wrap">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- CỘT PHẢI: TOP SẢN PHẨM BÁN CHẠY -->
-        <div class="col-lg-5">
-            <div class="card admin-card border border-light h-100 overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="m-0 fw-bold text-dark"><i class="fa-solid fa-trophy text-warning me-2"></i>Top Sản Phẩm Bán Chạy</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-4">Sản Phẩm</th>
-                                    <th class="text-center">Đã Bán</th>
-                                    <th class="text-end pe-4">Doanh Thu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.TopProducts != null && Model.TopProducts.Any())
+        <!-- CỘT PHẢI: Top sản phẩm bán chạy -->
+        <div class="dash-panel">
+            <div class="dash-panel-header">
+                <h5 class="dash-panel-title">
+                    <i class="fa-solid fa-trophy"></i>
+                    Top Sản Phẩm Bán Chạy
+                </h5>
+            </div>
+            <div class="dash-panel-body no-pad">
+                <div class="adm-table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4" style="width:36px;">#</th>
+                                <th>Sản Phẩm</th>
+                                <th class="text-center">Đã Bán</th>
+                                <th class="text-end pe-4">Doanh Thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopProducts != null && Model.TopProducts.Any())
+                            {
+                                int rank = 0;
+                                foreach (var item in Model.TopProducts)
                                 {
-                                    foreach (var item in Model.TopProducts)
-                                    {
-                                        <tr>
-                                            <td class="ps-4">
-                                                <div class="fw-bold text-dark text-truncate" style="max-width: 200px;" title="@item.ProductName">@item.ProductName</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">@item.QuantitySold</span>
-                                            </td>
-                                            <td class="text-end pe-4 fw-bold text-danger">
-                                                @item.Revenue.ToString("N0") đ
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
+                                    rank++;
+                                    string rankClass = rank == 1 ? "rank-1" : rank == 2 ? "rank-2" : rank == 3 ? "rank-3" : "rank-n";
                                     <tr>
-                                        <td colspan="3" class="text-center py-5 text-muted">
-                                            <i class="fa-solid fa-box-open fs-2 mb-2 opacity-50 d-block"></i>
-                                            Chưa có dữ liệu bán hàng trong kỳ này.
+                                        <td class="ps-4">
+                                            <span class="rank-badge @rankClass">@rank</span>
+                                        </td>
+                                        <td>
+                                            <div class="prod-name" title="@item.ProductName">@item.ProductName</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge-sold">@item.QuantitySold</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <span class="text-revenue">@item.Revenue.ToString("N0") đ</span>
                                         </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="adm-empty-row">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        <p>Chưa có dữ liệu bán hàng trong kỳ này</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- KHUNG TỶ TRỌNG DOANH THU THEO DANH MỤC -->
-    <div class="card admin-card border border-light overflow-hidden mb-5">
-        <div class="card-header bg-white py-3 border-bottom">
-            <h5 class="m-0 fw-bold text-dark"><i class="fa-solid fa-pie-chart text-info me-2"></i>Doanh Thu Mang Lại Theo Danh Mục</h5>
+    <!-- ===== DOANH THU THEO DANH MỤC ===== -->
+    <div class="dash-panel">
+        <div class="dash-panel-header">
+            <h5 class="dash-panel-title">
+                <i class="fa-solid fa-chart-pie"></i>
+                Doanh Thu Mang Lại Theo Danh Mục
+            </h5>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-custom mb-0">
+        <div class="dash-panel-body no-pad">
+            <div class="adm-table-responsive">
+                <table class="table mb-0">
                     <thead>
                         <tr>
-                            <th class="ps-4">Danh Mục Sản Phẩm</th>
-                            <th class="text-end pe-4">Tổng Doanh Thu Mang Lại</th>
+                            <th class="ps-4">#</th>
+                            <th>Danh Mục Sản Phẩm</th>
+                            <th class="d-none d-md-table-cell">Tỷ trọng</th>
+                            <th class="text-end pe-4">Tổng Doanh Thu</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.CategoryRevenue != null && Model.CategoryRevenue.Any())
                         {
+                            double maxRevenue = Model.CategoryRevenue.Max(x => x.Revenue);
+                            int catRank = 0;
                             foreach (var item in Model.CategoryRevenue)
                             {
+                                catRank++;
+                                int barPct = maxRevenue > 0 ? (int)Math.Round((item.Revenue / maxRevenue) * 100) : 0;
                                 <tr>
-                                    <td class="ps-4 fw-bold text-dark">
-                                        <i class="fa-solid fa-tag text-secondary me-2 small"></i>@item.CategoryName
+                                    <td class="ps-4">
+                                        <span class="rank-badge @(catRank <= 3 ? "rank-" + catRank : "rank-n")">@catRank</span>
                                     </td>
-                                    <td class="text-end pe-4 fw-bold text-success fs-6">
-                                        @item.Revenue.ToString("N0") đ
+                                    <td>
+                                        <i class="fa-solid fa-tag cat-icon"></i>
+                                        <strong>@item.CategoryName</strong>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <div class="cat-bar-wrap">
+                                                <div class="cat-bar-fill" style="width: @barPct%"></div>
+                                            </div>
+                                            <span style="font-size:11px; color:var(--adm-text-2); white-space:nowrap;">@barPct%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="text-revenue-green">@item.Revenue.ToString("N0") đ</span>
                                     </td>
                                 </tr>
                             }
@@ -341,9 +876,9 @@
                         else
                         {
                             <tr>
-                                <td colspan="2" class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-chart-pie fs-2 mb-2 opacity-50 d-block"></i>
-                                    Chưa có dữ liệu đóng góp danh mục.
+                                <td colspan="4" class="adm-empty-row">
+                                    <i class="fa-solid fa-chart-pie"></i>
+                                    <p>Chưa có dữ liệu đóng góp danh mục</p>
                                 </td>
                             </tr>
                         }
@@ -352,23 +887,23 @@
             </div>
         </div>
     </div>
+
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
+    // ===== Toggle custom date inputs =====
     function toggleCustomDates() {
         var period = document.getElementById("periodSelect").value;
         var customDates = document.querySelectorAll(".custom-date");
-        if (period === "custom") {
-            customDates.forEach(function (el) { el.style.display = "block"; });
-        } else {
-            customDates.forEach(function (el) { el.style.display = "none"; });
-        }
+        customDates.forEach(function (el) {
+            el.style.display = period === "custom" ? "block" : "none";
+        });
     }
 
-    $(document).ready(function () {
+    // ===== Revenue Chart (Dark Theme) =====
+    (function () {
         var labels = [];
         var values = [];
 
@@ -384,65 +919,89 @@
         }
 
         var canvas = document.getElementById("revenueChart");
-        if (canvas) {
-            var ctx = canvas.getContext("2d");
+        if (!canvas) return;
 
-            // Gradient hiệu ứng xịn xò cho Chart
-            var gradient = ctx.createLinearGradient(0, 0, 0, 320);
-            gradient.addColorStop(0, 'rgba(31, 107, 63, 0.35)'); // Xanh lá đậm mờ
-            gradient.addColorStop(1, 'rgba(31, 107, 63, 0.0)');
+        var ctx = canvas.getContext("2d");
 
-            new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Doanh thu (VNĐ)",
-                        data: values,
-                        borderColor: "#198754", /* Bootstrap Success Green */
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        pointBackgroundColor: "#198754",
-                        pointBorderColor: "#fff",
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: true,
-                        tension: 0.4 /* Đường cong mềm mại */
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1f2937',
-                            padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 14, weight: 'bold' },
-                            callbacks: {
-                                label: function (context) {
-                                    var val = context.parsed.y || 0;
-                                    return ' Doanh thu: ' + val.toLocaleString('vi-VN') + ' đ';
-                                }
+        // Gold gradient fill
+        var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(240, 180, 41, 0.25)');
+        gradient.addColorStop(1, 'rgba(240, 180, 41, 0.0)');
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Doanh thu (VNĐ)",
+                    data: values,
+                    borderColor: "#F0B429",
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: "#F0B429",
+                    pointBorderColor: "#0D1117",
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: "#F0B429",
+                    pointHoverBorderColor: "#fff",
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#21262D',
+                        borderColor: '#30363D',
+                        borderWidth: 1,
+                        padding: 12,
+                        titleColor: '#8B949E',
+                        bodyColor: '#E6EDF3',
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 14, weight: 'bold', family: "'JetBrains Mono', monospace" },
+                        callbacks: {
+                            label: function (context) {
+                                var val = context.parsed.y || 0;
+                                return ' ' + val.toLocaleString('vi-VN') + ' đ';
                             }
                         }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(48,54,61,0.6)', drawBorder: false },
+                        ticks: { color: '#8B949E', font: { size: 11 } }
                     },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f3f4f6' }, /* Viền lưới mờ */
-                            ticks: {
-                                callback: function (value) {
-                                    return value.toLocaleString('vi-VN') + ' đ';
-                                }
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(48,54,61,0.6)', drawBorder: false },
+                        ticks: {
+                            color: '#8B949E',
+                            font: { size: 11 },
+                            callback: function (value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M đ';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + 'K đ';
+                                return value.toLocaleString('vi-VN') + ' đ';
                             }
                         }
                     }
                 }
-            });
-        }
-    });
+            }
+        });
+    })();
+
+    // ===== Animate category bars on load =====
+    (function () {
+        var bars = document.querySelectorAll('.cat-bar-fill');
+        bars.forEach(function (bar) {
+            var target = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(function () { bar.style.width = target; }, 200);
+        });
+    })();
 </script>
+}

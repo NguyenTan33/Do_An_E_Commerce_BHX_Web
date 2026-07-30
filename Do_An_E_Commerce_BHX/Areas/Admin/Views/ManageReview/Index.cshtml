@@ -20,285 +20,250 @@
     int count1Star = ViewBag.Count1Star != null ? (int)ViewBag.Count1Star : 0;
 }
 
-<!-- IMPORT THƯ VIỆN ĐỂ KHÔNG BỊ BỂ GIAO DIỆN -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<div class="dash-page">
 
-<style>
-    /* ===== CUSTOM CSS CHO ADMIN ĐỒNG BỘ ===== */
-    .admin-card {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        background-color: #fff;
-    }
-
-    .btn-custom {
-        border-radius: 8px;
-        transition: all 0.2s ease-in-out;
-    }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-
-    /* Bộ lọc Tabs (Pills) */
-    .filter-tabs .nav-link {
-        border-radius: 30px;
-        font-weight: 600;
-        color: #495057;
-        padding: 8px 20px;
-        transition: all 0.3s;
-        border: 1px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-        .filter-tabs .nav-link:hover {
-            background-color: #f8f9fa;
-            border-color: #e9ecef;
-        }
-
-        .filter-tabs .nav-link.active {
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-    .tab-all.active {
-        background-color: #343a40;
-        color: #fff !important;
-        border-color: #343a40;
-    }
-
-    .tab-star.active {
-        background-color: #ffc107;
-        color: #000 !important;
-        border-color: #ffc107;
-    }
-
-    /* Bảng dữ liệu */
-    .table-custom th {
-        background-color: #f4f6f9;
-        color: #495057;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 16px 12px;
-    }
-
-    .table-custom td {
-        vertical-align: middle;
-        padding: 16px 12px;
-        border-bottom: 1px solid #f1f3f5;
-        transition: background-color 0.2s;
-    }
-
-    .table-custom tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-</style>
-
-<div class="container-fluid py-3">
-    <!-- TOP HEADER -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3" style="border-bottom: 1px solid var(--adm-border);">
         <div>
-            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-star-half-stroke text-warning me-2"></i>Quản Lý Đánh Giá Sản Phẩm</h3>
-            <p class="text-muted mb-0 mt-1 fs-6">Danh sách các bài đánh giá số sao (1-5★) & nhận xét từ Khách hàng</p>
+            <h3 class="mb-1" style="font-size: 20px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-star-half-stroke text-warning"></i> Quản Lý Đánh Giá Sản Phẩm
+            </h3>
+            <p class="mb-0" style="font-size: 13.5px; color: var(--adm-text-2);">Danh sách nhận xét và đánh giá sao từ khách hàng</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-secondary" style="font-size: 13px; padding: 8px 12px;">
+                <i class="fa-solid fa-comments me-1"></i> @countAll Đánh giá
+            </span>
         </div>
     </div>
 
-    <!-- TABS NÚT LỌC THEO SỐ SAO -->
-    <div class="nav nav-pills filter-tabs gap-3 mb-4 flex-wrap">
-        <a href="@Url.Action("Index", "ManageReview", new { star = (int?)null, search = currentSearch })"
-           class="nav-link tab-all @(!currentStar.HasValue ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-list"></i> Tất cả
-            <span class="badge @(!currentStar.HasValue ? "bg-secondary" : "bg-light text-dark border") rounded-pill ms-1">@countAll</span>
-        </a>
+    <!-- ===== BỘ LỌC VÀ TÌM KIẾM ===== -->
+    <div class="adm-filter-bar">
+        <h5 class="mb-3" style="font-size: 14px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sliders text-primary"></i> Bộ lọc & Tìm kiếm
+        </h5>
 
-        <a href="@Url.Action("Index", "ManageReview", new { star = 5, search = currentSearch })"
-           class="nav-link tab-star @(currentStar == 5 ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-star text-warning"></i> 5 Sao
-            <span class="badge @(currentStar == 5 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count5Star</span>
-        </a>
+        <form method="get" action="@Url.Action("Index", "ManageReview")">
+            <input type="hidden" name="star" value="@currentStar" />
 
-        <a href="@Url.Action("Index", "ManageReview", new { star = 4, search = currentSearch })"
-           class="nav-link tab-star @(currentStar == 4 ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-star text-warning"></i> 4 Sao
-            <span class="badge @(currentStar == 4 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count4Star</span>
-        </a>
+            <!-- Nút Lọc Theo Số Sao (Thay cho Tabs cũ) -->
+            <div class="d-flex flex-wrap gap-2 mb-3 pb-3" style="border-bottom: 1px dashed var(--adm-border);">
+                <a href="@Url.Action("Index", "ManageReview", new { star = (int?)null, search = currentSearch })"
+                   class="btn btn-sm @(!currentStar.HasValue ? "btn-primary" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-list"></i> Tất cả <span class="badge bg-dark ms-1 opacity-75">@countAll</span>
+                </a>
+                <a href="@Url.Action("Index", "ManageReview", new { star = 5, search = currentSearch })"
+                   class="btn btn-sm @(currentStar == 5 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-star @(currentStar == 5 ? "text-dark" : "text-warning")"></i> 5 Sao <span class="badge bg-dark ms-1 opacity-75 text-white">@count5Star</span>
+                </a>
+                <a href="@Url.Action("Index", "ManageReview", new { star = 4, search = currentSearch })"
+                   class="btn btn-sm @(currentStar == 4 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-star @(currentStar == 4 ? "text-dark" : "text-warning")"></i> 4 Sao <span class="badge bg-dark ms-1 opacity-75 text-white">@count4Star</span>
+                </a>
+                <a href="@Url.Action("Index", "ManageReview", new { star = 3, search = currentSearch })"
+                   class="btn btn-sm @(currentStar == 3 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-star @(currentStar == 3 ? "text-dark" : "text-warning")"></i> 3 Sao <span class="badge bg-dark ms-1 opacity-75 text-white">@count3Star</span>
+                </a>
+                <a href="@Url.Action("Index", "ManageReview", new { star = 2, search = currentSearch })"
+                   class="btn btn-sm @(currentStar == 2 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-star @(currentStar == 2 ? "text-dark" : "text-warning")"></i> 2 Sao <span class="badge bg-dark ms-1 opacity-75 text-white">@count2Star</span>
+                </a>
+                <a href="@Url.Action("Index", "ManageReview", new { star = 1, search = currentSearch })"
+                   class="btn btn-sm @(currentStar == 1 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary")" style="border-radius: 20px; padding: 6px 16px;">
+                    <i class="fa-solid fa-star @(currentStar == 1 ? "text-dark" : "text-warning")"></i> 1 Sao <span class="badge bg-dark ms-1 opacity-75 text-white">@count1Star</span>
+                </a>
+            </div>
 
-        <a href="@Url.Action("Index", "ManageReview", new { star = 3, search = currentSearch })"
-           class="nav-link tab-star @(currentStar == 3 ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-star text-warning"></i> 3 Sao
-            <span class="badge @(currentStar == 3 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count3Star</span>
-        </a>
-
-        <a href="@Url.Action("Index", "ManageReview", new { star = 2, search = currentSearch })"
-           class="nav-link tab-star @(currentStar == 2 ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-star text-warning"></i> 2 Sao
-            <span class="badge @(currentStar == 2 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count2Star</span>
-        </a>
-
-        <a href="@Url.Action("Index", "ManageReview", new { star = 1, search = currentSearch })"
-           class="nav-link tab-star @(currentStar == 1 ? "active" : "bg-white border-light shadow-sm")">
-            <i class="fa-solid fa-star text-warning"></i> 1 Sao
-            <span class="badge @(currentStar == 1 ? "bg-white text-dark" : "bg-light text-dark border") rounded-pill ms-1">@count1Star</span>
-        </a>
-    </div>
-
-    <!-- SEARCH BAR -->
-    <div class="card admin-card border border-light mb-4">
-        <div class="card-body p-4">
-            <form method="get" action="@Url.Action("Index", "ManageReview")">
-                <input type="hidden" name="star" value="@currentStar" />
-                <div class="row g-2">
-                    <div class="col-md-9 col-lg-10">
-                        <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
-                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm nội dung nhận xét, đánh giá..." value="@currentSearch" />
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-lg-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-custom fw-bold flex-grow-1 shadow-sm">
-                            <i class="fa-solid fa-filter me-1"></i> Lọc
-                        </button>
-                        <a href="@Url.Action("Index", "ManageReview")" class="btn btn-outline-secondary btn-custom shadow-sm" title="Xóa bộ lọc">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </a>
+            <!-- Ô Nhập Tìm Kiếm -->
+            <div class="row g-3">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <label class="form-label">Nội dung nhận xét</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-end-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm đánh giá..." value="@currentSearch" />
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Nút Tìm Kiếm & Đặt Lại -->
+            <div class="d-flex justify-content-end align-items-center gap-2 mt-4 pt-3" style="border-top: 1px solid var(--adm-border);">
+                <a href="@Url.Action("Index", "ManageReview")" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-filter"></i> LỌC KẾT QUẢ
+                </button>
+            </div>
+        </form>
     </div>
 
-    <!-- BẢNG DANH SÁCH ĐÁNH GIÁ -->
-    <div class="card admin-card border border-light overflow-hidden mb-5">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-4" style="width: 80px;">ID</th>
-                            <th style="width: 280px;">Sản Phẩm</th>
-                            <th style="width: 180px;">Khách Hàng</th>
-                            <th style="width: 140px;">Đánh Giá</th>
-                            <th>Nội Dung Nhận Xét</th>
-                            <th style="width: 130px;">Thời Gian</th>
-                            <th class="text-center" style="width: 100px;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
+    <!-- ===== BẢNG DANH SÁCH ĐÁNH GIÁ ===== -->
+    <div class="adm-table-wrap">
+        <div class="adm-table-header">
+            <h5 class="adm-table-title m-0">
+                <i class="fa-solid fa-list-ul"></i>
+                Danh Sách Đánh Giá
+            </h5>
+        </div>
+        <div class="adm-table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4" style="width: 80px; text-align:center;">ID</th>
+                        <th style="min-width: 250px;">Sản Phẩm</th>
+                        <th style="min-width: 150px;">Khách Hàng</th>
+                        <th style="min-width: 140px;">Đánh Giá</th>
+                        <th style="min-width: 250px;">Nội Dung Nhận Xét</th>
+                        <th style="width: 130px;">Thời Gian</th>
+                        <th class="text-end pe-4" style="width: 100px;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var r in Model)
                         {
-                            foreach (var r in Model)
+                            var p = products.ContainsKey(r.ProductId) ? products[r.ProductId] : null;
+                            string pName = p != null ? p.Name : "Sản phẩm #" + r.ProductId;
+                            string pImg = p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png";
+
+                            string uName = "Khách hàng";
+                            if (!string.IsNullOrEmpty(r.UserId) && users.ContainsKey(r.UserId))
                             {
-                                var p = products.ContainsKey(r.ProductId) ? products[r.ProductId] : null;
-                                string pName = p != null ? p.Name : "Sản phẩm #" + r.ProductId;
-                                string pImg = p != null && !string.IsNullOrEmpty(p.URLImage) ? p.URLImage : "/Content/images/no-image.png";
-
-                                string uName = "Khách hàng";
-                                if (!string.IsNullOrEmpty(r.UserId) && users.ContainsKey(r.UserId))
-                                {
-                                    uName = users[r.UserId];
-                                }
-
-                                <tr>
-                                    <td class="ps-4">
-                                        <span class="badge bg-light text-primary border px-2 py-1 fs-6">#@r.Id</span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-white rounded p-1 shadow-sm border flex-shrink-0">
-                                                <img src="@pImg" alt="@pName" style="width: 45px; height: 45px; object-fit: contain;" onerror="this.src='/Content/images/no-image.png';" />
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark text-truncate" style="max-width: 190px;" title="@pName">@pName</div>
-                                                <small class="text-muted">Mã SP: <span class="badge bg-light text-dark border">#@r.ProductId</span></small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold text-success"><i class="fa-solid fa-circle-user text-secondary me-2"></i>@uName</div>
-                                    </td>
-                                    <td>
-                                        <div class="text-warning fs-6">
-                                            @for (int i = 1; i <= 5; i++)
-                                            {
-                                                if (i <= r.Rating)
-                                                {
-                                                    <i class="fa-solid fa-star"></i>
-                                                }
-                                                else
-                                                {
-                                                    <i class="fa-regular fa-star text-muted opacity-50"></i>
-                                                }
-                                            }
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="text-dark fw-medium bg-light p-2 rounded-3 border d-inline-block">
-                                            <i class="fa-solid fa-quote-left text-muted me-2 opacity-50"></i>@r.Comment
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold text-dark">@r.CreatedDate.ToString("dd/MM/yyyy")</div>
-                                        <div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@r.CreatedDate.ToString("HH:mm")</div>
-                                    </td>
-                                    <td class="text-center pe-3">
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-custom btn-delete-review" data-id="@r.Id" title="Xóa đánh giá này">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                uName = users[r.UserId];
                             }
-                        }
-                        else
-                        {
+
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-star-half-stroke fs-1 d-block mb-3 opacity-50"></i>
-                                    <h5>Không tìm thấy bài đánh giá nào!</h5>
-                                    <p class="mb-0">Thử thay đổi tiêu chí sao hoặc từ khóa tìm kiếm.</p>
+                                <td class="ps-4 text-center">
+                                    <span style="font-family: 'JetBrains Mono', monospace; color: var(--adm-text-2); font-size: 13px;">#@r.Id</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-start gap-2">
+                                        <img src="@pImg" alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid var(--adm-border); background: var(--adm-surface-2);" onerror="this.src='/Content/images/no-image.png';" />
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 13.5px; color: var(--adm-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="@pName">@pName</div>
+                                            <span style="font-size: 12px; color: var(--adm-text-3); font-family: 'JetBrains Mono', monospace;">Mã SP: #@r.ProductId</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="color: var(--adm-blue); font-weight: 600; font-size: 13.5px;"><i class="fa-solid fa-user-circle me-1"></i> @uName</span>
+                                </td>
+                                <td>
+                                    <div style="font-size: 14px;">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= r.Rating)
+                                            {
+                                                <i class="fa-solid fa-star text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-solid fa-star" style="color: var(--adm-border-2);"></i>
+                                            }
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="p-2 rounded" style="background: var(--adm-surface-3); border: 1px solid var(--adm-border); font-size: 13.5px; color: var(--adm-text); line-height: 1.5;">
+                                        <i class="fa-solid fa-quote-left me-2" style="color: var(--adm-text-3);"></i>@r.Comment
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 13px; color: var(--adm-text);">@r.CreatedDate.ToString("dd/MM/yyyy")</div>
+                                    <div style="font-size: 12px; color: var(--adm-text-2);"><i class="fa-regular fa-clock me-1"></i>@r.CreatedDate.ToString("HH:mm")</div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-danger btn-delete-review" data-id="@r.Id" title="Xóa đánh giá này">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="adm-empty">
+                                <i class="fa-regular fa-star-half-stroke"></i>
+                                <h5>Trống</h5>
+                                <p>Không tìm thấy bài đánh giá nào phù hợp với bộ lọc.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODALS (BOOTSTRAP 5) ============ -->
+<!-- Modal Xác Nhận Xóa Đánh Giá -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger shadow-lg">
+            <div class="modal-header" style="border-bottom-color: var(--adm-red-dim) !important;">
+                <h5 class="modal-title text-danger" id="deleteModalLabel" style="font-weight: 700; font-size: 15px;">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p style="color: var(--adm-text-2); margin-bottom: 0;">
+                    Bạn có chắc chắn muốn <strong class="text-danger">XÓA VĨNH VIỄN</strong> bài đánh giá <strong id="deleteReviewId" class="text-white" style="font-family: 'JetBrains Mono', monospace; font-size: 16px;"></strong>?<br />
+                    <span class="text-danger mt-2 d-inline-block" style="font-size: 12.5px;">* Cảnh báo: Hành động này không thể hoàn tác.</span>
+                </p>
+            </div>
+            <div class="modal-footer" style="border-top-color: var(--adm-border) !important;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Xóa bài đánh giá</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function () {
-        // XÓA ĐÁNH GIÁ SẢN PHẨM
-        $('.btn-delete-review').click(function () {
-            var id = $(this).data('id');
-            var btn = $(this);
-            var originalHtml = btn.html();
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let reviewIdToDelete = null;
+        let deleteBtnElement = null;
+        let originalHtml = "";
 
-            if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài đánh giá #" + id + " này không?\nHành động này không thể hoàn tác!")) {
-                return;
-            }
+        $(document).ready(function () {
+            // MỞ MODAL XÓA ĐÁNH GIÁ
+            $('.btn-delete-review').click(function () {
+                reviewIdToDelete = $(this).data('id');
+                deleteBtnElement = $(this);
+                originalHtml = deleteBtnElement.html();
 
-            // Hiệu ứng loading
-            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
-
-            $.post('@Url.Action("Delete", "ManageReview")', { id: id }, function (res) {
-                if (res.success) {
-                    alert(res.message);
-                    location.reload();
-                } else {
-                    alert(res.message || "Không thể xóa bài đánh giá này!");
-                    btn.prop('disabled', false).html(originalHtml);
-                }
-            }).fail(function() {
-                alert("Lỗi kết nối đến máy chủ!");
-                btn.prop('disabled', false).html(originalHtml);
+                $('#deleteReviewId').text('#' + reviewIdToDelete);
+                var deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal'));
+                deleteModal.show();
             });
         });
-    });
-</script>
+
+        // XÁC NHẬN XÓA BẰNG AJAX
+        function confirmDelete() {
+            if (reviewIdToDelete && deleteBtnElement) {
+                // Ẩn modal
+                var deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                deleteModal.hide();
+
+                // Hiệu ứng loading trên nút
+                deleteBtnElement.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+                $.post('@Url.Action("Delete", "ManageReview")', { id: reviewIdToDelete }, function (res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message || "Không thể xóa bài đánh giá này!");
+                        deleteBtnElement.prop('disabled', false).html(originalHtml);
+                    }
+                }).fail(function() {
+                    alert("Lỗi kết nối đến máy chủ!");
+                    deleteBtnElement.prop('disabled', false).html(originalHtml);
+                });
+            }
+        }
+    </script>
+}

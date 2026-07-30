@@ -52,29 +52,39 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
         public void AddItemToCart(int id, string userId, int quantity = 1)
         {
             var product = appDBContext.Product.FirstOrDefault(p => p.Id == id);
-            if (product == null) return;
-            int curQuantity = product.Quantity;
-            if (quantity > curQuantity) quantity = curQuantity;
+            if (product == null) throw new Exception("Không tìm thấy sản phẩm!");
+
+            // Kiểm tra lượng tồn thực tế (nếu là sản phẩm dùng chung kho gốc ParentProduct)
+            int effectiveStock = product.Quantity;
+            if (product.ParentProductId.HasValue && product.ParentProductId.Value > 0)
+            {
+                var parent = appDBContext.Product.FirstOrDefault(p => p.Id == product.ParentProductId.Value);
+                if (parent != null) effectiveStock = parent.Quantity;
+            }
+
+            int factor = product.UnitMultiplier > 0 ? product.UnitMultiplier : 1;
+            int availableUnits = effectiveStock / factor;
+
+            if (availableUnits <= 0)
+            {
+                throw new Exception($"Sản phẩm '{product.Name}' hiện đã hết hàng trong kho!");
+            }
+
+            if (quantity > availableUnits) quantity = availableUnits;
+            if (quantity <= 0) quantity = 1;
 
             var cart = GetOrCreateCart(userId);
-            if (cart == null) return;
+            if (cart == null) throw new Exception("Không tạo được giỏ hàng người dùng!");
 
             var existProduct = appDBContext.CartDetail.FirstOrDefault(c => c.CartId == cart.Id && c.ProductId == id);
 
             if (existProduct != null)
             {
-                // Tính tổng số lượng dự định có trong giỏ
                 int targetQuantity = existProduct.Quantity + quantity;
+                if (targetQuantity > availableUnits) targetQuantity = availableUnits;
+                if (targetQuantity <= 0) targetQuantity = 1;
 
-                // Nếu vượt quá tồn kho thì chỉ lấy tối đa bằng tồn kho
-                if (targetQuantity > product.Quantity)
-                {
-                    existProduct.Quantity = product.Quantity;
-                }
-                else
-                {
-                    existProduct.Quantity = targetQuantity;
-                }
+                existProduct.Quantity = targetQuantity;
                 existProduct.Price = Convert.ToDouble(product.Price);
                 appDBContext.Entry(existProduct).State = EntityState.Modified;
             }

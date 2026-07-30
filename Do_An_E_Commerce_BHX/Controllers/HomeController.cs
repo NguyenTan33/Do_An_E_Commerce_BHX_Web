@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -24,6 +24,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
         public ActionResult Index(string searchTerm, int? categoryId, decimal? minPrice, decimal? maxPrice, string sortBy, int page = 1)
         {
+            ApplicationDbContext.EnsureProductColumnsExist(db);
+
             const int pageSize = 12;
 
             // 1. Lấy dữ liệu cơ bản

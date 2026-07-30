@@ -1,4 +1,3 @@
-﻿
 @model Do_An_E_Commerce_BHX.Models.Entities.Product
 
 @{
@@ -40,7 +39,7 @@
         }
 
         .header {
-            max-width: 560px;
+            max-width: 760px;
             margin: 0 auto 24px;
             border-bottom: 3px solid var(--navy);
             padding-bottom: 16px;
@@ -58,102 +57,70 @@
         h2 {
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
-            font-size: 28px;
-            letter-spacing: 0.01em;
+            font-size: 32px;
             color: var(--navy-deep);
-            margin: 0;
+            margin: 0 0 12px;
             text-transform: uppercase;
         }
 
         .back-link {
-            display: inline-block;
-            margin-top: 10px;
-            font-size: 13px;
-            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--amber);
             text-decoration: none;
+            font-weight: 600;
         }
 
-            .back-link:hover {
-                color: var(--navy);
-            }
-
         .form-card {
-            max-width: 560px;
+            max-width: 760px;
             margin: 0 auto;
             background: #fff;
+            border: 1.5px solid var(--line);
             border-radius: 6px;
-            padding: 32px;
-            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
+            padding: 36px 40px;
+            box-shadow: 0 12px 32px rgba(15,26,48,0.08);
         }
 
         .field {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
             .field label {
                 display: block;
                 font-family: 'Oswald', sans-serif;
-                font-size: 12px;
-                font-weight: 600;
+                font-size: 13px;
                 letter-spacing: 0.06em;
                 text-transform: uppercase;
-                color: var(--navy-deep);
-                margin-bottom: 7px;
+                color: var(--navy);
+                margin-bottom: 8px;
             }
 
-            .field input {
+            .field input[type="text"],
+            .field input[type="number"] {
                 width: 100%;
                 padding: 11px 14px;
-                font-family: 'Inter', sans-serif;
-                font-size: 14px;
                 border: 1.5px solid var(--line);
                 border-radius: 4px;
+                font-family: 'Inter', sans-serif;
+                font-size: 14px;
+                color: var(--ink);
                 background: var(--paper);
                 outline: none;
-                transition: border-color 0.15s ease, box-shadow 0.15s ease;
+                transition: border-color 0.15s ease, background 0.15s ease;
             }
 
                 .field input:focus {
                     border-color: var(--navy);
-                    box-shadow: 0 0 0 3px rgba(22,35,63,0.08);
                     background: #fff;
                 }
 
-            .field.barcode input,
-            .field.price input {
-                font-family: 'JetBrains Mono', monospace;
-            }
-
-            .field .hint {
-                font-size: 12px;
-                color: var(--muted);
-                margin-top: 5px;
-            }
-
-        .field-validation-error {
-            display: block;
-            font-size: 12px;
-            color: var(--red);
-            margin-top: 5px;
+        .field-row {
+            display: flex;
+            gap: 16px;
         }
 
-        .input-validation-error {
-            border-color: var(--red) !important;
-        }
-
-        .validation-summary-errors {
-            background: #FBEAE8;
-            border: 1px solid var(--red);
-            color: var(--red);
-            border-radius: 4px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-            .validation-summary-errors ul {
-                margin: 0;
-                padding-left: 18px;
+            .field-row .field {
+                flex: 1;
             }
 
         .actions {
@@ -172,21 +139,12 @@
             border-radius: 4px;
             border: none;
             cursor: pointer;
-            transition: opacity 0.15s ease, transform 0.1s ease;
         }
-
-            .btn:active {
-                transform: scale(0.98);
-            }
 
         .btn-primary {
             background: var(--navy);
             color: #fff;
         }
-
-            .btn-primary:hover {
-                opacity: 0.9;
-            }
 
         .btn-secondary {
             background: transparent;
@@ -196,133 +154,95 @@
             display: inline-flex;
             align-items: center;
         }
-
-            .btn-secondary:hover {
-                border-color: var(--muted);
-                color: var(--ink);
-            }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <p class="eyebrow">Quản lý kho &middot; Bán lẻ</p>
+        <p class="eyebrow">Quản lý kho &middot; Bách Hóa Xanh</p>
         <h2>Thêm sản phẩm mới</h2>
-        @Html.ActionLink("← Quay lại danh sách sản phẩm", "Index", "Products", null, new { @class = "back-link" })
+        @Html.ActionLink("← Quay lại danh sách sản phẩm", "Index", "ManageProduct", null, new { @class = "back-link" })
     </div>
 
     <div class="form-card">
-        <div class="form-card">
-            @using (Html.BeginForm("ThemSP", "ManageProduct", FormMethod.Post))
-            {
-                @Html.AntiForgeryToken()
-                @Html.ValidationSummary(false)
+        @using (Html.BeginForm("ThemSP", "ManageProduct", FormMethod.Post, new { id = "form-them-sp" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(false)
 
+            <div class="field">
+                <label>Tên sản phẩm (*)</label>
+                @Html.TextBoxFor(m => m.Name, new { placeholder = "VD: Bia Tiger Crystal, Thịt Ba Chỉ...", required = "required" })
+                @Html.ValidationMessageFor(m => m.Name)
+            </div>
+
+            <div class="field-row">
                 <div class="field">
-                    <label>Tên sản phẩm</label>
-                    @Html.TextBoxFor(m => m.Name, new { placeholder = "VD: Coca Cola 390ml" })
-                    @Html.ValidationMessageFor(m => m.Name)
-                </div>
-
-                <div class="field barcode">
-                    <label>Mã vạch</label>
-                    @Html.TextBoxFor(m => m.Barcode, new { placeholder = "8938505974194" })
+                    <label>Mã vạch (*)</label>
+                    @Html.TextBoxFor(m => m.Barcode, new { placeholder = "8938505974194", required = "required" })
                     @Html.ValidationMessageFor(m => m.Barcode)
                 </div>
-
-                <div class="field price">
-                    <label>Giá bán (VNĐ)</label>
-                    @Html.TextBoxFor(m => m.Price, new
-                    {
-                        type = "number",
-                        min = "0",
-                        step = "1000",
-                        placeholder = "10000"
-                    })
+                <div class="field">
+                    <label>Giá bán mặc định (VNĐ) (*)</label>
+                    @Html.TextBoxFor(m => m.Price, new { type = "number", min = "0", step = "1000", placeholder = "330000", required = "required" })
                     @Html.ValidationMessageFor(m => m.Price)
                 </div>
+            </div>
 
+            <div class="field-row">
                 <div class="field">
-                    <label>Số lượng tồn kho</label>
-                    @Html.TextBoxFor(m => m.Quantity, new
-                    {
-                        type = "number",
-                        min = "0",
-                        placeholder = "100"
-                    })
+                    <label>Số lượng kho (* Tồn lon/cái/gram lẻ)</label>
+                    @Html.TextBoxFor(m => m.Quantity, new { type = "number", min = "0", placeholder = "100", required = "required" })
                     @Html.ValidationMessageFor(m => m.Quantity)
                 </div>
-
                 <div class="field">
-                    <label>Mô tả</label>
-                    @Html.TextAreaFor(m => m.Description, new
-                    {
-                        rows = "4",
-                        placeholder = "Nhập mô tả sản phẩm...",
-                        style = "width:100%;padding:12px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;"
-                    })
-                </div>
-
-                <div class="field">
-                    <label>Ảnh sản phẩm</label>
-                    @Html.TextBoxFor(m => m.URLImage, new
-                    {
-                        placeholder = "coca.jpg"
-                    })
-                </div>
-
-                <div class="field">
-                    <label>Danh mục</label>
-                    @Html.DropDownListFor(m => m.CategoryId,
-                        ViewBag.CategoryId as SelectList,
-                        "-- Chọn danh mục --",
-                        new
-                        {
-                            @class = "form-control",
-                            style = "width:100%;padding:11px 14px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;"
-                        })
+                    <label>Danh mục sản phẩm (*)</label>
+                    @Html.DropDownListFor(m => m.CategoryId, ViewBag.CategoryId as SelectList, "-- Chọn danh mục --", new { @class = "form-control", style = "width:100%;padding:11px 14px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;", required = "required" })
                     @Html.ValidationMessageFor(m => m.CategoryId)
                 </div>
+            </div>
 
-                <div class="field">
+            <!-- CHỌN SẢN PHẨM KHO GỐC NẾU LÀ BÀI THÙNG / LỐC DÙNG CHUNG KHO -->
+            <div class="field" style="background: #EBF5FF; padding: 14px; border-radius: 6px; border: 1.5px solid #60A5FA; margin-bottom: 20px;">
+                <label style="color: #1E40AF; font-weight: bold; font-size: 13px;">🔗 Sản Phẩm Kho Gốc (Dành cho bài Thùng / Lốc 6 lon dùng chung kho lẻ)</label>
+                @Html.DropDownListFor(m => m.ParentProductId, ViewBag.ParentProductId as SelectList, "-- BÀI MẶC ĐỊNH (Tự quản lý kho riêng) --", new { @class = "form-control", style = "width:100%;padding:11px 14px;border:1.5px solid #93C5FD;border-radius:4px;background:#fff;font-weight:bold;" })
+                <small style="color: #1E40AF; font-size: 11px; display: block; margin-top: 4px;">📌 Chọn bài Lon lẻ gốc để khi bán Thùng tự động trừ kho từ bài Lon lẻ gốc.</small>
+            </div>
 
-                    <label>
-                        @Html.CheckBoxFor(m => m.IsAvailable)
-                        Đang bán
-                    </label>
-
-                    <label>
-                        @Html.CheckBoxFor(m => m.IsHot)
-                        Sản phẩm Hot
-                    </label>
-
-                    <label>
-                        @Html.CheckBoxFor(m => m.IsBestSeller)
-                        Bán chạy
-                    </label>
-
-                    <label>
-                        @Html.CheckBoxFor(m => m.IsLock)
-                        Khóa sản phẩm
-                    </label>
-
+            <!-- ĐƠN VỊ TÍNH VÀ HỆ SỐ QUY ĐỔI MẶC ĐỊNH -->
+            <div class="field-row" style="background: #FAF8F4; padding: 14px; border-radius: 6px; border: 1px dashed #E5E1D8; margin-bottom: 20px;">
+                <div class="field" style="margin-bottom: 0;">
+                    <label>Đơn vị tính mặc định (*)</label>
+                    @Html.TextBoxFor(m => m.Unit, new { placeholder = "VD: Thùng, Lon, Kg, Chai, Vỉ 200g...", Value = "Cái", required = "required" })
                 </div>
-
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary">
-                        💾 Lưu sản phẩm
-                    </button>
-
-                    @Html.ActionLink(
-                        "Hủy",
-                        "Index",
-                        "ManageProduct",
-                        null,
-                        new { @class = "btn btn-secondary" })
+                <div class="field" style="margin-bottom: 0;">
+                    <label>Hệ số quy đổi kho lẻ (*)</label>
+                    @Html.TextBoxFor(m => m.UnitMultiplier, new { type = "number", min = "1", placeholder = "1 (1 Thùng 24 lon = 24)", Value = "1", required = "required" })
+                    <small style="color: #6B7280; font-size: 11px;">Nhập 24 cho Thùng 24 lon, 200 cho Vỉ 200g, 1 cho hàng lẻ.</small>
                 </div>
-            }
-        </div>
+            </div>
+
+            <div class="field">
+                <label>Mô tả chi tiết</label>
+                @Html.TextAreaFor(m => m.Description, new { rows = "3", placeholder = "Nhập thông tin mô tả sản phẩm...", style = "width:100%;padding:12px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;" })
+            </div>
+
+            <div class="field">
+                <label>Đường dẫn hình ảnh (URL Image)</label>
+                @Html.TextBoxFor(m => m.URLImage, new { placeholder = "coca.jpg" })
+            </div>
+
+            <div class="field" style="display: flex; gap: 20px; align-items: center; background: #FAF8F4; padding: 12px; border-radius: 4px;">
+                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsAvailable) Đang bán</label>
+                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsHot) Nổi bật</label>
+                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsBestSeller) Bán chạy</label>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">💾 Lưu Sản Phẩm Mới</button>
+                @Html.ActionLink("Hủy bỏ", "Index", "ManageProduct", null, new { @class = "btn btn-secondary" })
+            </div>
+        }
     </div>
-
 </body>
 </html>

@@ -4,8 +4,13 @@
 
 @if (Request.IsAuthenticated)
 {
-    var manager = Context.GetOwinContext().GetUserManager<ApplicationUserManager>();
-    var user = manager.FindById(User.Identity.GetUserId());
+    ApplicationUser user = null;
+    try
+    {
+        var manager = Context.GetOwinContext().GetUserManager<ApplicationUserManager>();
+        user = manager.FindById(User.Identity.GetUserId());
+    }
+    catch { }
 
     var displayName = !string.IsNullOrWhiteSpace(user?.FullName)
         ? user.FullName

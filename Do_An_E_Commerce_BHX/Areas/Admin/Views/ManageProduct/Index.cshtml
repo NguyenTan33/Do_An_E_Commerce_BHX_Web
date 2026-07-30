@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Product>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Product>
 
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
@@ -6,633 +6,99 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-@section Styles {
-    <style>
-        :root {
-            --navy: #16233F;
-            --navy-deep: #0F1A30;
-            --paper: #FAF8F4;
-            --ink: #22262E;
-            --muted: #6B7280;
-            --line: #E5E1D8;
-            --amber: #E2792B;
-            --green: #2F8F5B;
-            --red: #C4453A;
-        }
-
-        .header, .filter-container, .table-wrap {
-            width: 100%;
-            max-width: 100% !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-        }
-
-        .header {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            border-bottom: 3px solid var(--navy);
-            padding-bottom: 16px;
-        }
-
-        .eyebrow {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.18em;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin: 0 0 6px;
-        }
-
-        h2 {
-            font-family: 'Oswald', sans-serif;
-            font-weight: 700;
-            font-size: 30px;
-            letter-spacing: 0.01em;
-            color: var(--navy-deep);
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .count-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            background: var(--navy);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 3px;
-            letter-spacing: 0.04em;
-        }
-
-        .btn-add {
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            background: var(--amber);
-            color: #fff;
-            padding: 9px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: opacity 0.15s ease;
-        }
-
-            .btn-add:hover {
-                opacity: 0.9;
-            }
-
-        /* Filter Panel */
-        .filter-container {
-            margin-bottom: 20px;
-        }
-
-        .filter-panel {
-            background: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
-            border: 1px solid var(--line);
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 18px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
-
-            .filter-row:last-child {
-                margin-bottom: 0;
-            }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 180px;
-            flex: 1;
-        }
-
-            .filter-group label {
-                font-weight: 600;
-                font-size: 13px;
-                margin-bottom: 6px;
-                color: var(--navy-deep);
-            }
-
-            .filter-group input, .filter-group select {
-                height: 40px;
-                border: 1px solid var(--line);
-                border-radius: 6px;
-                padding: 0 12px;
-                font-family: 'Inter', sans-serif;
-                font-size: 14px;
-                outline: none;
-                transition: border-color 0.15s ease;
-            }
-
-                .filter-group input:focus, .filter-group select:focus {
-                    border-color: var(--navy);
-                }
-
-        .filter-button {
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-        }
-
-        .btn-search {
-            height: 40px;
-            padding: 0 22px;
-            border: none;
-            border-radius: 6px;
-            background: var(--navy);
-            color: #fff;
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: opacity 0.15s ease;
-        }
-
-            .btn-search:hover {
-                opacity: 0.9;
-            }
-
-        .btn-reset {
-            height: 40px;
-            padding: 0 22px;
-            border-radius: 6px;
-            text-decoration: none;
-            background: #E5E1D8;
-            color: var(--ink);
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s ease;
-        }
-
-            .btn-reset:hover {
-                background: #d4cebe;
-            }
-
-        /* Table Area */
-        .table-wrap {
-            background: #fff;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
-            border: 1px solid var(--line);
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        thead th {
-            position: sticky;
-            top: 0;
-            background: var(--navy);
-            color: #fff;
-            font-family: 'Oswald', sans-serif;
-            font-weight: 500;
-            font-size: 13px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            text-align: left;
-            padding: 14px 16px;
-        }
-
-        tbody td {
-            padding: 13px 16px;
-            border-bottom: 1px solid var(--line);
-            font-size: 14px;
-            vertical-align: middle;
-        }
-
-        tbody tr:hover {
-            background: #F3F0E9;
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .id-cell {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .name-cell {
-            font-weight: 600;
-            color: var(--navy-deep);
-        }
-
-        .barcode-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            letter-spacing: -1px;
-            white-space: nowrap;
-        }
-
-            .barcode-cell::before {
-                content: "";
-                display: inline-block;
-                width: 3px;
-                height: 14px;
-                background: var(--ink);
-                margin-right: 3px;
-                box-shadow: 4px 0 0 var(--ink), 9px 0 0 var(--ink), 12px 0 0 var(--ink), 18px 0 0 var(--ink);
-            }
-
-            .barcode-cell .code-num {
-                margin-left: 26px;
-            }
-
-        .stock-cell {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 140px;
-        }
-
-        .stock-track {
-            flex: 1;
-            height: 6px;
-            background: var(--line);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .stock-fill {
-            height: 100%;
-            border-radius: 3px;
-        }
-
-        .stock-number {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            min-width: 30px;
-            text-align: right;
-        }
-
-        .price-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-            text-align: right;
-            color: var(--navy-deep);
-        }
-
-        .action-cell {
-            white-space: nowrap;
-            text-align: right;
-        }
-
-            .action-cell form {
-                display: inline-block;
-                margin: 0;
-            }
-
-        .icon-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            border: 1.5px solid var(--line);
-            background: #fff;
-            cursor: pointer;
-            text-decoration: none;
-            margin-left: 6px;
-            transition: border-color 0.15s ease, background 0.15s ease;
-        }
-
-            .icon-btn svg {
-                width: 15px;
-                height: 15px;
-            }
-
-            .icon-btn.view {
-                color: var(--navy);
-            }
-
-                .icon-btn.view:hover {
-                    border-color: var(--navy);
-                    background: #EEF1F6;
-                }
-
-            .icon-btn.edit {
-                color: var(--navy);
-            }
-
-                .icon-btn.edit:hover {
-                    border-color: var(--navy);
-                    background: #EEF1F6;
-                }
-
-            .icon-btn.delete {
-                color: var(--red);
-            }
-
-                .icon-btn.delete:hover {
-                    border-color: var(--red);
-                    background: #FBEAE8;
-                }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--muted);
-        }
-
-        /* Shared Modal Overlay */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15,26,48,0.55);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-            .modal-overlay.active {
-                display: flex;
-            }
-
-        .modal-box {
-            background: #fff;
-            border-radius: 6px;
-            padding: 28px;
-            max-width: 380px;
-            width: 90%;
-            box-shadow: 0 20px 50px rgba(15,26,48,0.3);
-        }
-
-            .modal-box h3 {
-                font-family: 'Oswald', sans-serif;
-                font-size: 18px;
-                text-transform: uppercase;
-                color: var(--navy-deep);
-                margin: 0 0 10px;
-            }
-
-            .modal-box p {
-                font-size: 14px;
-                color: var(--muted);
-                margin: 0 0 22px;
-                line-height: 1.5;
-            }
-
-                .modal-box p strong {
-                    color: var(--ink);
-                }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-            .modal-actions button {
-                font-family: 'Oswald', sans-serif;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
-                padding: 10px 18px;
-                border-radius: 4px;
-                border: none;
-                cursor: pointer;
-            }
-
-        .modal-cancel {
-            background: transparent;
-            border: 1.5px solid var(--line) !important;
-            color: var(--muted);
-        }
-
-            .modal-cancel:hover {
-                border-color: var(--muted) !important;
-                color: var(--ink);
-            }
-
-        .modal-confirm {
-            background: var(--red);
-            color: #fff;
-        }
-
-            .modal-confirm:hover {
-                opacity: 0.9;
-            }
-
-        /* Modal Xem Chi Tiết */
-        .detail-modal-box {
-            max-width: 580px;
-            width: 92%;
-        }
-
-        .detail-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--navy);
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-        }
-
-            .detail-header h3 {
-                font-family: 'Oswald', sans-serif;
-                font-size: 20px;
-                color: var(--navy-deep);
-                margin: 0;
-                text-transform: uppercase;
-            }
-
-        .detail-body {
-            display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 20px;
-        }
-
-        .detail-img {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid var(--line);
-            background: var(--paper);
-        }
-
-        .detail-info {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .detail-info-row {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px dashed var(--line);
-            padding-bottom: 4px;
-        }
-
-        .detail-info-label {
-            font-weight: 600;
-            color: var(--muted);
-        }
-
-        .detail-info-val {
-            font-weight: 600;
-            color: var(--navy-deep);
-        }
-
-        .badge-tag {
-            display: inline-block;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-            margin-right: 4px;
-        }
-
-        .bg-hot {
-            background: #FDE8E8;
-            color: var(--red);
-        }
-
-        .bg-bestseller {
-            background: #FEF3C7;
-            color: var(--amber);
-        }
-
-        .bg-available {
-            background: #DEF7EC;
-            color: var(--green);
-        }
-
-        .bg-lock {
-            background: #E5E7EB;
-            color: var(--muted);
-            text-decoration: line-through;
-        }
-
-        .detail-desc {
-            grid-column: span 2;
-            background: var(--paper);
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--ink);
-            line-height: 1.5;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-    </style>
-}
-
-<div class="header">
-    <div>
-        <p class="eyebrow">Quản lý kho &middot; Bán lẻ</p>
-        <h2>Danh sách sản phẩm</h2>
+<div class="dash-page">
+
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3" style="border-bottom: 1px solid var(--adm-border);">
+        <div>
+            <h3 class="mb-1" style="font-size: 20px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-box-open text-primary"></i> Quản Lý Sản Phẩm
+            </h3>
+            <p class="mb-0" style="font-size: 13.5px; color: var(--adm-text-2);">Quản lý kho, giá bán và trạng thái hiển thị của các sản phẩm</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-secondary" style="font-size: 13px; padding: 8px 12px;">
+                <i class="fa-solid fa-boxes-stacked me-1"></i> @(Model?.Count() ?? 0) SP
+            </span>
+            <a href="@Url.Action("ThemSP", "ManageProduct")" class="btn btn-success">
+                <i class="fa-solid fa-plus"></i> Thêm sản phẩm
+            </a>
+        </div>
     </div>
-    <div class="header-right">
-        <span class="count-badge">@(Model?.Count() ?? 0) SP</span>
-        @Html.ActionLink("+ Thêm sản phẩm", "ThemSP", "ManageProduct", null, new { @class = "btn-add" })
-    </div>
-</div>
 
-<!-- Bộ lọc tìm kiếm & sắp xếp (Server-side) -->
-<div class="filter-container">
-    @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
-    {
-        <div class="filter-panel">
-            <!-- Hàng 1: Tìm kiếm cơ bản & Giá -->
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label>Từ khóa</label>
-                    <input type="text" name="TuKhoa" value="@Request["TuKhoa"]" placeholder="Tên sản phẩm..." />
+    <!-- ===== BỘ LỌC TÌM KIẾM ĐA LỚP ===== -->
+    <div class="adm-filter-bar">
+        <h5 class="mb-3" style="font-size: 14px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sliders text-primary"></i> Bộ lọc chi tiết
+        </h5>
+        @using (Html.BeginForm("Index", "ManageProduct", FormMethod.Get))
+        {
+            <div class="row g-3">
+                <!-- Hàng 1 -->
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label">Từ khóa</label>
+                    <input type="text" name="TuKhoa" class="form-control" value="@Request["TuKhoa"]" placeholder="Tên sản phẩm..." />
                 </div>
-                <div class="filter-group">
-                    <label>Danh mục</label>
-                    @Html.DropDownList("CategoryId", ViewBag.Category as SelectList, "-- Tất cả --", new { @class = "form-control" })
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label">Danh mục</label>
+                    @Html.DropDownList("CategoryId", ViewBag.Category as SelectList, "-- Tất cả --", new { @class = "form-select" })
                 </div>
-                <div class="filter-group">
-                    <label>Giá từ</label>
-                    <input type="number" name="GiaTu" value="@Request["GiaTu"]" />
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label">Loại sản phẩm</label>
+                    <select name="productType" class="form-select">
+                        <option value="">-- Tất cả --</option>
+                        <option value="1" @(ViewBag.ProductType == 1 ? "selected" : "")>⭐ Sản phẩm kho gốc</option>
+                        <option value="2" @(ViewBag.ProductType == 2 ? "selected" : "")>🔗 Bài quy cách con</option>
+                    </select>
                 </div>
-                <div class="filter-group">
-                    <label>Giá đến</label>
-                    <input type="number" name="GiaDen" value="@Request["GiaDen"]" />
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label">Khoảng giá</label>
+                    <div class="input-group">
+                        <input type="number" name="GiaTu" class="form-control" value="@Request["GiaTu"]" placeholder="Từ..." />
+                        <span class="input-group-text border-start-0 border-end-0">-</span>
+                        <input type="number" name="GiaDen" class="form-control" value="@Request["GiaDen"]" placeholder="Đến..." />
+                    </div>
                 </div>
-            </div>
 
-            <!-- Hàng 2: Trạng thái kinh doanh & Tồn kho -->
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label>Tồn từ</label>
-                    <input type="number" name="TonTu" value="@Request["TonTu"]" />
+                <!-- Hàng 2 -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label">Khoảng Tồn kho</label>
+                    <div class="input-group">
+                        <input type="number" name="TonTu" class="form-control" value="@Request["TonTu"]" placeholder="Từ..." />
+                        <span class="input-group-text border-start-0 border-end-0">-</span>
+                        <input type="number" name="TonDen" class="form-control" value="@Request["TonDen"]" placeholder="Đến..." />
+                    </div>
                 </div>
-                <div class="filter-group">
-                    <label>Tồn đến</label>
-                    <input type="number" name="TonDen" value="@Request["TonDen"]" />
-                </div>
-                <div class="filter-group">
-                    <label>Kinh doanh</label>
-                    <select name="isAvailable">
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="form-label">Kinh doanh</label>
+                    <select name="isAvailable" class="form-select">
                         <option value="">-- Tất cả --</option>
                         <option value="true" @(Request["isAvailable"] == "true" ? "selected" : "")>Đang bán</option>
                         <option value="false" @(Request["isAvailable"] == "false" ? "selected" : "")>Ngừng bán</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label>Trạng thái Khóa</label>
-                    <select name="isLock">
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label">TT Khóa</label>
+                    <select name="isLock" class="form-select">
                         <option value="">-- Tất cả --</option>
                         <option value="true" @(Request["isLock"] == "true" ? "selected" : "")>Bị khóa</option>
                         <option value="false" @(Request["isLock"] == "false" ? "selected" : "")>Đang mở</option>
                     </select>
                 </div>
-            </div>
-
-            <!-- Hàng 3: Sắp xếp, Nổi bật, Bán chạy -->
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label>Sản phẩm Nổi bật (Hot)</label>
-                    <select name="isHot">
-                        <option value="">-- Tất cả --</option>
-                        <option value="true" @(Request["isHot"] == "true" ? "selected" : "")>Có</option>
-                        <option value="false" @(Request["isHot"] == "false" ? "selected" : "")>Không</option>
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label">Nổi bật / Bán chạy</label>
+                    <select name="isHot" class="form-select mb-2">
+                        <option value="">-- Lọc Hot --</option>
+                        <option value="true" @(Request["isHot"] == "true" ? "selected" : "")>Sản phẩm Hot</option>
+                    </select>
+                    <select name="isBestSeller" class="form-select">
+                        <option value="">-- Lọc BestSeller --</option>
+                        <option value="true" @(Request["isBestSeller"] == "true" ? "selected" : "")>Bán chạy</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label>Bán chạy (Best Seller)</label>
-                    <select name="isBestSeller">
-                        <option value="">-- Tất cả --</option>
-                        <option value="true" @(Request["isBestSeller"] == "true" ? "selected" : "")>Có</option>
-                        <option value="false" @(Request["isBestSeller"] == "false" ? "selected" : "")>Không</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Sắp xếp</label>
-                    <select name="SortBy">
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label">Sắp xếp</label>
+                    <select name="SortBy" class="form-select">
                         <option value="">Mặc định</option>
                         <option value="nameAsc" @(Request["SortBy"] == "nameAsc" ? "selected" : "")>Tên A-Z</option>
                         <option value="nameDesc" @(Request["SortBy"] == "nameDesc" ? "selected" : "")>Tên Z-A</option>
@@ -642,177 +108,238 @@
                         <option value="qtyDesc" @(Request["SortBy"] == "qtyDesc" ? "selected" : "")>Tồn giảm</option>
                     </select>
                 </div>
-                <div class="filter-button" style="flex: 1; justify-content: flex-end;">
-                    <button type="submit" class="btn-search">🔍 Tìm kiếm</button>
-                    <a href="@Url.Action("Index")" class="btn-reset">Đặt lại</a>
-                </div>
             </div>
+
+            <!-- Nút Lọc và Đặt lại đã được đồng bộ -->
+            <div class="d-flex justify-content-end align-items-center gap-2 mt-4 pt-3" style="border-top: 1px solid var(--adm-border);">
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-filter"></i> TÌM KIẾM
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- ===== BẢNG DANH SÁCH SẢN PHẨM ===== -->
+    <div class="adm-table-wrap">
+        <div class="adm-table-header">
+            <h5 class="adm-table-title m-0">
+                <i class="fa-solid fa-list-ul"></i>
+                Danh Sách Sản Phẩm (@(Model?.Count() ?? 0))
+            </h5>
         </div>
-    }
-</div>
-
-<!-- Bảng danh sách sản phẩm -->
-<div class="table-wrap">
-    <table id="productTable">
-        <thead>
-            <tr>
-                <th>Mã SP</th>
-                <th>Tên sản phẩm</th>
-                <th>Mã vạch</th>
-                <th>Tồn kho</th>
-                <th style="text-align:right;">Giá bán</th>
-                <th style="text-align:right;">Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model != null && Model.Any())
-            {
-                var maxQty = Model.Max(p => p.Quantity);
-                if (maxQty <= 0) { maxQty = 1; }
-
-                foreach (var item in Model)
-                {
-                    var pct = (int)Math.Min(100, (item.Quantity * 100.0) / maxQty);
-                    var stockColor = item.Quantity <= 5 ? "var(--red)" : (item.Quantity <= 20 ? "var(--amber)" : "var(--green)");
-
+        <div class="adm-table-responsive">
+            <table class="table mb-0">
+                <thead>
                     <tr>
-                        <td class="id-cell">#@item.Id</td>
-                        <td class="name-cell">
-                            @item.Name
-                            <div style="margin-top: 4px;">
-                                @if (item.IsHot)
-                                {<span class="badge-tag bg-hot">HOT</span>}
-                                @if (item.IsBestSeller)
-                                {<span class="badge-tag bg-bestseller">BEST SELLER</span>}
-                                @if (!item.IsAvailable)
-                                {<span class="badge-tag bg-lock">Ngừng bán</span>}
-                                @if (item.IsLock)
-                                {<span class="badge-tag bg-lock">Bị khóa</span>}
-                            </div>
-                        </td>
-                        <td class="barcode-cell"><span class="code-num">@item.Barcode</span></td>
-                        <td>
-                            <div class="stock-cell">
-                                <div class="stock-track">
-                                    <div class="stock-fill" style="width:@(pct)%; background:@stockColor;"></div>
-                                </div>
-                                <span class="stock-number">@item.Quantity</span>
-                            </div>
-                        </td>
-                        <td class="price-cell">@item.Price.ToString("N0") ₫</td>
-                        <td class="action-cell">
-                            <!-- Nút Xem Chi Tiết -->
-                            <button type="button" class="icon-btn view" title="Xem chi tiết"
-                                    onclick="openDetailModal({
-                                        id: '@item.Id',
-                                        name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))',
-                                        barcode: '@item.Barcode',
-                                        category: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Category?.Name ?? "Chưa phân loại"))',
-                                        price: '@item.Price.ToString("N0") ₫',
-                                        quantity: '@item.Quantity',
-                                        image: '@(string.IsNullOrEmpty(item.URLImage) ? "https://via.placeholder.com/140?text=No+Img" : item.URLImage)',
-                                        desc: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Description ?? "Không có mô tả chi tiết."))',
-                                        isAvailable: @(item.IsAvailable ? "true" : "false"),
-                                        isHot: @(item.IsHot ? "true" : "false"),
-                                        isBestSeller: @(item.IsBestSeller ? "true" : "false"),
-                                        isLock: @(item.IsLock ? "true" : "false")
-                                    })">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </button>
-
-                            <!-- Nút Sửa -->
-                            <a href="@Url.Action("SuaSP", "ManageProduct", new { id = item.Id })" class="icon-btn edit" title="Sửa">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                            </a>
-
-                            <!-- Nút Xóa -->
-                            @using (Html.BeginForm("XoaSP", "ManageProduct", FormMethod.Post, new { onsubmit = "return false;" }))
-                            {
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="Id" value="@item.Id" />
-                                <button type="button" class="icon-btn delete" title="Xóa"
-                                        onclick="openDeleteModal(this, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                        <path d="M10 11v6"></path>
-                                        <path d="M14 11v6"></path>
-                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                                    </svg>
-                                </button>
-                            }
-                        </td>
+                        <th class="ps-4">Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Mã vạch</th>
+                        <th style="min-width: 150px;">Tồn kho</th>
+                        <th class="text-end">Giá bán</th>
+                        <th class="text-end pe-4" style="min-width: 140px;">Thao tác</th>
                     </tr>
-                }
-            }
-            else
-            {
-                <tr><td colspan="6" class="empty-state">Chưa có sản phẩm nào trong danh sách.</td></tr>
-            }
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        var maxQty = Model.Max(p => p.Quantity);
+                        if (maxQty <= 0) { maxQty = 1; }
+
+                        foreach (var item in Model)
+                        {
+                            var pct = (int)Math.Min(100, (item.Quantity * 100.0) / maxQty);
+                            var stockColor = item.Quantity <= 5 ? "var(--adm-red)" : (item.Quantity <= 20 ? "var(--adm-orange)" : "var(--adm-emerald)");
+
+                            <tr>
+                                <td class="ps-4">
+                                    <span style="font-family: 'JetBrains Mono', monospace; color: var(--adm-text-2); font-size: 13px;">#@item.Id</span>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 14.5px;">@item.Name</div>
+                                    <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                        <span class="badge bg-secondary text-white">
+                                            📦 @(string.IsNullOrEmpty(item.Unit) ? "Cái" : item.Unit) @(item.UnitMultiplier > 1 ? $"({item.UnitMultiplier} lẻ)" : "")
+                                        </span>
+
+                                        @if (item.ParentProductId.HasValue && item.ParentProduct != null)
+                                        {
+                                            <span class="badge bg-info text-dark">🔗 Kho gốc: @item.ParentProduct.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-primary">⭐ Bài Kho Gốc</span>
+                                        }
+
+                                        @if (item.IsHot)
+                                        {<span class="badge bg-danger">HOT</span>}
+                                        @if (item.IsBestSeller)
+                                        {<span class="badge bg-warning text-dark">BEST SELLER</span>}
+                                        @if (!item.IsAvailable)
+                                        {<span class="badge bg-secondary text-decoration-line-through">Ngừng bán</span>}
+                                        @if (item.IsLock)
+                                        {<span class="badge bg-dark border border-secondary">Bị khóa</span>}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--adm-text-2);">
+                                        <i class="fa-solid fa-barcode me-1"></i> @item.Barcode
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px; background-color: var(--adm-surface-3);">
+                                            <div class="progress-bar" style="width: @(pct)%; background-color: @stockColor;"></div>
+                                        </div>
+                                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px;">@item.Quantity</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--adm-gold);">
+                                        @item.Price.ToString("N0") ₫
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <!-- Nút Xem Chi Tiết -->
+                                    <button type="button" class="btn btn-sm btn-outline-info" title="Xem chi tiết"
+                                            onclick="openDetailModal({
+                                                id: '@item.Id',
+                                                name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))',
+                                                barcode: '@item.Barcode',
+                                                category: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Category?.Name ?? "Chưa phân loại"))',
+                                                price: '@item.Price.ToString("N0") ₫',
+                                                quantity: '@item.Quantity',
+                                                image: '@(string.IsNullOrEmpty(item.URLImage) ? "https://via.placeholder.com/140?text=No+Img" : item.URLImage)',
+                                                desc: '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Description ?? "Không có mô tả chi tiết."))',
+                                                isAvailable: @(item.IsAvailable ? "true" : "false"),
+                                                isHot: @(item.IsHot ? "true" : "false"),
+                                                isBestSeller: @(item.IsBestSeller ? "true" : "false"),
+                                                isLock: @(item.IsLock ? "true" : "false")
+                                            })">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+
+                                    <!-- Nút Sửa -->
+                                    <a href="@Url.Action("SuaSP", "ManageProduct", new { id = item.Id })" class="btn btn-sm btn-outline-primary ms-1" title="Sửa">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+
+                                    <!-- Nút Xóa -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Xóa"
+                                            onclick="openDeleteModal(@item.Id, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+
+                                    <!-- Form ẩn xóa -->
+                                    @using (Html.BeginForm("XoaSP", "ManageProduct", FormMethod.Post, new { id = "formDelete_" + item.Id, style = "display:none;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@item.Id" />
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="adm-empty">
+                                <i class="fa-solid fa-box-open"></i>
+                                <h5>Trống</h5>
+                                <p>Chưa có sản phẩm nào trong danh sách.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<!-- ============ MODALS (BOOTSTRAP 5) ============ -->
 <!-- Modal Xem Chi Tiết -->
-<div class="modal-overlay" id="detailModal">
-    <div class="modal-box detail-modal-box">
-        <div class="detail-header">
-            <h3>Chi tiết sản phẩm <span id="dtId" style="color:var(--amber);"></span></h3>
-            <button type="button" class="modal-cancel" onclick="closeDetailModal()" style="padding: 4px 10px;">✕</button>
-        </div>
-        <div class="detail-body">
-            <img id="dtImage" src="" class="detail-img" alt="Product Image" onerror="this.src='https://via.placeholder.com/140?text=No+Img';" />
-            <div class="detail-info">
-                <div style="font-size: 16px; font-weight: 700; color: var(--navy);" id="dtName"></div>
-                <div class="detail-info-row">
-                    <span class="detail-info-label">Danh mục:</span>
-                    <span class="detail-info-val" id="dtCategory"></span>
-                </div>
-                <div class="detail-info-row">
-                    <span class="detail-info-label">Giá bán:</span>
-                    <span class="detail-info-val" id="dtPrice" style="color:var(--amber);"></span>
-                </div>
-                <div class="detail-info-row">
-                    <span class="detail-info-label">Tồn kho:</span>
-                    <span class="detail-info-val" id="dtQuantity"></span>
-                </div>
-                <div class="detail-info-row">
-                    <span class="detail-info-label">Mã vạch:</span>
-                    <span class="detail-info-val" id="dtBarcode" style="font-family:'JetBrains Mono';"></span>
-                </div>
-                <div style="margin-top: 6px;" id="dtBadges"></div>
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel" style="color: var(--adm-text); font-weight: 700; font-size: 16px;">
+                    <i class="fa-solid fa-circle-info text-info me-2"></i> Chi tiết sản phẩm <span id="dtId" style="color: var(--adm-gold);"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="detail-desc">
-                <strong>Mô tả: </strong><span id="dtDesc"></span>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-12 col-md-4 text-center">
+                        <img id="dtImage" src="" class="img-fluid rounded border border-secondary p-1" style="background: var(--adm-surface-2); max-height: 200px; object-fit: contain;" alt="Product Image" onerror="this.src='https://via.placeholder.com/140?text=No+Img';" />
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <h4 id="dtName" style="font-weight: 700; color: var(--adm-text); margin-bottom: 16px;"></h4>
+
+                        <table class="table table-borderless table-sm mb-3" style="color: var(--adm-text-2);">
+                            <tr>
+                                <td style="width: 100px; font-weight: 600;">Danh mục:</td>
+                                <td id="dtCategory" style="color: var(--adm-text);"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">Giá bán:</td>
+                                <td id="dtPrice" style="color: var(--adm-gold); font-weight: 700; font-family: 'JetBrains Mono', monospace;"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">Tồn kho:</td>
+                                <td id="dtQuantity" style="color: var(--adm-text);"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">Mã vạch:</td>
+                                <td id="dtBarcode" style="color: var(--adm-text); font-family: 'JetBrains Mono', monospace;"></td>
+                            </tr>
+                        </table>
+
+                        <div id="dtBadges" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 rounded" style="background: var(--adm-surface-2); border: 1px solid var(--adm-border);">
+                            <strong style="color: var(--adm-text-2);">Mô tả chi tiết:</strong>
+                            <div id="dtDesc" class="mt-2" style="font-size: 13.5px; line-height: 1.6; max-height: 150px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="modal-actions" style="margin-top:20px;">
-            <button type="button" class="modal-cancel" onclick="closeDetailModal()">Đóng</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Modal Xác Nhận Xóa -->
-<div class="modal-overlay" id="deleteModal">
-    <div class="modal-box">
-        <h3>Xác nhận xóa</h3>
-        <p>Bạn có chắc muốn xóa sản phẩm <strong id="deleteProductName"></strong>? Hành động này không thể hoàn tác.</p>
-        <div class="modal-actions">
-            <button type="button" class="modal-cancel" onclick="closeDeleteModal()">Hủy</button>
-            <button type="button" class="modal-confirm" onclick="confirmDelete()">Xóa sản phẩm</button>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger shadow-lg">
+            <div class="modal-header" style="border-bottom-color: var(--adm-red-dim) !important;">
+                <h5 class="modal-title text-danger" id="deleteModalLabel" style="font-weight: 700; font-size: 15px;">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p style="color: var(--adm-text-2); margin-bottom: 0;">
+                    Bạn có chắc chắn muốn xóa sản phẩm <strong id="deleteProductName" class="text-white"></strong>?<br />
+                    <span class="text-danger mt-2 d-inline-block" style="font-size: 12.5px;">* Cảnh báo: Hành động này không thể hoàn tác.</span>
+                </p>
+            </div>
+            <div class="modal-footer" style="border-top-color: var(--adm-border) !important;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Xóa sản phẩm</button>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // --- JS Modal Chi Tiết ---
+        // --- JS Modal Chi Tiết (Bootstrap 5) ---
         function openDetailModal(data) {
             document.getElementById('dtId').textContent = '#' + data.id;
             document.getElementById('dtName').textContent = data.name;
@@ -824,46 +351,31 @@
             document.getElementById('dtImage').src = data.image;
 
             let badgesHtml = '';
-            if (data.isAvailable) badgesHtml += '<span class="badge-tag bg-available">Kinh doanh</span>';
-            if (data.isHot) badgesHtml += '<span class="badge-tag bg-hot">HOT 🔥</span>';
-            if (data.isBestSeller) badgesHtml += '<span class="badge-tag bg-bestseller">Best Seller ⭐</span>';
-            if (data.isLock) badgesHtml += '<span class="badge-tag bg-lock">Đã khóa 🔒</span>';
+            if (data.isAvailable) badgesHtml += '<span class="badge bg-success">Đang kinh doanh</span>';
+            if (data.isHot) badgesHtml += '<span class="badge bg-danger">HOT 🔥</span>';
+            if (data.isBestSeller) badgesHtml += '<span class="badge bg-warning text-dark">Best Seller ⭐</span>';
+            if (data.isLock) badgesHtml += '<span class="badge bg-dark border border-secondary">Đã khóa 🔒</span>';
             document.getElementById('dtBadges').innerHTML = badgesHtml;
 
-            document.getElementById('detailModal').classList.add('active');
+            var detailModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal'));
+            detailModal.show();
         }
 
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.remove('active');
-        }
+        // --- JS Modal Xóa (Bootstrap 5) ---
+        let productIdToDelete = null;
 
-        document.getElementById('detailModal').addEventListener('click', function (e) {
-            if (e.target === this) closeDetailModal();
-        });
-
-        // --- JS Modal Xóa ---
-        let formToSubmit = null;
-
-        function openDeleteModal(button, productName) {
-            formToSubmit = button.closest('form');
+        function openDeleteModal(id, productName) {
+            productIdToDelete = id;
             document.getElementById('deleteProductName').textContent = productName;
-            document.getElementById('deleteModal').classList.add('active');
-        }
 
-        function closeDeleteModal() {
-            formToSubmit = null;
-            document.getElementById('deleteModal').classList.remove('active');
+            var deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal'));
+            deleteModal.show();
         }
 
         function confirmDelete() {
-            if (formToSubmit) {
-                formToSubmit.onsubmit = null;
-                formToSubmit.submit();
+            if (productIdToDelete) {
+                document.getElementById('formDelete_' + productIdToDelete).submit();
             }
         }
-
-        document.getElementById('deleteModal').addEventListener('click', function (e) {
-            if (e.target === this) closeDeleteModal();
-        });
     </script>
 }

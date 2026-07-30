@@ -516,7 +516,15 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 var product = _dbContext.Product.Find(item.ProductId);
                 if (product != null)
                 {
-                    product.Quantity += item.Quantity; // Cộng hoàn lại số lượng đã trừ trước đó
+                    // Lấy sản phẩm thực tế cần trả kho (Nếu là bài quy cách con Thùng/Lốc, trả kho về bài Lon lẻ gốc)
+                    var targetStockProduct = (product.ParentProductId.HasValue && product.ParentProductId.Value > 0)
+                        ? _dbContext.Product.Find(product.ParentProductId.Value) ?? product
+                        : product;
+
+                    int factor = product.UnitMultiplier > 0 ? product.UnitMultiplier : 1;
+                    int quantityToRestore = item.Quantity * factor;
+
+                    targetStockProduct.Quantity += quantityToRestore;
                 }
             }
         }

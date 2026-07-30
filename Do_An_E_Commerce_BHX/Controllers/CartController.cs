@@ -52,6 +52,18 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 decimal newTotal = _orderService.CalculatePrice(userId);
                 return Json(new { success = true, newTotal = newTotal });
             }
+            catch (System.Data.Entity.Validation.DbEntityValidationException dbEx)
+            {
+                var msg = "";
+                foreach (var validationErrors in dbEx.EntityValidationErrors)
+                {
+                    foreach (var validationError in validationErrors.ValidationErrors)
+                    {
+                        msg += string.Format("[{0}: {1}] ", validationError.PropertyName, validationError.ErrorMessage);
+                    }
+                }
+                return Json(new { success = false, message = "Lỗi dữ liệu giỏ hàng: " + msg });
+            }
             catch (System.Exception ex)
             {
                 var msg = ex.Message;

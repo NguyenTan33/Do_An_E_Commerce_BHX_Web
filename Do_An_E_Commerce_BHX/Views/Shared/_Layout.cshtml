@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>@ViewBag.Title - Bách Hóa Xanh</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
-    <style>
+<style>
         :root {
             --forest: #163B2E;
             --forest-deep: #0E2A20;
@@ -200,10 +200,22 @@
         }
 
         @@keyframes cartBounce {
-            0% { transform: scale(1); }
-            35% { transform: scale(1.45) rotate(-14deg); color: var(--leaf-dark); }
-            70% { transform: scale(0.88) rotate(8deg); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            35% {
+                transform: scale(1.45) rotate(-14deg);
+                color: var(--leaf-dark);
+            }
+
+            70% {
+                transform: scale(0.88) rotate(8deg);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .cart-bounce {
@@ -518,7 +530,7 @@
 
         @@media (max-width: 576px) {
             .page-shell {
-                padding: 16px;
+                padding: 12px;
             }
 
             .header-account span.acc-text {
@@ -529,7 +541,215 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+
+        /* ========================================
+           MOBILE-FIRST RESPONSIVE FIXES
+           Comprehensive fix for all screen sizes
+        ======================================== */
+
+        /* Prevent horizontal overflow on all screens */
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100vw;
+        }
+
+        /* Fix header on small screens */
+        @@media (max-width: 767px) {
+            /* Hide topbar text on very small screens */
+            .topbar .bar-inner > span {
+                display: none;
+            }
+
+            .topbar .bar-inner {
+                justify-content: flex-end;
+                padding: 5px 14px;
+            }
+            /* Header compact */
+            .header-inner {
+                padding: 10px 14px;
+                gap: 10px;
+                flex-wrap: nowrap;
+                min-width: 0;
+            }
+            /* Brand smaller on mobile */
+            .brand {
+                font-size: 1rem;
+                gap: 5px;
+                flex-shrink: 0;
+            }
+
+                .brand i {
+                    font-size: 1rem;
+                }
+            /* Cart text hide label */
+            .header-cart-text small,
+            .header-cart-text strong {
+                font-size: 0.7rem;
+            }
+            /* Account links compact */
+            .header-account ul {
+                gap: 8px;
+            }
+
+            .header-account a {
+                font-size: 0.8rem;
+                gap: 4px;
+            }
+            /* Spacer shrinks on mobile */
+            .header-spacer {
+                flex: 0 1 auto;
+                min-width: 0;
+            }
+            /* Cart link compact */
+            .header-cart-link {
+                padding-left: 10px;
+            }
+            /* Page shell full width */
+            .page-shell {
+                padding: 12px 12px 24px;
+                gap: 0;
+            }
+            /* Footer compact */
+            .footer-main {
+                padding: 28px 16px 20px;
+                gap: 20px;
+            }
+            /* Topbar links wrap */
+            .topbar .bar-links {
+                gap: 10px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Extra small phones */
+        @@media (max-width: 420px) {
+            .header-inner {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .brand {
+                font-size: 0.9rem;
+            }
+            /* Hide "Tra cứu đơn" text, keep icon only */
+            .header-inner > a[href*="Track"] span {
+                display: none !important;
+            }
+
+            .header-inner > a[href*="Track"] {
+                padding: 6px 8px !important;
+            }
+            /* Account: icon only */
+            .header-account a > :not(i):not(.cart-icon-wrap):not(.cart-badge) {
+                display: none;
+            }
+
+            .page-shell {
+                padding: 10px 10px 20px;
+            }
+        }
+
+        /* Safe area for notched phones */
+        @@media (max-width: 991px) {
+            .site-chrome {
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+
+            .page-shell {
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+        }
+
+        /* Touch target minimum size */
+        @@media (max-width: 991px) {
+            .sidebar-toggle,
+            .header-account a,
+            .header-cart-link a,
+            .sidebar-link {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            .sidebar-toggle {
+                min-width: 44px;
+                justify-content: center;
+            }
+        }
+        /* =========================================================
+           FIX MOBILE HEADER - BẢN TỐI GIẢN CHỈ ICON (ĐÃ FIX LỖI MẤT NÚT)
+        ========================================================= */
+        @@media (max-width: 767px) {
+            /* --- KHUNG TỔNG HEADER --- */
+            .header-inner {
+                display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;
+                padding: 10px; gap: 8px;
+            }
+            .header-spacer { display: none !important; }
+
+            /* 1. MENU DANH MỤC */
+            .sidebar-toggle { font-size: 0 !important; padding: 4px; background: transparent !important; color: var(--forest-deep) !important; min-width: unset; }
+            .sidebar-toggle i { font-size: 1.6rem; margin: 0; }
+
+            /* 2. LOGO */
+            .brand { font-size: 0 !important; gap: 0; }
+            .brand i { font-size: 1.8rem; color: var(--leaf-dark); }
+
+            /* 3. GIỎ HÀNG (Ẩn toàn bộ chữ và giá tiền, CHỈ GIỮ ICON và số lượng) */
+            .header-cart-text { display: none !important; }
+            .header-cart-link { padding-left: 0; border-left: none; }
+
+            /* 4. TRA CỨU ĐƠN */
+            .header-inner > a[href*="Track"] { font-size: 0 !important; padding: 4px !important; border: none !important; background: transparent !important; }
+            .header-inner > a[href*="Track"] i { font-size: 1.4rem !important; margin: 0 !important; color: var(--amber-dark); }
+
+            /* --- VÙNG TÀI KHOẢN (ACCOUNT) --- */
+            .header-account form { margin: 0 !important; padding: 0 !important; }
+            .header-account ul { display: flex !important; align-items: center !important; gap: 15px !important; margin: 0 !important; padding: 0 !important; }
+
+            /* Ẩn nút Đăng ký */
+            .header-account a[href*="Register"],
+            .header-account li:has(a[href*="Register"]) { display: none !important; }
+
+            /* Thiết lập chung cho TẤT CẢ các nút (Login, Profile, Logout) */
+            .header-account a,
+            .header-account button {
+                font-size: 0 !important; /* Giấu mọi chữ: Hello Tân, Hạng Bạc, Đăng nhập, Đăng xuất */
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 4px !important;
+                background: transparent !important;
+                border: none !important;
+            }
+
+            /* GIẤU MỌI THỨ CŨ BÊN TRONG NÚT (Icon cũ, Badge Hạng...) để không bị đúp */
+            .header-account a *,
+            .header-account button * { display: none !important; }
+
+            /* VẼ LẠI ICON NGƯỜI (Mặc định cho Login / Profile) */
+            .header-account a::before {
+                content: "\f007"; /* Icon Người */
+                font-family: "Font Awesome 6 Free";
+                font-weight: 900;
+                font-size: 1.5rem !important;
+                color: var(--forest-deep);
+                display: block;
+            }
+
+            /* ĐỔI THÀNH ICON CÁI CỬA CHO RIÊNG NÚT ĐĂNG XUẤT */
+            /* Quét các trường hợp nút đăng xuất của ASP.NET MVC */
+            .header-account a[href*="javascript"]::before,
+            .header-account a[href*="LogOff"]::before,
+            .header-account a[href*="Logout"]::before,
+            .header-account form button[type="submit"]::before {
+                content: "\f2f5" !important; /* Icon cái cửa đi ra */
+                color: var(--tomato) !important;
+            }
+        }
+</style>
 
     @RenderSection("styles", required: false)
 </head>
@@ -667,7 +887,8 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
 
-    <script>(function () {
+    <script>
+    (function () {
             var toggleBtn = document.getElementById('sidebarToggle');
             var sidebar = document.getElementById('categorySidebar');
             var backdrop = document.getElementById('sidebarBackdrop');

@@ -203,6 +203,7 @@
     <Compile Include="Models\Entities\Category.cs" />
     <Compile Include="Models\Entities\Preview.cs" />
     <Compile Include="Models\Entities\Product.cs" />
+    <Compile Include="Models\Entities\ProductUnit.cs" />
     <Compile Include="Models\Entities\Promotion.cs" />
     <Compile Include="Models\Entities\UserPromotion.cs" />
     <Compile Include="Models\Entities\Question.cs" />

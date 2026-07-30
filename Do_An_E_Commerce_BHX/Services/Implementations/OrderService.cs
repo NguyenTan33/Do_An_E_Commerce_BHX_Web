@@ -100,12 +100,26 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                 OrderDetails = new List<OrderDetail>()
             };
 
-            // 6. Map CartDetails sang OrderDetails + Trừ tồn kho
+            // 6. Map CartDetails sang OrderDetails + Trừ tồn kho theo hệ số quy đổi (Kho gốc hoặc Sản phẩm hiện tại)
             foreach (var item in itemsToOrder)
             {
                 var product = dbContext.Product.Find(item.ProductId);
                 if (product != null)
                 {
+                    // Nếu sản phẩm này có Kho Gốc (ParentProductId), lấy thông tin kho từ sản phẩm gốc
+                    var targetStockProduct = (product.ParentProductId.HasValue && product.ParentProductId.Value > 0)
+                        ? dbContext.Product.Find(product.ParentProductId.Value) ?? product
+                        : product;
+
+                    int factor = product.UnitMultiplier > 0 ? product.UnitMultiplier : 1;
+                    int requiredStock = item.Quantity * factor;
+
+                    if (targetStockProduct.Quantity < requiredStock)
+                    {
+                        string unitLabel = !string.IsNullOrEmpty(product.Unit) ? product.Unit : "sản phẩm";
+                        throw new Exception($"Sản phẩm '{product.Name}' hiện kho gốc chỉ còn {targetStockProduct.Quantity} lẻ, không đủ {requiredStock} lẻ để đóng {item.Quantity} {unitLabel}!");
+                    }
+
                     order.OrderDetails.Add(new OrderDetail
                     {
                         ProductId = item.ProductId,
@@ -113,8 +127,8 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                         Price = Convert.ToDouble(product.Price)
                     });
 
-                    // Trừ tồn kho
-                    product.Quantity -= item.Quantity;
+                    // Trừ tồn kho của sản phẩm gốc (hoặc sản phẩm hiện tại)
+                    targetStockProduct.Quantity -= requiredStock;
                 }
             }
 
@@ -160,13 +174,20 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
 
             order.OrderStatus = 4;
 
-            // HOÀN TRẢ SỐ LƯỢNG VÀO KHO
+            // HOÀN TRẢ SỐ LƯỢNG VÀO KHO (Trả về kho gốc nếu là bài quy cách con Thùng/Lốc)
             foreach (var detail in order.OrderDetails)
             {
                 var product = dbContext.Product.Find(detail.ProductId);
                 if (product != null)
                 {
-                    product.Quantity += detail.Quantity; 
+                    var targetStockProduct = (product.ParentProductId.HasValue && product.ParentProductId.Value > 0)
+                        ? dbContext.Product.Find(product.ParentProductId.Value) ?? product
+                        : product;
+
+                    int factor = product.UnitMultiplier > 0 ? product.UnitMultiplier : 1;
+                    int quantityToRestore = detail.Quantity * factor;
+
+                    targetStockProduct.Quantity += quantityToRestore;
                 }
             }
             dbContext.SaveChanges();

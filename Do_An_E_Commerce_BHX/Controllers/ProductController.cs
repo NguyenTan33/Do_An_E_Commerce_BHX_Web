@@ -213,5 +213,58 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
+
+        // 5. GET: /Product/GetProductUnitsJson?productId=123
+        [AllowAnonymous]
+        [HttpGet]
+        public ActionResult GetProductUnitsJson(int productId)
+        {
+            var product = _dbContext.Product
+                .FirstOrDefault(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm" }, JsonRequestBehavior.AllowGet);
+            }
+
+            var units = _dbContext.ProductUnit
+                .Where(u => u.ProductId == productId)
+                .OrderByDescending(u => u.IsDefault)
+                .ThenBy(u => u.ConversionFactor)
+                .ToList();
+
+            if (!units.Any())
+            {
+                units.Add(new ProductUnit
+                {
+                    ProductId = productId,
+                    UnitName = !string.IsNullOrEmpty(product.Unit) ? product.Unit : "Cái",
+                    Price = product.Price,
+                    ConversionFactor = product.UnitMultiplier > 0 ? product.UnitMultiplier : 1,
+                    IsDefault = true
+                });
+            }
+
+            var resultList = units.Select(u => new
+            {
+                id = u.Id,
+                unitName = u.UnitName,
+                price = u.Price,
+                priceFormatted = u.Price.ToString("N0") + " ₫",
+                conversionFactor = u.ConversionFactor,
+                isDefault = u.IsDefault,
+                canFulfill = product.Quantity >= u.ConversionFactor,
+                stockRemaining = product.Quantity
+            }).ToList();
+
+            return Json(new
+            {
+                success = true,
+                productId = product.Id,
+                productName = product.Name,
+                totalStock = product.Quantity,
+                units = resultList
+            }, JsonRequestBehavior.AllowGet);
+        }
     }
 }

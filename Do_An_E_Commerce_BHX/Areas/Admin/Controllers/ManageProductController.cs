@@ -1,4 +1,4 @@
-﻿using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Microsoft.AspNet.Identity;
 using System;
@@ -17,16 +17,64 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
     {
         private readonly ApplicationDbContext _db = new ApplicationDbContext();
 
-        // Cập nhật thêm các tham số bool? để nhận giá trị lọc trạng thái
+        public void EnsureProductUnitColumnsExist()
+        {
+            try
+            {
+                string sql = @"
+                    IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Products')
+                    BEGIN
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Unit')
+                            ALTER TABLE [dbo].[Products] ADD [Unit] NVARCHAR(50) DEFAULT N'Cái' NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'UnitMultiplier')
+                            ALTER TABLE [dbo].[Products] ADD [UnitMultiplier] INT DEFAULT 1 NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'ParentProductId')
+                            ALTER TABLE [dbo].[Products] ADD [ParentProductId] INT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'PackagingTag')
+                            ALTER TABLE [dbo].[Products] ADD [PackagingTag] NVARCHAR(100) NULL;
+                    END
+
+                    IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Product')
+                    BEGIN
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'Unit')
+                            ALTER TABLE [dbo].[Product] ADD [Unit] NVARCHAR(50) DEFAULT N'Cái' NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'UnitMultiplier')
+                            ALTER TABLE [dbo].[Product] ADD [UnitMultiplier] INT DEFAULT 1 NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'ParentProductId')
+                            ALTER TABLE [dbo].[Product] ADD [ParentProductId] INT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'PackagingTag')
+                            ALTER TABLE [dbo].[Product] ADD [PackagingTag] NVARCHAR(100) NULL;
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'ProductUnit')
+                    BEGIN
+                        CREATE TABLE [dbo].[ProductUnit] (
+                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [ProductId] INT NOT NULL,
+                            [UnitName] NVARCHAR(100) NOT NULL,
+                            [Price] DECIMAL(18,2) NOT NULL,
+                            [ConversionFactor] INT DEFAULT 1 NOT NULL,
+                            [IsDefault] BIT DEFAULT 0 NOT NULL
+                        );
+                    END
+                ";
+                _db.Database.ExecuteSqlCommand(sql);
+            }
+            catch { }
+        }
+
+        // Cập nhật thêm các tham số bool? và productType để nhận giá trị lọc trạng thái
         public ActionResult Index(string tuKhoa, int? categoryId, decimal? giaTu, decimal? giaDen,
                                   int? tonTu, int? tonDen, bool? isAvailable, bool? isHot,
-                                  bool? isBestSeller, bool? isLock, string SortBy)
+                                  bool? isBestSeller, bool? isLock, int? productType, string SortBy)
         {
+            EnsureProductUnitColumnsExist();
+
             var userId = User.Identity.GetUserId();
             var user = _db.Users.Find(userId);
             ViewBag.FullName = user?.FullName;
 
-            var ds = _db.Product.AsQueryable();
+            var ds = _db.Product.Include(p => p.ParentProduct).AsQueryable();
 
             // Lọc theo Tên sản phẩm
             if (!string.IsNullOrWhiteSpace(tuKhoa))
@@ -38,6 +86,19 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             if (categoryId.HasValue)
             {
                 ds = ds.Where(x => x.CategoryId == categoryId);
+            }
+
+            // Lọc theo Loại sản phẩm (1: Sản phẩm gốc, 2: Bài quy cách con Thùng/Lốc)
+            if (productType.HasValue)
+            {
+                if (productType.Value == 1)
+                {
+                    ds = ds.Where(x => x.ParentProductId == null);
+                }
+                else if (productType.Value == 2)
+                {
+                    ds = ds.Where(x => x.ParentProductId != null);
+                }
             }
 
             // Lọc theo Khoảng giá
@@ -100,32 +161,83 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     ds = ds.OrderByDescending(x => x.Quantity);
                     break;
                 default:
-                    ds = ds.OrderBy(x => x.Id);
+                    ds = ds.OrderByDescending(x => x.Id);
                     break;
             }
 
-            ViewBag.Category = new SelectList(_db.Category, "Id", "Name");
+            ViewBag.Category = new SelectList(_db.Category, "Id", "Name", categoryId);
+            ViewBag.ProductType = productType;
 
             return View(ds.ToList());
+        }
+
+        private void PopulateProductDropdowns(int? categoryId = null, int? parentProductId = null)
+        {
+            ViewBag.CategoryId = new SelectList(_db.Category.OrderBy(c => c.Name).ToList(), "Id", "Name", categoryId);
+            ViewBag.Category = ViewBag.CategoryId;
+
+            var baseProducts = _db.Product.Where(p => p.ParentProductId == null).OrderBy(p => p.Name).ToList();
+            ViewBag.ParentProductId = new SelectList(baseProducts, "Id", "Name", parentProductId);
         }
 
         [HttpGet]
         public ActionResult ThemSP()
         {
-            ViewBag.CategoryId = new SelectList(_db.Category, "Id", "Name");
+            PopulateProductDropdowns();
             return View();
         }
 
         [HttpPost]
-        public ActionResult ThemSP(Product ThemSpMoi)
+        public ActionResult ThemSP(Product ThemSpMoi, string extraUnitsJson)
         {
             if (ModelState.IsValid)
             {
+                if (string.IsNullOrEmpty(ThemSpMoi.Unit)) ThemSpMoi.Unit = "Cái";
+                if (ThemSpMoi.UnitMultiplier <= 0) ThemSpMoi.UnitMultiplier = 1;
+
                 _db.Product.Add(ThemSpMoi);
+                _db.SaveChanges();
+
+                // Tạo Unit mặc định đầu tiên từ thuộc tính của Product
+                _db.ProductUnit.Add(new ProductUnit
+                {
+                    ProductId = ThemSpMoi.Id,
+                    UnitName = ThemSpMoi.Unit,
+                    Price = ThemSpMoi.Price,
+                    ConversionFactor = ThemSpMoi.UnitMultiplier,
+                    IsDefault = true
+                });
+
+                if (!string.IsNullOrWhiteSpace(extraUnitsJson))
+                {
+                    try
+                    {
+                        var extraUnits = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ProductUnit>>(extraUnitsJson);
+                        if (extraUnits != null && extraUnits.Any())
+                        {
+                            foreach (var u in extraUnits)
+                            {
+                                if (!string.IsNullOrWhiteSpace(u.UnitName) && u.Price > 0)
+                                {
+                                    _db.ProductUnit.Add(new ProductUnit
+                                    {
+                                        ProductId = ThemSpMoi.Id,
+                                        UnitName = u.UnitName,
+                                        Price = u.Price,
+                                        ConversionFactor = u.ConversionFactor > 0 ? u.ConversionFactor : 1,
+                                        IsDefault = false
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.CategoryId = new SelectList(_db.Category, "Id", "Name", ThemSpMoi.CategoryId);
+            PopulateProductDropdowns(ThemSpMoi.CategoryId, ThemSpMoi.ParentProductId);
             return View(ThemSpMoi);
         }
 
@@ -135,6 +247,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             var sanpham = _db.Product.FirstOrDefault(x => x.Id == Id);
             if (sanpham != null)
             {
+                var units = _db.ProductUnit.Where(u => u.ProductId == Id).ToList();
+                if (units.Any()) _db.ProductUnit.RemoveRange(units);
+
                 _db.Product.Remove(sanpham);
                 _db.SaveChanges();
             }
@@ -144,25 +259,29 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public ActionResult SuaSP(int Id)
         {
-            var sanpham = _db.Product.FirstOrDefault(x => x.Id == Id);
+            var sanpham = _db.Product.Include(p => p.ProductUnits).FirstOrDefault(x => x.Id == Id);
             if (sanpham == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.Category = new SelectList(_db.Category.ToList(), "Id", "Name", sanpham.CategoryId);
+            PopulateProductDropdowns(sanpham.CategoryId, sanpham.ParentProductId);
             return View(sanpham);
         }
 
         [HttpPost]
-        public ActionResult SuaSP(Product SanPhamMoi)
+        public ActionResult SuaSP(Product SanPhamMoi, string extraUnitsJson)
         {
-            var sanphamcu = _db.Product.FirstOrDefault(x => x.Id == SanPhamMoi.Id);
+            var sanphamcu = _db.Product.Include(p => p.ProductUnits).FirstOrDefault(x => x.Id == SanPhamMoi.Id);
 
-            if (ModelState.IsValid)
+            if (sanphamcu != null && ModelState.IsValid)
             {
                 sanphamcu.Name = SanPhamMoi.Name;
                 sanphamcu.Price = SanPhamMoi.Price;
                 sanphamcu.Quantity = SanPhamMoi.Quantity;
+                sanphamcu.Unit = !string.IsNullOrEmpty(SanPhamMoi.Unit) ? SanPhamMoi.Unit : "Cái";
+                sanphamcu.UnitMultiplier = SanPhamMoi.UnitMultiplier > 0 ? SanPhamMoi.UnitMultiplier : 1;
+                sanphamcu.ParentProductId = SanPhamMoi.ParentProductId;
+                sanphamcu.PackagingTag = SanPhamMoi.PackagingTag;
                 sanphamcu.Barcode = SanPhamMoi.Barcode;
                 sanphamcu.Description = SanPhamMoi.Description;
                 sanphamcu.URLImage = SanPhamMoi.URLImage;
@@ -172,9 +291,53 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 sanphamcu.IsLock = SanPhamMoi.IsLock;
                 sanphamcu.CategoryId = SanPhamMoi.CategoryId;
 
+                // Xóa quy cách cũ và cập nhật danh sách mới
+                var oldUnits = _db.ProductUnit.Where(u => u.ProductId == sanphamcu.Id).ToList();
+                if (oldUnits.Any())
+                {
+                    _db.ProductUnit.RemoveRange(oldUnits);
+                }
+
+                _db.ProductUnit.Add(new ProductUnit
+                {
+                    ProductId = sanphamcu.Id,
+                    UnitName = sanphamcu.Unit,
+                    Price = sanphamcu.Price,
+                    ConversionFactor = sanphamcu.UnitMultiplier,
+                    IsDefault = true
+                });
+
+                if (!string.IsNullOrWhiteSpace(extraUnitsJson))
+                {
+                    try
+                    {
+                        var extraUnits = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ProductUnit>>(extraUnitsJson);
+                        if (extraUnits != null && extraUnits.Any())
+                        {
+                            foreach (var u in extraUnits)
+                            {
+                                if (!string.IsNullOrWhiteSpace(u.UnitName) && u.Price > 0 && u.UnitName != sanphamcu.Unit)
+                                {
+                                    _db.ProductUnit.Add(new ProductUnit
+                                    {
+                                        ProductId = sanphamcu.Id,
+                                        UnitName = u.UnitName,
+                                        Price = u.Price,
+                                        ConversionFactor = u.ConversionFactor > 0 ? u.ConversionFactor : 1,
+                                        IsDefault = false
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
                 _db.SaveChanges();
+                return RedirectToAction("Index");
             }
-            return RedirectToAction("Index");
+            PopulateProductDropdowns(SanPhamMoi.CategoryId, SanPhamMoi.ParentProductId);
+            return View(SanPhamMoi);
         }
 
         [HttpGet]
