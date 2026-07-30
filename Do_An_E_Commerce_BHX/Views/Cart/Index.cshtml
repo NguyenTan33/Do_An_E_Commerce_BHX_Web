@@ -9,395 +9,479 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Giỏ hàng của bạn - Bách Hóa Xanh</title>
 
-    <!-- Nhúng Bootstrap CSS -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- Nhúng FontAwesome (Icon) -->
+    <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* Định nghĩa màu sắc thương hiệu phong cách BHX */
         :root {
-            --bhx-green: #008445;
-            --bhx-green-hover: #006635;
-            --bhx-red: #d70018;
-            --bhx-bg-gray: #f2f4f5;
-            --border-color: #e0e0e0;
+            --bhx-primary: #0F7A3C;
+            --bhx-primary-dark: #064E21;
+            --bhx-accent: #17A85A;
+            --bhx-red: #E63946;
+            --bhx-gold: #FFB703;
+            --bhx-bg: #F4F7F4;
+            --bhx-card-bg: #FFFFFF;
+            --bhx-text-main: #1A2E22;
+            --bhx-text-muted: #6C7A70;
+            --bhx-border: #E2E8E4;
+            --radius-lg: 16px;
+            --radius-md: 12px;
         }
 
-        /* Nền trang tổng thể */
         body {
-            background-color: var(--bhx-bg-gray);
-            font-family: Arial, sans-serif;
+            background-color: var(--bhx-bg);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--bhx-text-main);
+            padding-bottom: 90px; /* Chống đè nội dung trên mobile sticky bottom bar */
         }
 
-        /* ===== STYLE CHO CÁC KHỐI (CARD) ===== */
-        .card {
-            border-radius: 12px;
-            border: none !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        /* HEADER BANNER */
+        .cart-header-banner {
+            background: linear-gradient(135deg, var(--bhx-primary-dark) 0%, var(--bhx-primary) 50%, var(--bhx-accent) 100%);
+            color: #FFFFFF;
+            padding: 24px 0 32px;
+            margin-bottom: -20px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: 0 10px 30px rgba(6, 78, 33, 0.2);
+        }
+
+        .cart-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.6rem;
+            margin: 0;
+        }
+
+        /* CARDS & CONTAINERS */
+        .bhx-card {
+            background: var(--bhx-card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--bhx-border);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
             margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .card-header {
-            background-color: #fff;
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 12px 12px 0 0 !important;
-            padding: 15px 20px;
+        .bhx-card-header {
+            background: #FFFFFF;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--bhx-border);
         }
 
-            /* Tiêu đề tóm tắt đơn hàng */
-            .card-header.bg-success {
-                background-color: var(--bhx-green) !important;
-                color: #fff !important;
-            }
-
-        /* ===== STYLE CHO BẢNG GIỎ HÀNG ===== */
-        #cart-table {
-            margin-bottom: 0;
+        /* CHECKBOX CUSTOM */
+        .form-check-input {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #A8B8AD;
+            cursor: pointer;
         }
 
-            #cart-table thead th {
-                background-color: #f9f9f9;
-                color: #333;
-                font-weight: 600;
-                border-bottom: 2px solid var(--bhx-green);
-                padding: 12px 10px;
-                text-transform: uppercase;
-                font-size: 0.85rem;
-            }
-
-            #cart-table tbody td {
-                vertical-align: middle;
-                padding: 15px 10px;
-                border-bottom: 1px solid #f0f0f0;
-            }
-
-        .cart-row:hover {
-            background-color: #fafbfc;
-        }
-
-        /* Checkbox màu xanh BHX */
         .form-check-input:checked {
-            background-color: var(--bhx-green);
-            border-color: var(--bhx-green);
-            box-shadow: 0 0 0 0.2rem rgba(0, 132, 69, 0.25);
+            background-color: var(--bhx-primary);
+            border-color: var(--bhx-primary);
+            box-shadow: 0 0 0 3px rgba(15, 122, 60, 0.15);
         }
 
-        /* ===== STYLE CHỮ & MÀU SẮC ===== */
-        .text-success {
-            color: var(--bhx-green) !important;
+        /* CART ITEM ROW - RESPONSIVE MOBILE FRIENDLY */
+        .cart-item-card {
+            padding: 16px;
+            border-bottom: 1px solid var(--bhx-border);
+            transition: background 0.2s ease;
         }
 
-        .text-danger {
-            color: var(--bhx-red) !important;
+        .cart-item-card:last-child {
+            border-bottom: none;
         }
 
-        #cart-final-total {
-            font-size: 1.5rem;
-            color: var(--bhx-red) !important;
+        .cart-item-card:hover {
+            background-color: #F9FBF9;
         }
 
-        /* ===== STYLE CHO NÚT BẤM (BUTTON) ===== */
-        .btn-success {
-            background-color: var(--bhx-green);
-            border-color: var(--bhx-green);
+        .product-thumb {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            background: #FFFFFF;
+            padding: 4px;
+            border: 1px solid var(--bhx-border);
         }
 
-            .btn-success:hover {
-                background-color: var(--bhx-green-hover);
-                border-color: var(--bhx-green-hover);
-            }
-
-        .btn-outline-success {
-            color: var(--bhx-green);
-            border-color: var(--bhx-green);
+        .product-name-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--bhx-text-main);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.35;
         }
 
-            .btn-outline-success:hover {
-                background-color: var(--bhx-green);
-                color: #fff;
-            }
+        .product-unit-price {
+            font-weight: 700;
+            color: var(--bhx-primary);
+            font-size: 1rem;
+        }
 
-        /* Nút Thanh toán siêu to khổng lồ */
-        #btn-proceed-checkout {
-            background: linear-gradient(180deg, var(--bhx-green) 0%, var(--bhx-green-hover) 100%);
+        /* QUANTITY STEPPER CONTROL */
+        .qty-stepper {
+            display: inline-flex;
+            align-items: center;
+            border: 1.5px solid var(--bhx-border);
+            border-radius: 10px;
+            background: #FFFFFF;
+            overflow: hidden;
+        }
+
+        .qty-btn {
+            width: 34px;
+            height: 34px;
             border: none;
-            border-radius: 8px;
+            background: #F2F6F3;
+            color: var(--bhx-text-main);
+            font-weight: bold;
             font-size: 1.1rem;
-            padding: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 6px rgba(0, 132, 69, 0.3);
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s ease;
         }
 
-            #btn-proceed-checkout:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(0, 132, 69, 0.4);
+        .qty-btn:hover {
+            background: #E2EBE4;
+            color: var(--bhx-primary);
+        }
+
+        .qty-input {
+            width: 44px;
+            height: 34px;
+            border: none;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--bhx-text-main);
+        }
+
+        .qty-input:focus {
+            outline: none;
+        }
+
+        /* VOUCHER & SUMMARY CARDS */
+        .voucher-pill {
+            background: #F0F9F3;
+            border: 1.5px dashed var(--bhx-accent);
+            border-radius: 12px;
+            padding: 10px 14px;
+            transition: all 0.2s ease;
+        }
+
+        .voucher-pill.disabled-voucher {
+            background: #F8F9FA;
+            border: 1px solid #DEE2E6;
+        }
+
+        /* BUTTON CHECKOUT DESKTOP & MOBILE STICKY */
+        .btn-bhx-checkout {
+            background: linear-gradient(135deg, var(--bhx-primary) 0%, var(--bhx-accent) 100%);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            padding: 14px 20px;
+            box-shadow: 0 6px 20px rgba(15, 122, 60, 0.3);
+            transition: all 0.25s ease;
+        }
+
+        .btn-bhx-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 122, 60, 0.4);
+            color: #FFFFFF;
+        }
+
+        /* STICKY BOTTOM BAR FOR MOBILE PHONES */
+        .mobile-sticky-checkout-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border-top: 1px solid var(--bhx-border);
+            padding: 12px 16px;
+            z-index: 1040;
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+            display: none; /* Hiển thị trên mobile via media query */
+        }
+
+        @@media (max-width: 991.98px) {
+            .mobile-sticky-checkout-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
             }
 
-        /* ===== STYLE CHO Ô NHẬP SỐ LƯỢNG ===== */
-        .input-group-sm {
-            width: 120px;
-        }
-
-        .quantity-input {
-            font-weight: bold;
-            color: #333;
-            border-left: none;
-            border-right: none;
-            border-color: #ced4da;
-        }
-
-            .quantity-input:focus {
-                box-shadow: none;
-                border-color: #ced4da;
+            body {
+                padding-bottom: 100px;
             }
-
-        .btn-minus, .btn-plus {
-            background-color: #fff;
-            border-color: #ced4da;
-            color: #555;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-            .btn-minus:hover, .btn-plus:hover {
-                background-color: #f0f0f0;
-                color: var(--bhx-green);
-            }
-
-        /* Input mã giảm giá */
-        #couponCodeInput {
-            border-right: none;
-        }
-
-            #couponCodeInput:focus {
-                border-color: var(--bhx-green);
-                box-shadow: 0 0 0 0.2rem rgba(0, 132, 69, 0.25);
-            }
-
-        #btnApplyCoupon {
-            background-color: #288ad6;
-            border-color: #288ad6;
-            color: white;
-        }
-
-            #btnApplyCoupon:hover {
-                background-color: #1c6aa8;
-            }
-
-        /* Trạng thái giỏ hàng trống */
-        .alert-info {
-            background-color: #fff;
-            border-color: var(--bhx-green);
-            border-left: 5px solid var(--bhx-green);
-            color: #333;
         }
     </style>
 </head>
 <body>
 
-    <div class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="m-0 text-success font-weight-bold"><i class="fa-solid fa-cart-shopping"></i> Giỏ Hàng Của Bạn</h2>
-            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-success">
-                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại trang chủ
-            </a>
+    <!-- HEADER BANNER -->
+    <div class="cart-header-banner">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-sm btn-light rounded-circle shadow-sm p-2 text-success" title="Quay về trang chủ" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-arrow-left fs-5"></i>
+                    </a>
+                    <div>
+                        <h1 class="cart-title"><i class="fa-solid fa-basket-shopping me-2"></i>Giỏ Hàng Của Bạn</h1>
+                        <small class="opacity-75">Bách Hóa Xanh &bull; Thực Phẩm Tươi Ngon Mỗi Ngày</small>
+                    </div>
+                </div>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-outline-light btn-sm rounded-pill px-3 d-none d-md-inline-block">
+                    <i class="fa-solid fa-store me-1"></i> Tiếp tục mua sắm
+                </a>
+            </div>
         </div>
-        <hr />
+    </div>
 
+    <!-- MAIN CART CONTENT -->
+    <div class="container" style="margin-top: 35px;">
         @if (Model == null || Model.CartDetails == null || !Model.CartDetails.Any())
         {
-            <div class="alert alert-info shadow-sm p-4 text-center">
-                <h4 class="alert-heading mb-2"><i class="fa-solid fa-basket-shopping me-2"></i>Giỏ hàng của bạn đang trống!</h4>
-                <p class="mb-3">Hãy chọn cho mình những món thực phẩm tươi ngon và nhu yếu phẩm chất lượng ngay nhé.</p>
-                <a href="@Url.Action("Index", "Home")" class="btn btn-success btn-lg">
-                    <i class="fa-solid fa-store me-1"></i> Đi mua sắm ngay
+            <!-- GIỎ HÀNG TRỐNG -->
+            <div class="bhx-card p-5 text-center my-4">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle p-4 mb-2" style="width: 90px; height: 90px;">
+                        <i class="fa-solid fa-cart-arrow-down fs-1"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Giỏ hàng của bạn đang trống!</h4>
+                <p class="text-muted mb-4" style="max-width: 460px; margin: 0 auto;">Hãy dạo một vòng siêu thị Bách Hóa Xanh để lựa chọn những món thực phẩm tươi ngon và nhu yếu phẩm chất lượng ngay nhé.</p>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-bhx-checkout px-5 rounded-pill">
+                    <i class="fa-solid fa-store me-2"></i> ĐI MUA SẮM NGAY
                 </a>
             </div>
         }
         else
         {
-            <div class="row">
-                <div class="col-lg-8 mb-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                            <div class="form-check m-0">
+            <div class="row g-4">
+                <!-- CỘT TRÁI: DANH SÁCH SẢN PHẨM IN CART -->
+                <div class="col-lg-8">
+                    <div class="bhx-card">
+                        <!-- BANNER CHỌN TẤT CẢ & THAO TÁC XÓA -->
+                        <div class="bhx-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="form-check m-0 d-flex align-items-center gap-2">
                                 <input class="form-check-input" type="checkbox" id="check-all" checked />
-                                <label class="form-check-label font-weight-bold" for="check-all">
-                                    Chọn tất cả (@Model.CartDetails.Count sản phẩm)
+                                <label class="form-check-label fw-bold text-dark" for="check-all" style="cursor: pointer;">
+                                    Chọn tất cả (<span id="total-cart-items-count">@Model.CartDetails.Count</span> sản phẩm)
                                 </label>
                             </div>
-                            <div>
-                                <button id="btn-remove-selected" class="btn btn-sm btn-outline-danger me-2">
-                                    <i class="fa-solid fa-trash-can me-1"></i> Xóa mục chọn
+                            <div class="d-flex gap-2">
+                                <button id="btn-remove-selected" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Xóa chọn
                                 </button>
-                                <button id="btn-clear-cart" class="btn btn-sm btn-danger">
-                                    <i class="fa-solid fa-xmark me-1"></i> Xóa tất cả
+                                <button id="btn-clear-cart" class="btn btn-sm btn-light text-danger rounded-pill px-3 border">
+                                    <i class="fa-solid fa-xmark me-1"></i> Xóa hết
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table align-middle m-0" id="cart-table">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="width: 40px;" class="text-center"></th>
-                                            <th>Sản phẩm</th>
-                                            <th>Đơn giá</th>
-                                            <th style="width: 140px;">Số lượng</th>
-                                            <th>Thành tiền</th>
-                                            <th style="width: 60px;" class="text-center">Xóa</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in Model.CartDetails)
-                                        {
-                                            decimal itemPrice = item.Product != null ? item.Product.Price : 0;
-                                            decimal itemTotal = item.Quantity * itemPrice;
-                                            <tr id="row-@item.ProductId" class="cart-row">
-                                                <td class="text-center">
-                                                    <input type="checkbox"
-                                                           class="form-check-input item-checkbox"
+
+                        <!-- DANH SÁCH MÓN HÀNG RESPONSIVE -->
+                        <div class="cart-items-list">
+                            @foreach (var item in Model.CartDetails)
+                            {
+                                decimal itemPrice = item.Product != null ? item.Product.Price : 0;
+                                decimal itemTotal = item.Quantity * itemPrice;
+                                string itemImg = item.Product != null && !string.IsNullOrEmpty(item.Product.URLImage) ? item.Product.URLImage : "/Content/images/no-image.png";
+
+                                <div id="row-@item.ProductId" class="cart-item-card cart-row">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <!-- CHECKBOX -->
+                                        <div class="form-check m-0">
+                                            <input type="checkbox"
+                                                   class="form-check-input item-checkbox"
+                                                   data-id="@item.ProductId"
+                                                   data-price="@itemPrice"
+                                                   data-quantity="@item.Quantity"
+                                                   checked />
+                                        </div>
+
+                                        <!-- HÌNH ẢNH SẢN PHẨM -->
+                                        <img src="@itemImg" class="product-thumb" alt="@(item.Product != null ? item.Product.Name : "")" onerror="this.src='/Content/images/no-image.png'" />
+
+                                        <!-- THÔNG TIN & THAO TÁC -->
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                <a href="javascript:void(0)" class="product-name-title">
+                                                    @(item.Product != null ? item.Product.Name : "Sản phẩm")
+                                                </a>
+                                                <button class="btn btn-sm text-muted p-0 btn-remove ms-2" data-id="@item.ProductId" title="Xóa món này">
+                                                    <i class="fa-solid fa-trash-can hover-danger"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                                <!-- ĐƠN GIÁ & TỔNG TIỀN MÓN -->
+                                                <div>
+                                                    <span class="product-unit-price">@itemPrice.ToString("N0") ₫</span>
+                                                </div>
+
+                                                <!-- BỘ TĂNG GIẢM SỐ LƯỢNG (STEPPER) -->
+                                                <div class="qty-stepper">
+                                                    <button class="qty-btn btn-minus" data-id="@item.ProductId" type="button">-</button>
+                                                    <input type="number"
+                                                           class="qty-input quantity-input"
                                                            data-id="@item.ProductId"
                                                            data-price="@itemPrice"
-                                                           data-quantity="@item.Quantity"
-                                                           checked />
-                                                </td>
-                                                <td>
-                                                    <strong>@(item.Product != null ? item.Product.Name : "Sản phẩm")</strong>
-                                                </td>
-                                                <td class="text-nowrap">@itemPrice.ToString("N0") VNĐ</td>
-                                                <td>
-                                                    <div class="input-group input-group-sm">
-                                                        <button class="btn btn-outline-secondary btn-minus" data-id="@item.ProductId" type="button">-</button>
-                                                        <input type="number"
-                                                               class="form-control text-center quantity-input"
-                                                               data-id="@item.ProductId"
-                                                               data-price="@itemPrice"
-                                                               value="@item.Quantity"
-                                                               min="1" max="100" />
-                                                        <button class="btn btn-outline-secondary btn-plus" data-id="@item.ProductId" type="button">+</button>
-                                                    </div>
-                                                </td>
-                                                <td id="item-total-@item.ProductId" class="text-success font-weight-bold text-nowrap">
-                                                    @itemTotal.ToString("N0") VNĐ
-                                                </td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-link text-danger p-0 btn-remove" data-id="@item.ProductId" title="Xóa món này">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    @{
-                        var suggestedVouchers = ViewBag.SuggestedVouchers as List<Do_An_E_Commerce_BHX.Services.Implementations.VoucherEvaluationResult>;
-                    }
-
-                    <div class="card shadow-sm border-0 mb-3">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                            <h5 class="m-0 font-weight-bold text-dark"><i class="fa-solid fa-ticket text-warning me-2"></i>Mã Giảm Giá Ưu Đãi</h5>
-                            <a href="@Url.Action("MyVouchers", "Manage")" class="small fw-bold text-success text-decoration-none">
-                                <i class="fa-solid fa-wallet me-1"></i>Ví của tôi
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <!-- NHẬP MÃ THỦ CÔNG -->
-                            <div class="input-group mb-3">
-                                <input type="text" id="couponCodeInput" class="form-control" placeholder="Nhập mã giảm giá..." value="@ViewBag.AppliedCoupon" style="text-transform: uppercase;" />
-                                <button id="btnApplyCoupon" class="btn btn-success fw-bold" type="button">Áp dụng</button>
-                            </div>
-                            <div id="couponMessage" class="mt-2 text-sm font-weight-bold"></div>
-
-                            <!-- BANNER GỢI Ý MÃ THEO GIỎ HÀNG -->
-                            @if (suggestedVouchers != null && suggestedVouchers.Any())
-                            {
-                                <div class="mt-3">
-                                    <div class="fw-bold text-dark mb-2 small"><i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i>Gợi ý voucher dành cho giỏ hàng:</div>
-
-                                    <div class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;">
-                                        @foreach (var v in suggestedVouchers)
-                                        {
-                                            string minOrderText = v.MinOrderAmount > 0 ? $"Đơn tối thiểu {v.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
-
-                                            if (v.IsEligible)
-                                            {
-                                                <div class="p-2 border border-success bg-success bg-opacity-10 rounded-3 d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <div class="fw-bold text-success small">
-                                                            <i class="fa-solid fa-circle-check me-1"></i>@v.Code
-                                                            <span class="badge bg-success ms-1">Giảm @v.CalculatedDiscount.ToString("N0")đ</span>
-                                                        </div>
-                                                        <small class="text-dark d-block text-truncate" style="max-width: 220px;" title="@v.Description">@v.Description</small>
-                                                    </div>
-                                                    <button type="button" class="btn btn-sm btn-success fw-bold text-nowrap btn-quick-apply" data-code="@v.Code">
-                                                        DÙNG MÃ
-                                                    </button>
+                                                           value="@item.Quantity"
+                                                           min="1" max="100" />
+                                                    <button class="qty-btn btn-plus" data-id="@item.ProductId" type="button">+</button>
                                                 </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="p-2 border rounded-3 bg-light opacity-75">
-                                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <span class="badge bg-secondary">@v.Code</span>
-                                                        <span class="text-muted text-xs">@minOrderText</span>
-                                                    </div>
-                                                    <small class="text-muted d-block" title="@v.ReasonIfNotEligible">
-                                                        <i class="fa-solid fa-circle-info text-warning me-1"></i>@v.ReasonIfNotEligible
-                                                    </small>
-                                                </div>
-                                            }
-                                        }
+                                            </div>
+
+                                            <div class="mt-1 text-end d-block d-md-none">
+                                                <small class="text-muted">Thành tiền: </small>
+                                                <strong id="item-total-mobile-@item.ProductId" class="text-danger font-weight-bold">@itemTotal.ToString("N0") ₫</strong>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             }
                         </div>
                     </div>
+                </div>
 
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-success text-white py-3">
-                            <h5 class="m-0 font-weight-bold"><i class="fa-solid fa-receipt me-2"></i>Tóm tắt đơn hàng</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Tạm tính (<span id="selected-count">@Model.CartDetails.Count</span> sản phẩm):</span>
-                                <span id="cart-subtotal" class="font-weight-bold">@totalPrice.ToString("N0") VNĐ</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 text-danger" id="discount-row" style="display: none !important;">
-                                <span>Giảm giá (<span id="applied-coupon-code"></span>):</span>
-                                <span id="discount-amount" class="font-weight-bold">-0 VNĐ</span>
-                            </div>
-                            <hr />
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="h5 m-0 font-weight-bold">Tổng thanh toán:</span>
-                                <span id="cart-final-total" class="h4 m-0 text-danger font-weight-bold">@totalPrice.ToString("N0") VNĐ</span>
-                            </div>
+                <!-- CỘT PHẢI: VOUCHER & TÓM TẮT ĐƠN HÀNG (DESKTOP) -->
+                <div class="col-lg-4">
+                    @{
+                        var suggestedVouchers = ViewBag.SuggestedVouchers as List<Do_An_E_Commerce_BHX.Services.Implementations.VoucherEvaluationResult>;
+                    }
 
-                            <button id="btn-proceed-checkout" class="btn btn-success btn-lg w-100 font-weight-bold shadow-sm">
-                                <i class="fa-solid fa-credit-card me-2"></i> TIẾN HÀNH ĐẶT HÀNG
-                            </button>
+                    <!-- KHUNG MÃ GIẢM GIÁ -->
+                    <div class="bhx-card p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-ticket text-warning me-2 fs-5"></i>Mã Giảm Giá Ưu Đãi</h6>
+                            <a href="@Url.Action("MyVouchers", "Manage")" class="small fw-bold text-success text-decoration-none">
+                                <i class="fa-solid fa-wallet me-1"></i>Ví voucher
+                            </a>
                         </div>
+
+                        <div class="input-group mb-2">
+                            <input type="text" id="couponCodeInput" class="form-control rounded-start-3 border-end-0" placeholder="Nhập mã giảm giá..." value="@ViewBag.AppliedCoupon" style="text-transform: uppercase;" />
+                            <button id="btnApplyCoupon" class="btn btn-success fw-bold px-3 rounded-end-3" type="button">Áp dụng</button>
+                        </div>
+                        <div id="couponMessage" class="mt-1 small fw-bold"></div>
+
+                        <!-- BANNER GỢI Ý MÃ THEO GIỎ HÀNG -->
+                        @if (suggestedVouchers != null && suggestedVouchers.Any())
+                        {
+                            <div class="mt-3">
+                                <small class="fw-bold text-muted d-block mb-2"><i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i>Voucher phù hợp với giỏ hàng:</small>
+
+                                <div class="d-flex flex-column gap-2" style="max-height: 260px; overflow-y: auto;">
+                                    @foreach (var v in suggestedVouchers)
+                                    {
+                                        string minOrderText = v.MinOrderAmount > 0 ? $"Đơn tối thiểu {v.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
+
+                                        if (v.IsEligible)
+                                        {
+                                            <div class="voucher-pill d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold text-success small">
+                                                        <i class="fa-solid fa-circle-check me-1"></i>Mã: @v.Code
+                                                    </div>
+                                                    <small class="text-dark d-block text-truncate" style="max-width: 180px;" title="@v.Description">@v.Description</small>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-success fw-bold rounded-pill px-3 btn-quick-apply" data-code="@v.Code">
+                                                    DÙNG
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="voucher-pill disabled-voucher">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="badge bg-secondary">@v.Code</span>
+                                                    <small class="text-muted text-xs">@minOrderText</small>
+                                                </div>
+                                                <small class="text-muted d-block text-truncate" title="@v.ReasonIfNotEligible">
+                                                    <i class="fa-solid fa-circle-info text-warning me-1"></i>@v.ReasonIfNotEligible
+                                                </small>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- KHUNG TÓM TẮT TỔNG TIỀN (DESKTOP) -->
+                    <div class="bhx-card p-4">
+                        <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">
+                            <i class="fa-solid fa-receipt text-success me-2"></i>Tóm tắt đơn hàng
+                        </h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tạm tính (<span id="selected-count">@Model.CartDetails.Count</span> món):</span>
+                            <span id="cart-subtotal" class="fw-bold text-dark">@totalPrice.ToString("N0") ₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-danger" id="discount-row" style="display: none !important;">
+                            <span>Giảm giá (<span id="applied-coupon-code"></span>):</span>
+                            <span id="discount-amount" class="fw-bold">-0 ₫</span>
+                        </div>
+                        <hr class="my-3" />
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <span class="fw-bold text-dark d-block">Tổng thanh toán:</span>
+                                <small class="text-muted">(Đã bao gồm VAT)</small>
+                            </div>
+                            <span id="cart-final-total" class="fs-3 text-danger fw-bold">@totalPrice.ToString("N0") ₫</span>
+                        </div>
+
+                        <button id="btn-proceed-checkout" class="btn btn-bhx-checkout w-100">
+                            <i class="fa-solid fa-credit-card me-2"></i> TIẾN HÀNH ĐẶT HÀNG
+                        </button>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <!-- Nhúng jQuery (Bắt buộc phải có để chạy Ajax) -->
+    <!-- STICKY BOTTOM CHECKOUT BAR (DÀNH CHO ĐIỆN THOẠI DI ĐỘNG) -->
+    @if (Model != null && Model.CartDetails != null && Model.CartDetails.Any())
+    {
+        <div class="mobile-sticky-checkout-bar">
+            <div>
+                <small class="text-muted d-block">Tổng tiền (<span id="mobile-selected-count">@Model.CartDetails.Count</span> món):</small>
+                <span id="mobile-cart-final-total" class="fs-5 text-danger fw-bold">@totalPrice.ToString("N0") ₫</span>
+            </div>
+            <button id="btn-proceed-checkout-mobile" class="btn btn-bhx-checkout px-4 py-2">
+                ĐẶT HÀNG <i class="fa-solid fa-arrow-right ms-1"></i>
+            </button>
+        </div>
+    }
+
+    <!-- JQUERY & BOOTSTRAP 5 JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Nhúng Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -417,13 +501,14 @@
                     count++;
                 });
 
-                $('#selected-count').text(count);
-                $('#cart-subtotal').text(subtotal.toLocaleString('vi-VN') + ' VNĐ');
+                $('#selected-count, #mobile-selected-count').text(count);
+                $('#cart-subtotal').text(subtotal.toLocaleString('vi-VN') + ' ₫');
 
                 var finalTotal = subtotal - appliedDiscount;
                 if (finalTotal < 0) finalTotal = 0;
 
-                $('#cart-final-total').text(finalTotal.toLocaleString('vi-VN') + ' VNĐ');
+                var formattedTotal = finalTotal.toLocaleString('vi-VN') + ' ₫';
+                $('#cart-final-total, #mobile-cart-final-total').text(formattedTotal);
             }
 
             // 1. Select All Checkbox
@@ -451,7 +536,8 @@
                         if (res.success) {
                             var price = parseFloat($('#row-' + productId + ' .quantity-input').data('price'));
                             var itemTotal = price * newQty;
-                            $('#item-total-' + productId).text(itemTotal.toLocaleString('vi-VN') + ' VNĐ');
+                            var formattedItemTotal = itemTotal.toLocaleString('vi-VN') + ' ₫';
+                            $('#item-total-' + productId + ', #item-total-mobile-' + productId).text(formattedItemTotal);
                             $('#row-' + productId + ' .item-checkbox').data('quantity', newQty);
                             recalculateTotals();
                         }
@@ -573,13 +659,13 @@
                             appliedDiscount = res.discountAmount;
                             appliedCoupon = res.code;
 
-                            $('#couponMessage').attr('class', 'mt-2 text-success font-weight-bold').text(res.message);
+                            $('#couponMessage').attr('class', 'mt-1 text-success fw-bold').text(res.message);
                             $('#applied-coupon-code').text(res.code);
-                            $('#discount-amount').text('-' + res.discountAmount.toLocaleString('vi-VN') + ' VNĐ');
+                            $('#discount-amount').text('-' + res.discountAmount.toLocaleString('vi-VN') + ' ₫');
                             $('#discount-row').removeAttr('style');
                             recalculateTotals();
                         } else {
-                            $('#couponMessage').attr('class', 'mt-2 text-danger font-weight-bold').text(res.message);
+                            $('#couponMessage').attr('class', 'mt-1 text-danger fw-bold').text(res.message);
                         }
                     }
                 });
@@ -592,8 +678,8 @@
                 $('#btnApplyCoupon').click();
             });
 
-            // 7. Proceed to Checkout
-            $('#btn-proceed-checkout').on('click', function () {
+            // 7. Proceed to Checkout (Desktop & Mobile)
+            $('#btn-proceed-checkout, #btn-proceed-checkout-mobile').on('click', function () {
                 var selectedIds = [];
                 $('.item-checkbox:checked').each(function () {
                     selectedIds.push($(this).data('id'));

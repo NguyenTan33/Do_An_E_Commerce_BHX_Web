@@ -59,10 +59,24 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             // 3. Tính tiền
             decimal rawTotal = calculate.CalculatePrice(itemsToOrder);
 
-            if (coupon != null && discountAmount == 0)
+            if (coupon != null)
             {
-                decimal totalAfterCoupon = calculate.applyCoupon(rawTotal, coupon);
-                discountAmount = rawTotal - totalAfterCoupon;
+                if (discountAmount == 0)
+                {
+                    decimal totalAfterCoupon = calculate.applyCoupon(rawTotal, coupon);
+                    discountAmount = rawTotal - totalAfterCoupon;
+                }
+
+                // Tăng số lượt đã dùng của Voucher và kiểm tra hết lượt để tự động tắt mã
+                var dbCoupon = dbContext.Promotion.FirstOrDefault(p => p.Id == coupon.Id || p.Code == coupon.Code);
+                if (dbCoupon != null)
+                {
+                    dbCoupon.UsedCount++;
+                    if (dbCoupon.UsageLimit > 0 && dbCoupon.UsedCount >= dbCoupon.UsageLimit)
+                    {
+                        dbCoupon.IsActive = false; // Tự động ngắt mã không cho dùng nữa
+                    }
+                }
             }
 
             decimal totalAfterDiscount = rawTotal - discountAmount - (decimal)pointDiscountAmount;

@@ -31,6 +31,9 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         [StringLength(255)]
         public string Description { get; set; } // Mô tả ngắn (VD: "Đơn từ 50k - Giảm 15% tối đa 30k dành riêng Dầu ăn")
 
+        public int UsageLimit { get; set; } = 100; // Tổng số lượng phát hành (VD: 100 mã)
+        public int UsedCount { get; set; } = 0;   // Số lượng đã được sử dụng
+
         public DateTime DateCreated { get; private set; } = DateTime.Now;
         public DateTime EffectiveDate { get; set; } = DateTime.Now;
         public DateTime ExpiryDate { get; set; } = DateTime.Now.AddDays(30);

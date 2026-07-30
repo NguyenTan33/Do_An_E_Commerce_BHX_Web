@@ -133,6 +133,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     promo.CategoryId = model.CategoryId;
                     promo.MaxDiscountAmount = model.MaxDiscountAmount;
                     promo.Description = model.Description;
+                    promo.UsageLimit = model.UsageLimit > 0 ? model.UsageLimit : 100;
                     promo.EffectiveDate = model.EffectiveDate;
                     promo.ExpiryDate = model.ExpiryDate;
                     promo.IsActive = model.IsActive;

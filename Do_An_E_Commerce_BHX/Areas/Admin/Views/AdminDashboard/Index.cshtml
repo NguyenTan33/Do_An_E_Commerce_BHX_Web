@@ -888,6 +888,145 @@
         </div>
     </div>
 
+    <!-- ===== DANH SÁCH ĐƠN HÀNG TẠO NÊN DOANH THU KỲ BÁO CÁO (FILTERED ORDERS) ===== -->
+    <div class="dash-panel mt-4">
+        <div class="dash-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h5 class="dash-panel-title">
+                <i class="fa-solid fa-receipt text-warning"></i>
+                Danh Sách Đơn Hàng Tạo Nên Doanh Thu Kỳ Lọc (@(Model.FilteredOrders?.Count ?? 0) đơn)
+            </h5>
+            <small class="text-muted"><i class="fa-solid fa-filter text-info me-1"></i>Được tự động đồng bộ theo bộ lọc ngày & trạng thái ở trên</small>
+        </div>
+        <div class="dash-panel-body no-pad">
+            <div class="adm-table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Mã Đơn</th>
+                            <th>Thời Gian Đặt</th>
+                            <th>Khách Hàng & SĐT</th>
+                            <th>Thanh Toán</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-end pe-4">Giá Trị Đơn (Doanh thu)</th>
+                            <th class="text-center" style="width: 130px;">Chi Tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.FilteredOrders != null && Model.FilteredOrders.Any())
+                        {
+                            foreach (var item in Model.FilteredOrders)
+                            {
+                                string payMethodName = item.PaymentMethod == 1 ? "Ngân hàng (VietQR)" : (item.PaymentMethod == 2 ? "Ví MoMo" : "Tiền mặt (COD)");
+                                <tr>
+                                    <td class="ps-4">
+                                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--adm-gold);">#@item.Id</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-white">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                        <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>@item.OrderDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-info"><i class="fa-regular fa-user me-1"></i>@item.ReceiverName</div>
+                                        <small class="text-danger fw-bold"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-dark border border-secondary text-light">@payMethodName</span>
+                                    </td>
+                                    <td>
+                                        @if (item.OrderStatus == 4)
+                                        {
+                                            <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Thành công</span>
+                                        }
+                                        else if (item.OrderStatus == 5)
+                                        {
+                                            <span class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i>Hủy / Thất bại</span>
+                                        }
+                                        else if (item.OrderStatus == 3)
+                                        {
+                                            <span class="badge bg-info text-dark"><i class="fa-solid fa-truck-fast me-1"></i>Đang giao</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Đang xử lý</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="text-revenue-green fs-6">@item.TotalAmount.ToString("N0") ₫</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-warning fw-bold px-3 rounded-pill" onclick="openRevenueOrderDetailModal(@item.Id)">
+                                            <i class="fa-solid fa-eye me-1"></i> Xem đơn
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="adm-empty-row py-5">
+                                    <i class="fa-solid fa-receipt fs-1 text-muted opacity-50 mb-2"></i>
+                                    <p class="text-muted fw-bold">Không tìm thấy đơn hàng nào khớp với bộ lọc hiện tại.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL XEM CHI TIẾT ĐƠN HÀNG TẠO DOANH THU -->
+<div class="modal fade" id="revenueOrderDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <div class="modal-header border-secondary" style="background: var(--adm-surface-2);">
+                <h5 class="modal-title text-warning fw-bold d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> CHI TIẾT ĐƠN HÀNG <span id="revModalOrderId" class="text-gold font-monospace"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3 mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255,255,255,0.02);">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Thời gian đặt: <strong id="revModalOrderDate" class="text-white"></strong></div>
+                        <div class="text-muted small mt-1">Khách nhận: <strong id="revModalReceiver" class="text-info"></strong></div>
+                        <div class="text-muted small mt-1">SĐT liên hệ: <strong id="revModalPhone" class="text-danger"></strong></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Phương thức: <strong id="revModalPayment" class="text-warning"></strong></div>
+                        <div class="text-muted small mt-1">Địa chỉ giao: <strong id="revModalAddress" class="text-white"></strong></div>
+                    </div>
+                </div>
+
+                <!-- DANH SÁCH MÓN ĂN TRONG ĐƠN -->
+                <h6 class="fw-bold text-warning mb-3"><i class="fa-solid fa-boxes-stacked me-1"></i>Sản phẩm trong đơn:</h6>
+                <div class="table-responsive mb-3 border border-secondary rounded-3">
+                    <table class="table table-dark table-hover align-middle mb-0" id="revModalItemsTable">
+                        <thead class="table-secondary text-white">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Đơn giá</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end pe-3">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3 border border-warning" style="background: rgba(240, 180, 41, 0.08);">
+                    <span class="fw-bold text-white fs-6">TỔNG THÀNH TIỀN ĐƠN HÀNG:</span>
+                    <span id="revModalFinalTotal" class="fw-bold text-warning fs-4 font-monospace"></span>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -1003,5 +1142,62 @@
             setTimeout(function () { bar.style.width = target; }, 200);
         });
     })();
+
+    // ===== JS mở Modal Chi Tiết Đơn Hàng trong Báo Cáo Doanh Thu =====
+    function openRevenueOrderDetailModal(orderId) {
+        var modalEl = document.getElementById('revenueOrderDetailModal');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        document.getElementById('revModalOrderId').textContent = '#' + orderId;
+        document.getElementById('revModalOrderDate').textContent = 'Đang nạp...';
+        document.getElementById('revModalReceiver').textContent = '...';
+        document.getElementById('revModalPhone').textContent = '...';
+        document.getElementById('revModalPayment').textContent = '...';
+        document.getElementById('revModalAddress').textContent = '...';
+        document.getElementById('revModalFinalTotal').textContent = '0 ₫';
+        
+        var tbody = document.querySelector('#revModalItemsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-warning"><i class="fa-solid fa-spinner fa-spin me-2"></i>Đang nạp dữ liệu chi tiết đơn hàng...</td></tr>';
+        
+        modal.show();
+
+        fetch('@Url.Action("GetOrderDetailJson", "ManageOrder")?id=' + orderId)
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    var d = res.data;
+                    document.getElementById('revModalOrderDate').textContent = d.orderDate;
+                    document.getElementById('revModalReceiver').textContent = d.receiverName;
+                    document.getElementById('revModalPhone').textContent = d.receiverPhone;
+                    document.getElementById('revModalPayment').textContent = d.paymentMethod + ' (' + d.paymentStatus + ')';
+                    document.getElementById('revModalAddress').textContent = d.shippingAddress;
+                    document.getElementById('revModalFinalTotal').textContent = d.totalAmount.toLocaleString('vi-VN') + ' ₫';
+
+                    tbody.innerHTML = '';
+                    if (d.items && d.items.length > 0) {
+                        d.items.forEach(function(item) {
+                            var tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>
+                                    <div class="fw-bold text-white">${item.productName}</div>
+                                    <small class="text-muted">Mã vạch: ${item.barcode || 'N/A'}</small>
+                                </td>
+                                <td class="text-center text-warning font-monospace">${item.price.toLocaleString('vi-VN')} ₫</td>
+                                <td class="text-center font-monospace fw-bold">x${item.quantity}</td>
+                                <td class="text-end pe-3 text-emerald font-monospace fw-bold">${item.total.toLocaleString('vi-VN')} ₫</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Không có danh sách món.</td></tr>';
+                    }
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Không tải được thông tin đơn hàng!</td></tr>';
+                }
+            })
+            .catch(err => {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi kết nối máy chủ!</td></tr>';
+            });
+    }
 </script>
 }

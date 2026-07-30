@@ -176,6 +176,8 @@
     <Compile Include="Areas\Admin\Controllers\ManageReviewController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageQuestionController.cs" />
     <Compile Include="Controllers\CartController.cs" />
+    <Compile Include="Controllers\AnalyticsController.cs" />
+    <Compile Include="Areas\Admin\Controllers\BehaviorAnalyticsController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageController.cs" />
@@ -211,6 +213,7 @@
     <Compile Include="Models\Entities\Review.cs" />
     <Compile Include="Models\Entities\UserAddress.cs" />
     <Compile Include="Models\Entities\Waranty.cs" />
+    <Compile Include="Models\Entities\UserBehaviorLog.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\ViewModels\HomeIndexViewModel.cs" />
@@ -278,6 +281,9 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
+    <None Include="Properties\PublishProfiles\greenbasket-001-site1 - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\greenbasket-001-site1 - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -346,6 +352,8 @@
     <Content Include="Areas\Admin\Views\ManageUser\OrderHistory.cshtml" />
     <Content Include="Views\Manage\MyVouchers.cshtml" />
     <Content Include="Views\Order\Track.cshtml" />
+    <Content Include="Scripts\behavior-tracker.js" />
+    <Content Include="Areas\Admin\Views\BehaviorAnalytics\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

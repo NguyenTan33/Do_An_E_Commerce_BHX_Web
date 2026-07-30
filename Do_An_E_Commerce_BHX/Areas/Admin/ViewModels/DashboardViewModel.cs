@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.ViewModels
@@ -23,6 +23,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.ViewModels
         public List<TopProductVM> TopProducts { get; set; }
         public List<RevenueChartVM> RevenueChart { get; set; }
         public List<CategoryRevenueVM> CategoryRevenue { get; set; }
+        public List<Do_An_E_Commerce_BHX.Models.Entities.Order> FilteredOrders { get; set; }
 
         // Thông tin bộ lọc hiện tại để View hiển thị
         public string CurrentPeriodInfo { get; set; }

@@ -43,12 +43,33 @@ namespace Do_An_E_Commerce_BHX.Models
         public DbSet<Entities.Question> Question { get; set; }
         public DbSet<Entities.Review> Review { get; set; }
         public DbSet<Entities.Waranty> Waranty { get; set; }
+        public DbSet<Entities.UserBehaviorLog> UserBehaviorLog { get; set; }
 
         public static void EnsureProductColumnsExist(ApplicationDbContext db)
         {
             try
             {
                 string sql = @"
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserBehaviorLog')
+                    BEGIN
+                        CREATE TABLE [dbo].[UserBehaviorLog] (
+                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [SessionId] NVARCHAR(100) NULL,
+                            [UserId] NVARCHAR(128) NULL,
+                            [EventType] NVARCHAR(50) NOT NULL,
+                            [TargetId] INT NULL,
+                            [TargetName] NVARCHAR(255) NULL,
+                            [DurationSeconds] INT NULL,
+                            [ScrollPercent] INT NULL,
+                            [ReferrerUrl] NVARCHAR(500) NULL,
+                            [PageLoadMs] INT NULL,
+                            [ExtraDataJson] NVARCHAR(MAX) NULL,
+                            [DeviceType] NVARCHAR(50) NULL,
+                            [IPAddress] NVARCHAR(50) NULL,
+                            [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE()
+                        );
+                    END
+
                     IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Products')
                     BEGIN
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Unit')

@@ -74,6 +74,7 @@
                         <th>Mức giảm</th>
                         <th>Điều kiện đơn</th>
                         <th>Danh mục áp dụng</th>
+                        <th>Lượt dùng</th>
                         <th>Hiệu lực từ</th>
                         <th>Hết hạn vào</th>
                         <th>Trạng thái</th>
@@ -86,6 +87,7 @@
                         foreach (var item in Model)
                         {
                             bool isExpired = item.ExpiryDate < DateTime.Now;
+                            bool isExhausted = item.UsageLimit > 0 && item.UsedCount >= item.UsageLimit;
                             string minOrderText = item.MinOrderAmount > 0 ? $"Đơn từ {item.MinOrderAmount:N0}đ" : "Đơn từ 0đ";
                             string catText = item.Category != null ? item.Category.Name : "Tất cả sản phẩm";
 
@@ -114,6 +116,11 @@
                                 </td>
                                 <td><span class="badge bg-secondary text-white">@minOrderText</span></td>
                                 <td><span class="badge bg-info text-dark">@catText</span></td>
+                                <td>
+                                    <span class="badge @(isExhausted ? "bg-danger text-white" : "bg-warning text-dark") font-monospace">
+                                        @item.UsedCount / @(item.UsageLimit > 0 ? item.UsageLimit.ToString("N0") : "∞")
+                                    </span>
+                                </td>
                                 <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--adm-text-2);">
                                     @item.EffectiveDate.ToString("dd/MM/yyyy HH:mm")
                                 </td>
@@ -121,9 +128,16 @@
                                     @item.ExpiryDate.ToString("dd/MM/yyyy HH:mm")
                                 </td>
                                 <td>
-                                    @if (!item.IsActive)
+                                    @if (isExhausted || !item.IsActive)
                                     {
-                                        <span class="badge bg-dark border border-secondary text-muted">Vô hiệu hóa</span>
+                                        if (isExhausted)
+                                        {
+                                            <span class="badge bg-danger text-white">Hết số lượng (Đã tắt)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-dark border border-secondary text-muted">Vô hiệu hóa</span>
+                                        }
                                     }
                                     else if (isExpired)
                                     {

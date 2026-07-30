@@ -45,6 +45,10 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                             ALTER TABLE [dbo].[Promotions] ADD [MaxDiscountAmount] FLOAT DEFAULT 0 NOT NULL;
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotions]') AND name = 'Description')
                             ALTER TABLE [dbo].[Promotions] ADD [Description] NVARCHAR(255) NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotions]') AND name = 'UsageLimit')
+                            ALTER TABLE [dbo].[Promotions] ADD [UsageLimit] INT DEFAULT 100 NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotions]') AND name = 'UsedCount')
+                            ALTER TABLE [dbo].[Promotions] ADD [UsedCount] INT DEFAULT 0 NOT NULL;
                     END
 
                     IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Promotion')
@@ -57,6 +61,10 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                             ALTER TABLE [dbo].[Promotion] ADD [MaxDiscountAmount] FLOAT DEFAULT 0 NOT NULL;
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotion]') AND name = 'Description')
                             ALTER TABLE [dbo].[Promotion] ADD [Description] NVARCHAR(255) NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotion]') AND name = 'UsageLimit')
+                            ALTER TABLE [dbo].[Promotion] ADD [UsageLimit] INT DEFAULT 100 NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Promotion]') AND name = 'UsedCount')
+                            ALTER TABLE [dbo].[Promotion] ADD [UsedCount] INT DEFAULT 0 NOT NULL;
                     END
 
                     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserPromotion')
@@ -188,9 +196,21 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             };
 
             var now = DateTime.Now;
-            if (!promo.IsActive || promo.EffectiveDate > now || promo.ExpiryDate < now)
+            if (!promo.IsActive || promo.EffectiveDate > now || promo.ExpiryDate < now || (promo.UsageLimit > 0 && promo.UsedCount >= promo.UsageLimit))
             {
-                result.ReasonIfNotEligible = "Mã giảm giá đã hết hạn sử dụng hoặc chưa được kích hoạt.";
+                if (promo.UsageLimit > 0 && promo.UsedCount >= promo.UsageLimit)
+                {
+                    if (promo.IsActive)
+                    {
+                        promo.IsActive = false; // Tự động tắt mã khi hết số lượng
+                        try { _db.SaveChanges(); } catch { }
+                    }
+                    result.ReasonIfNotEligible = $"Mã giảm giá [{promo.Code}] đã HẾT SỐ LƯỢNG phát hành ({promo.UsedCount}/{promo.UsageLimit}) và bị tắt ngắt!";
+                }
+                else
+                {
+                    result.ReasonIfNotEligible = "Mã giảm giá đã hết hạn sử dụng hoặc chưa được kích hoạt.";
+                }
                 return result;
             }
 

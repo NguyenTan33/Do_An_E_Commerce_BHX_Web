@@ -167,6 +167,14 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services
                 }
             }
 
+            // 8. DANH SÁCH ĐƠN HÀNG TẠO NÊN DOANH THU KỲ LỌC
+            vm.FilteredOrders = orderQuery
+                .Include(o => o.User)
+                .Include("OrderDetails.Product")
+                .OrderByDescending(o => o.OrderDate)
+                .Take(100)
+                .ToList();
+
             return vm;
         }
     }

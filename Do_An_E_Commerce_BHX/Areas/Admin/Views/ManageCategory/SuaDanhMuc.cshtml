@@ -1,4 +1,4 @@
-﻿@model Do_An_E_Commerce_BHX.Models.Entities.Category
+@model Do_An_E_Commerce_BHX.Models.Entities.Category
 
 @{
     ViewData["Title"] = "Chỉnh sửa danh mục";
@@ -6,143 +6,46 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-@section Styles {
-    <style>
-        :root {
-            --navy: #16233F;
-            --navy-deep: #0F1A30;
-            --paper: #FAF8F4;
-            --ink: #22262E;
-            --muted: #6B7280;
-            --line: #E5E1D8;
-            --amber: #E2792B;
-            --green: #2F8F5B;
-            --red: #C4453A;
-        }
-
-        .form-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .form-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 28px 32px;
-            box-shadow: 0 1px 3px rgba(15,26,48,0.08), 0 8px 24px rgba(15,26,48,0.06);
-            border: 1px solid var(--line);
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-
-            .form-group label {
-                font-weight: 600;
-                font-size: 13px;
-                color: var(--navy-deep);
-                margin-bottom: 6px;
-            }
-
-        .form-control {
-            height: 42px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            padding: 0 14px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            color: var(--ink);
-            background: #fff;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-            .form-control:focus {
-                border-color: var(--navy);
-                box-shadow: 0 0 0 3px rgba(22,35,63,0.08);
-            }
-
-        .text-danger {
-            font-size: 12px;
-            color: var(--red);
-            margin-top: 4px;
-        }
-
-        .form-actions {
-            margin-top: 28px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .btn-submit {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            background: var(--navy);
-            color: #fff;
-            padding: 10px 22px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: opacity 0.15s ease;
-        }
-
-            .btn-submit:hover {
-                opacity: 0.9;
-            }
-
-        .btn-back {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            background: #E5E1D8;
-            color: var(--ink);
-            padding: 10px 18px;
-            border-radius: 6px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s ease;
-        }
-
-            .btn-back:hover {
-                background: #d4cebe;
-            }
-    </style>
-}
-
-<div class="form-container">
-    <div style="margin-bottom: 20px;">
-        <a href="@Url.Action("Index", "ManageCategory")" class="btn-back">
-            &larr; Quay lại danh sách
+<div class="container-fluid py-3" style="max-width: 650px;">
+    <!-- HEADER BAR -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--adm-border);">
+        <div>
+            <h3 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-warning"></i> Chỉnh Sửa Danh Mục
+            </h3>
+            <p class="mb-0 text-muted small">Thay đổi tên gọi hiển thị của danh mục sản phẩm</p>
+        </div>
+        <a href="@Url.Action("Index", "ManageCategory")" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
         </a>
     </div>
 
-    <div class="form-card">
-        @using (Html.BeginForm( "SuaDanhMuc", "ManageCategory",new { area = "Admin" }, FormMethod.Post, null))
-        {
-            @Html.AntiForgeryToken()
-            @Html.HiddenFor(m => m.Id)
+    <!-- FORM CARD DARK THEME -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: var(--adm-surface); border: 1px solid var(--adm-border) !important;">
+        <div class="card-body p-4 p-md-5">
+            @using (Html.BeginForm("SuaDanhMuc", "ManageCategory", new { area = "Admin" }, FormMethod.Post, null))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
 
-            <div class="form-group">
-                <label>Mã danh mục</label>
-                <input type="text" class="form-control" value="#@Model.Id" disabled style="background: var(--paper); font-weight:600; color: var(--muted);" />
-            </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted fw-bold small text-uppercase">Mã danh mục</label>
+                    <input type="text" class="form-control bg-dark text-warning border-secondary fw-bold" value="#@Model.Id" disabled />
+                </div>
 
-            <div class="form-group">
-                <label>Tên danh mục (*)</label>
-                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập tên danh mục...", autofocus = "autofocus" })
-                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
-            </div>
+                <div class="mb-4">
+                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-tag me-1"></i>Tên danh mục (*)</label>
+                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control form-control-lg bg-dark text-white border-secondary fw-bold", placeholder = "VD: Rau Củ Tươi, Thịt Cá, Đồ Kèm...", autofocus = "autofocus", required = "required" })
+                    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger small mt-1 d-block" })
+                </div>
 
-            <div class="form-actions">
-                <a href="@Url.Action("Index", "ManageCategory")" class="btn-back">Hủy bỏ</a>
-                <button type="submit" class="btn-submit">💾 Lưu thay đổi</button>
-            </div>
-        }
+                <div class="d-flex justify-content-end gap-3 pt-3 border-top border-secondary">
+                    <a href="@Url.Action("Index", "ManageCategory")" class="btn btn-outline-secondary px-4 fw-bold">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-warning fw-bold px-5 text-dark shadow">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> LƯU THAY ĐỔI
+                    </button>
+                </div>
+            }
+        </div>
     </div>
 </div>

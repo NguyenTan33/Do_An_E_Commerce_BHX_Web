@@ -972,7 +972,7 @@
 </div>
 
 <!-- MODAL OVERLAY TRANG GHI ĐÈ CHI TIẾT SẢN PHẨM & BÌNH LUẬN QTV -->
-<div class="modal fade" id="homeProductDetailModal" tabindex="-1" aria-labelledby="homeProductDetailModalLabel" aria-hidden="true">
+<div class="modal fade" id="homeProductDetailModal" tabindex="-1" aria-labelledby="homeProductDetailModalLabel" aria-hidden="true" style="display: none !important; visibility: hidden !important;">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header bg-dark text-white py-3">
@@ -1213,6 +1213,11 @@
 
                         renderReviewsList(d.reviews);
                         renderQuestionsList(d.questions, res.isAdmin);
+
+                        // Ghi log hành vi xem sản phẩm ngầm
+                        if (window.BHXTracker) {
+                            window.BHXTracker.logEvent('ViewProduct', d.id, d.name);
+                        }
                     } else {
                         $('#pmd-description').text(res.message || "Không nạp được thông tin chi tiết sản phẩm!");
                     }
@@ -1261,6 +1266,8 @@
         }
 
         function showModalInstance(modalEl) {
+            modalEl.style.setProperty('display', 'block', 'important');
+            modalEl.style.setProperty('visibility', 'visible', 'important');
             try {
                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                     var detailModal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -1269,7 +1276,6 @@
                     $(modalEl).modal('show');
                 } else {
                     modalEl.classList.add('show');
-                    modalEl.style.display = 'block';
                 }
             } catch (err) {
                 if (typeof $(modalEl).modal === 'function') {
@@ -1277,6 +1283,12 @@
                 }
             }
         }
+
+        // Tự động ẩn lại modal khi bấm nút Đóng hoặc click backdrop
+        $(document).on('hidden.bs.modal', '#homeProductDetailModal', function () {
+            this.style.setProperty('display', 'none', 'important');
+            this.style.setProperty('visibility', 'hidden', 'important');
+        });
 
         function renderQuestionsList(questions, isAdmin) {
             var container = $('#pmd-questions-container');

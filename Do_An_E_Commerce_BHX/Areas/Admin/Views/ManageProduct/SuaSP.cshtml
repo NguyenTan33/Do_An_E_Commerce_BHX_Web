@@ -1,249 +1,130 @@
 @model Do_An_E_Commerce_BHX.Models.Entities.Product
 
 @{
-    ViewBag.Title = "Chỉnh Sửa Sản Phẩm";
+    ViewData["Title"] = "Chỉnh Sửa Sản Phẩm";
+    ViewData["Subtitle"] = $"Sửa thông tin sản phẩm #{Model.Id}";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    string priceValue = Model != null ? Model.Price.ToString("0") : "0";
 }
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <title>Sửa sản phẩm - @Model.Name</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --navy: #16233F;
-            --navy-deep: #0F1A30;
-            --paper: #FAF8F4;
-            --ink: #22262E;
-            --muted: #6B7280;
-            --line: #E5E1D8;
-            --amber: #E2792B;
-            --green: #2F8F5B;
-            --red: #C4453A;
-        }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 40px 32px 60px;
-            background: var(--paper);
-            background-image: radial-gradient(circle at 1px 1px, rgba(22,35,63,0.06) 1px, transparent 0);
-            background-size: 22px 22px;
-            font-family: 'Inter', Arial, sans-serif;
-            color: var(--ink);
-        }
-
-        .header {
-            max-width: 760px;
-            margin: 0 auto 24px;
-            border-bottom: 3px solid var(--navy);
-            padding-bottom: 16px;
-        }
-
-        .eyebrow {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.18em;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin: 0 0 6px;
-        }
-
-        h2 {
-            font-family: 'Oswald', sans-serif;
-            font-weight: 700;
-            font-size: 32px;
-            color: var(--navy-deep);
-            margin: 0 0 12px;
-            text-transform: uppercase;
-        }
-
-        .back-link {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--amber);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .form-card {
-            max-width: 760px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1.5px solid var(--line);
-            border-radius: 6px;
-            padding: 36px 40px;
-            box-shadow: 0 12px 32px rgba(15,26,48,0.08);
-        }
-
-        .field {
-            margin-bottom: 22px;
-        }
-
-            .field label {
-                display: block;
-                font-family: 'Oswald', sans-serif;
-                font-size: 13px;
-                letter-spacing: 0.06em;
-                text-transform: uppercase;
-                color: var(--navy);
-                margin-bottom: 8px;
-            }
-
-            .field input[type="text"],
-            .field input[type="number"] {
-                width: 100%;
-                padding: 11px 14px;
-                border: 1.5px solid var(--line);
-                border-radius: 4px;
-                font-family: 'Inter', sans-serif;
-                font-size: 14px;
-                color: var(--ink);
-                background: var(--paper);
-                outline: none;
-                transition: border-color 0.15s ease, background 0.15s ease;
-            }
-
-                .field input:focus {
-                    border-color: var(--navy);
-                    background: #fff;
-                }
-
-        .field-row {
-            display: flex;
-            gap: 16px;
-        }
-
-            .field-row .field {
-                flex: 1;
-            }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 28px;
-        }
-
-        .btn {
-            font-family: 'Oswald', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            padding: 12px 22px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: var(--navy);
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--muted);
-            border: 1.5px solid var(--line);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="header">
-        <p class="eyebrow">Quản lý kho &middot; Bách Hóa Xanh</p>
-        <h2>Sửa sản phẩm: @Model.Name</h2>
-        @Html.ActionLink("← Quay lại danh sách sản phẩm", "Index", "ManageProduct", null, new { @class = "back-link" })
+<div class="container-fluid py-3" style="max-width: 900px;">
+    <!-- HEADER BAR -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--adm-border);">
+        <div>
+            <h3 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-warning"></i> Chỉnh Sửa Sản Phẩm: <span class="text-warning">@Model.Name</span>
+            </h3>
+            <p class="mb-0 text-muted small">Cập nhật giá bán, số lượng kho, mã vạch và trạng thái hiển thị</p>
+        </div>
+        <a href="@Url.Action("Index", "ManageProduct")" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+        </a>
     </div>
 
-    <div class="form-card">
-        @using (Html.BeginForm("SuaSP", "ManageProduct", FormMethod.Post, new { id = "form-sua-sp" }))
-        {
-            @Html.AntiForgeryToken()
-            @Html.HiddenFor(m => m.Id)
-            @Html.ValidationSummary(false)
+    <!-- FORM CARD DARK THEME -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: var(--adm-surface); border: 1px solid var(--adm-border) !important;">
+        <div class="card-body p-4 p-md-5">
+            @using (Html.BeginForm("SuaSP", "ManageProduct", FormMethod.Post, new { id = "form-sua-sp" }))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
 
-            <div class="field">
-                <label>Tên sản phẩm (*)</label>
-                @Html.TextBoxFor(m => m.Name, new { placeholder = "VD: Bia Tiger Crystal, Thịt Ba Chỉ...", required = "required" })
-                @Html.ValidationMessageFor(m => m.Name)
-            </div>
-
-            <div class="field-row">
-                <div class="field">
-                    <label>Mã vạch (*)</label>
-                    @Html.TextBoxFor(m => m.Barcode, new { placeholder = "8938505974194", required = "required" })
-                    @Html.ValidationMessageFor(m => m.Barcode)
+                <!-- TÊN SẢN PHẨM -->
+                <div class="mb-4">
+                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-tag me-1"></i>Tên sản phẩm (*)</label>
+                    <input type="text" name="Name" class="form-control form-control-lg bg-dark text-white border-secondary fw-bold" value="@Model.Name" required placeholder="VD: Bia Tiger Crystal, Thịt Ba Chỉ..." />
                 </div>
-                <div class="field">
-                    <label>Giá bán mặc định (VNĐ) (*)</label>
-                    @Html.TextBoxFor(m => m.Price, new { type = "number", min = "0", step = "1000", placeholder = "330000", required = "required" })
-                    @Html.ValidationMessageFor(m => m.Price)
+
+                <!-- MÃ VẠCH & GIÁ BÁN -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-barcode me-1"></i>Mã vạch (*)</label>
+                        <input type="text" name="Barcode" class="form-control bg-dark text-white border-secondary" value="@Model.Barcode" placeholder="8938505974194" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-money-bill-wave me-1"></i>Giá bán mặc định (VNĐ) (*)</label>
+                        <input type="number" name="Price" class="form-control bg-dark text-warning border-secondary fw-bold fs-5" value="@priceValue" min="0" step="1000" placeholder="330000" required />
+                    </div>
                 </div>
-            </div>
 
-            <div class="field-row">
-                <div class="field">
-                    <label>Số lượng kho (* Tồn lon/cái/gram lẻ)</label>
-                    @Html.TextBoxFor(m => m.Quantity, new { type = "number", min = "0", placeholder = "100", required = "required" })
-                    @Html.ValidationMessageFor(m => m.Quantity)
+                <!-- TỒN KHO & DANH MỤC -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-boxes-stacked me-1"></i>Số lượng tồn kho lẻ (*)</label>
+                        <input type="number" name="Quantity" class="form-control bg-dark text-white border-secondary fw-bold" value="@Model.Quantity" min="0" placeholder="100" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-layer-group me-1"></i>Danh mục sản phẩm (*)</label>
+                        @Html.DropDownListFor(m => m.CategoryId, ViewBag.Category as SelectList, "-- Chọn danh mục --", new { @class = "form-select bg-dark text-white border-secondary", required = "required" })
+                    </div>
                 </div>
-                <div class="field">
-                    <label>Danh mục sản phẩm (*)</label>
-                    @Html.DropDownListFor(m => m.CategoryId, ViewBag.Category as SelectList, "-- Chọn danh mục --", new { @class = "form-control", style = "width:100%;padding:11px 14px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;", required = "required" })
-                    @Html.ValidationMessageFor(m => m.CategoryId)
+
+                <!-- CHỌN SẢN PHẨM KHO GỐC NẾU LÀ BÀI THÙNG / LỐC DÙNG CHUNG KHO -->
+                <div class="p-3 mb-4 rounded-3 border" style="background: rgba(13, 110, 253, 0.1); border-color: rgba(13, 110, 253, 0.3) !important;">
+                    <label class="form-label text-info fw-bold small mb-2"><i class="fa-solid fa-link me-1"></i>Sản Phẩm Kho Gốc (Dành cho bài Thùng / Lốc 6 lon dùng chung kho lẻ)</label>
+                    @Html.DropDownListFor(m => m.ParentProductId, ViewBag.ParentProductId as SelectList, "-- BÀI MẶC ĐỊNH (Tự quản lý kho riêng) --", new { @class = "form-select bg-dark text-white border-secondary fw-bold" })
+                    <small class="text-info opacity-75 d-block mt-2"><i class="fa-solid fa-circle-info me-1"></i>Chọn bài Lon lẻ gốc để khi bán Thùng tự động trừ kho từ bài Lon lẻ gốc.</small>
                 </div>
-            </div>
 
-            <!-- CHỌN SẢN PHẨM KHO GỐC NẾU LÀ BÀI THÙNG / LỐC DÙNG CHUNG KHO -->
-            <div class="field" style="background: #EBF5FF; padding: 14px; border-radius: 6px; border: 1.5px solid #60A5FA; margin-bottom: 20px;">
-                <label style="color: #1E40AF; font-weight: bold; font-size: 13px;">🔗 Sản Phẩm Kho Gốc (Dành cho bài Thùng / Lốc 6 lon dùng chung kho lẻ)</label>
-                @Html.DropDownListFor(m => m.ParentProductId, ViewBag.ParentProductId as SelectList, "-- BÀI MẶC ĐỊNH (Tự quản lý kho riêng) --", new { @class = "form-control", style = "width:100%;padding:11px 14px;border:1.5px solid #93C5FD;border-radius:4px;background:#fff;font-weight:bold;" })
-                <small style="color: #1E40AF; font-size: 11px; display: block; margin-top: 4px;">📌 Chọn bài Lon lẻ gốc để khi bán Thùng tự động trừ kho từ bài Lon lẻ gốc.</small>
-            </div>
-
-            <!-- ĐƠN VỊ TÍNH VÀ HỆ SỐ QUY ĐỔI MẶC ĐỊNH -->
-            <div class="field-row" style="background: #FAF8F4; padding: 14px; border-radius: 6px; border: 1px dashed #E5E1D8; margin-bottom: 20px;">
-                <div class="field" style="margin-bottom: 0;">
-                    <label>Đơn vị tính mặc định (*)</label>
-                    @Html.TextBoxFor(m => m.Unit, new { placeholder = "VD: Thùng, Lon, Kg, Chai, Vỉ 200g...", required = "required" })
+                <!-- ĐƠN VỊ TÍNH VÀ HỆ SỐ QUY ĐỔI MẶC ĐỊNH -->
+                <div class="row g-3 mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255, 255, 255, 0.03);">
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-scale-balanced me-1"></i>Đơn vị tính mặc định (*)</label>
+                        <input type="text" name="Unit" class="form-control bg-dark text-white border-secondary" value="@(string.IsNullOrEmpty(Model.Unit) ? "Cái" : Model.Unit)" placeholder="VD: Thùng, Lon, Kg, Chai, Vỉ 200g..." required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-calculator me-1"></i>Hệ số quy đổi kho lẻ (*)</label>
+                        <input type="number" name="UnitMultiplier" class="form-control bg-dark text-white border-secondary" value="@(Model.UnitMultiplier > 0 ? Model.UnitMultiplier : 1)" min="1" placeholder="1 (1 Thùng 24 lon = 24)" required />
+                        <small class="text-muted text-xs mt-1 d-block">Nhập 24 cho Thùng 24 lon, 200 cho Vỉ 200g, 1 cho hàng lẻ.</small>
+                    </div>
                 </div>
-                <div class="field" style="margin-bottom: 0;">
-                    <label>Hệ số quy đổi kho lẻ (*)</label>
-                    @Html.TextBoxFor(m => m.UnitMultiplier, new { type = "number", min = "1", placeholder = "1 (1 Thùng 24 lon = 24)", required = "required" })
-                    <small style="color: #6B7280; font-size: 11px;">Nhập 24 cho Thùng 24 lon, 200 cho Vỉ 200g, 1 cho hàng lẻ.</small>
+
+                <!-- MÔ TẢ CHI TIẾT -->
+                <div class="mb-4">
+                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-align-left me-1"></i>Mô tả chi tiết sản phẩm</label>
+                    <textarea name="Description" rows="3" class="form-control bg-dark text-white border-secondary" placeholder="Nhập thông tin mô tả sản phẩm...">@Model.Description</textarea>
                 </div>
-            </div>
 
-            <div class="field">
-                <label>Mô tả chi tiết</label>
-                @Html.TextAreaFor(m => m.Description, new { rows = "3", placeholder = "Nhập thông tin mô tả sản phẩm...", style = "width:100%;padding:12px;border:1.5px solid #E5E1D8;border-radius:4px;background:#FAF8F4;" })
-            </div>
+                <!-- HÌNH ẢNH URL -->
+                <div class="mb-4">
+                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-image me-1"></i>Đường dẫn hình ảnh (URL Image)</label>
+                    <input type="text" name="URLImage" class="form-control bg-dark text-white border-secondary" value="@Model.URLImage" placeholder="coca.jpg" />
+                    @if (!string.IsNullOrEmpty(Model.URLImage))
+                    {
+                        <div class="mt-3 text-center p-3 rounded-3 border border-secondary" style="background: rgba(255,255,255,0.02);">
+                            <small class="text-muted d-block mb-2">Ảnh xem trước:</small>
+                            <img src="@Model.URLImage" style="max-height: 120px; object-fit: contain;" class="rounded border p-1 bg-white" onerror="this.src='/Content/images/no-image.png'" />
+                        </div>
+                    }
+                </div>
 
-            <div class="field">
-                <label>Đường dẫn hình ảnh (URL Image)</label>
-                @Html.TextBoxFor(m => m.URLImage, new { placeholder = "coca.jpg" })
-            </div>
+                <!-- TRẠNG THÁI HIỂN THỊ & KHÓA -->
+                <div class="mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255, 255, 255, 0.03);">
+                    <label class="form-label text-white fw-bold small mb-2 text-uppercase">Trạng thái sản phẩm:</label>
+                    <div class="d-flex gap-4 flex-wrap">
+                        <label class="form-check-label text-success fw-bold cursor-pointer">
+                            <input type="checkbox" name="IsAvailable" value="true" class="form-check-input me-1" @(Model.IsAvailable ? "checked" : "") /> Đang bán
+                        </label>
+                        <label class="form-check-label text-danger fw-bold cursor-pointer">
+                            <input type="checkbox" name="IsHot" value="true" class="form-check-input me-1" @(Model.IsHot ? "checked" : "") /> Nổi bật 🔥
+                        </label>
+                        <label class="form-check-label text-warning fw-bold cursor-pointer">
+                            <input type="checkbox" name="IsBestSeller" value="true" class="form-check-input me-1" @(Model.IsBestSeller ? "checked" : "") /> Bán chạy ⭐
+                        </label>
+                        <label class="form-check-label text-secondary fw-bold cursor-pointer">
+                            <input type="checkbox" name="IsLock" value="true" class="form-check-input me-1" @(Model.IsLock ? "checked" : "") /> Khóa sản phẩm 🔒
+                        </label>
+                    </div>
+                </div>
 
-            <div class="field" style="display: flex; gap: 20px; align-items: center; background: #FAF8F4; padding: 12px; border-radius: 4px;">
-                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsAvailable) Đang bán</label>
-                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsHot) Nổi bật</label>
-                <label style="margin: 0; cursor: pointer;">@Html.CheckBoxFor(m => m.IsBestSeller) Bán chạy</label>
-            </div>
-
-            <div class="actions">
-                <button type="submit" class="btn btn-primary">💾 Cập Nhật Sản Phẩm</button>
-                @Html.ActionLink("Hủy bỏ", "Index", "ManageProduct", null, new { @class = "btn btn-secondary" })
-            </div>
-        }
+                <!-- BUTTON ACTIONS -->
+                <div class="d-flex justify-content-end gap-3 pt-3 border-top border-secondary">
+                    <a href="@Url.Action("Index", "ManageProduct")" class="btn btn-outline-secondary px-4 fw-bold">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-warning fw-bold px-5 text-dark shadow">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> CẬP NHẬT SẢN PHẨM
+                    </button>
+                </div>
+            }
+        </div>
     </div>
-</body>
-</html>
+</div>

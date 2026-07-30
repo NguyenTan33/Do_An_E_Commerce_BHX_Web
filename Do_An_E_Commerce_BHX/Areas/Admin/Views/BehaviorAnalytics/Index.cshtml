@@ -1,0 +1,241 @@
+@model Do_An_E_Commerce_BHX.Areas.Admin.Controllers.BehaviorAnalyticsController.BehaviorAnalyticsViewModel
+
+@{
+    ViewBag.Title = "Báo cáo Phân tích Hành vi Người dùng";
+    ViewData["Subtitle"] = "Theo dõi thói quen mua sắm, độ cuộn trang, dwell time và phễu chuyển đổi";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    int selectedDays = ViewBag.SelectedDays != null ? (int)ViewBag.SelectedDays : 30;
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid py-3">
+    <!-- FILTERS & HEADER BAR -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4 class="fw-bold text-dark m-0"><i class="fa-solid fa-chart-pie text-success me-2"></i>BÁO CÁO HÀNH VI NGƯỜI DÙNG</h4>
+                <small class="text-muted">Dữ liệu thu thập tự động ngầm qua Behavior Tracker Engine</small>
+            </div>
+
+            <!-- FORM LỌC KHOẢNG THỜI GIAN & PRESETS -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <form action="@Url.Action("Index", "BehaviorAnalytics")" method="get" class="d-flex align-items-center gap-2 m-0 flex-wrap">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted fw-bold">Từ ngày</span>
+                        <input type="date" name="startDate" class="form-control form-control-sm" value="@ViewBag.StartDate" />
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted fw-bold">Đến ngày</span>
+                        <input type="date" name="endDate" class="form-control form-control-sm" value="@ViewBag.EndDate" />
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">
+                        <i class="fa-solid fa-filter me-1"></i> Áp dụng
+                    </button>
+                </form>
+
+                <div class="btn-group" role="group">
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 7 })" class="btn btn-sm @(selectedDays == 7 ? "btn-success fw-bold" : "btn-outline-secondary")">7 ngày qua</a>
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 30 })" class="btn btn-sm @(selectedDays == 30 ? "btn-success fw-bold" : "btn-outline-secondary")">30 ngày qua</a>
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 90 })" class="btn btn-sm @(selectedDays == 90 ? "btn-success fw-bold" : "btn-outline-secondary")">90 ngày qua</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- METRIC CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
+                <div class="text-muted small fw-bold text-uppercase">Tổng lượt tương tác</div>
+                <div class="fs-2 fw-bold text-primary mt-1">@Model.TotalEvents.ToString("N0")</div>
+                <small class="text-muted"><i class="fa-solid fa-bolt text-warning me-1"></i>Sự kiện được ghi nhận</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
+                <div class="text-muted small fw-bold text-uppercase">Số phiên làm việc (Sessions)</div>
+                <div class="fs-2 fw-bold text-success mt-1">@Model.TotalSessions.ToString("N0")</div>
+                <small class="text-muted"><i class="fa-solid fa-users text-success me-1"></i>Phiên người dùng độc lập</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
+                <div class="text-muted small fw-bold text-uppercase">Thời gian xem trang TB</div>
+                <div class="fs-2 fw-bold text-warning mt-1">@Model.AvgDwellSeconds.ToString("N1")s</div>
+                <small class="text-muted"><i class="fa-solid fa-stopwatch text-warning me-1"></i>Dwell Time active tab</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
+                <div class="text-muted small fw-bold text-uppercase">Cú nhấp bực bội (Rage Clicks)</div>
+                <div class="fs-2 fw-bold text-danger mt-1">@Model.TotalRageClicks.ToString("N0")</div>
+                <small class="text-muted"><i class="fa-solid fa-hand-pointer text-danger me-1"></i>Bấm dồn dập khi đơ/lag</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW: FUNNEL & DEVICE DISTRIBUTION -->
+    <div class="row g-4 mb-4">
+        <!-- PHỄU CHUYỂN ĐỔI (FUNNEL ANALYTICS) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-filter text-primary me-2"></i>Phễu Chuyển Đổi (Conversion Funnel)</h5>
+                <div style="height: 280px;">
+                    <canvas id="funnelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TỶ LỆ THIẾT BỊ (MOBILE VS DESKTOP) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-mobile-screen text-success me-2"></i>Tỷ Lệ Thiết Bị Truy Cập</h5>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLES ROW: TOP PRODUCTS & SEARCH KEYWORDS -->
+    <div class="row g-4 mb-4">
+        <!-- TOP SẢN PHẨM ĐƯỢC XEM & THỜI GIAN XEM -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-fire text-danger me-2"></i>Top 10 Sản Phẩm Xem Nhiều & Đọc Lâu Nhất</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Lượt xem</th>
+                                <th class="text-end">Thời gian đọc TB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopViewedProducts != null && Model.TopViewedProducts.Any())
+                            {
+                                foreach (var p in Model.TopViewedProducts)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark">@p.ProductName</div>
+                                            <small class="text-muted">Mã SP: #@p.ProductId</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2">@p.ViewCount lượt</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-warning">
+                                            <i class="fa-regular fa-clock me-1"></i>@p.AvgDurationSeconds giây
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="3" class="text-center py-3 text-muted">Chưa có dữ liệu lượt xem sản phẩm.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP TỪ KHÓA TÌM KIẾM HOT -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-magnifying-glass text-warning me-2"></i>Top Từ Khóa Tìm Kiếm Hot</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Từ khóa tìm kiếm</th>
+                                <th class="text-end">Tần suất</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopSearchKeywords != null && Model.TopSearchKeywords.Any())
+                            {
+                                foreach (var k in Model.TopSearchKeywords)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-dark">
+                                            <i class="fa-solid fa-search text-muted me-2"></i>@k.Keyword
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary px-3 py-2">@k.Count lần</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="2" class="text-center py-3 text-muted">Chưa có dữ liệu từ khóa tìm kiếm.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT KHỞI TẠO BIỂU ĐỒ CHART.JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. BIỂU ĐỒ PHỄU CHUYỂN ĐỔI (FUNNEL CHART)
+        var funnelCtx = document.getElementById('funnelChart').getContext('2d');
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['1. Xem sản phẩm', '2. Thêm vào giỏ', '3. Vào thanh toán', '4. Đặt thành công'],
+                datasets: [{
+                    label: 'Số lượng chuyển đổi',
+                    data: [@Model.Funnel.ProductViews, @Model.Funnel.CartAdditions, @Model.Funnel.CheckoutStarted, @Model.Funnel.OrdersCompleted],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.85)',
+                        'rgba(255, 193, 7, 0.85)',
+                        'rgba(13, 202, 240, 0.85)',
+                        'rgba(25, 135, 84, 0.85)'
+                    ],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 2. BIỂU ĐỒ TỶ LỆ THIẾT BỊ (DEVICE CHART)
+        var deviceCtx = document.getElementById('deviceChart').getContext('2d');
+        new Chart(deviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Điện thoại Mobile', 'Máy tính Desktop', 'Máy tính bảng Tablet'],
+                datasets: [{
+                    data: [@Model.Devices.MobileCount, @Model.Devices.DesktopCount, @Model.Devices.TabletCount],
+                    backgroundColor: [
+                        '#198754',
+                        '#0d6efd',
+                        '#ffc107'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    });
+</script>
