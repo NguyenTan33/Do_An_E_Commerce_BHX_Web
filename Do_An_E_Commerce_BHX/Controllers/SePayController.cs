@@ -47,15 +47,16 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 string logContent = $"Gateway: {model.gateway}, Amount: {model.transferAmount}, Content: '{model.content}', Account: {model.accountNumber}";
                 LogSePay(logContent);
 
-                // 1. Kiểm tra API Key (nếu cấu hình)
-                string authHeader = Request.Headers["Authorization"];
+                // 1. Kiểm tra API Key (Xác thực bảo mật SePay Webhook)
+                string authHeader = Request.Headers["Authorization"] ?? Request.Headers["X-SePay-Api-Key"] ?? "";
                 string configuredKey = ConfigurationManager.AppSettings["SePay_ApiKey"] ?? "";
                 
-                if (!string.IsNullOrWhiteSpace(configuredKey) && configuredKey != "SEPAY_SECRET_KEY")
+                if (!string.IsNullOrWhiteSpace(configuredKey))
                 {
                     if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.Contains(configuredKey))
                     {
-                        LogSePay("[CẢNH BÁO BẢO MẬT] API Key SePay trong Header không khớp với Web.config.");
+                        LogSePay($"[CẢNH BÁO BẢO MẬT] API Key SePay trong Header ('{authHeader}') không khớp với cấu hình.");
+                        // Bạn có thể chọn từ chối hoặc cảnh báo. Ở đây chúng ta ghi log cảnh báo chi tiết để đảm bảo không bỏ sót giao dịch hợp lệ.
                     }
                 }
 
@@ -105,22 +106,61 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
+        // GET: /SePay/TestWebhook?orderId=1015 (API hỗ trợ Test kích hoạt gạch nợ thủ công trực tiếp)
+        [HttpGet]
+        public ActionResult TestWebhook(int orderId)
+        {
+            try
+            {
+                var order = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
+                if (order == null)
+                {
+                    return Json(new { success = false, message = $"Đơn hàng #{orderId} không tồn tại!" }, JsonRequestBehavior.AllowGet);
+                }
+
+                order.PaymentMethod = 1; // VietinBank / SePay
+                order.PaymentStatus = 1; // Đã thanh toán
+                _dbContext.SaveChanges();
+
+                LogSePay($"[TEST WEBHOOK GẠCH NỢ] Đơn hàng #{orderId} đã được gạch nợ thành công qua TestWebhook.");
+
+                string recipientEmail = order.User != null ? order.User.Email : null;
+                if (!string.IsNullOrWhiteSpace(recipientEmail))
+                {
+                    OrderInvoiceEmailService.SendOrderConfirmationEmail(order, recipientEmail);
+                }
+
+                return Json(new { success = true, message = $"Đã gạch nợ thành công đơn hàng #{orderId}!", orderId = orderId }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi TestWebhook: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         private int ExtractOrderId(string content)
         {
             if (string.IsNullOrWhiteSpace(content)) return 0;
 
-            // Tìm dạng BHX1234 hoặc BHX_1234 hoặc BHX 1234
-            var match = Regex.Match(content, @"BHX[\_\s]?(\d+)", RegexOptions.IgnoreCase);
+            // 1. Tìm dạng BHX1234, BHX 1234, BHX_1234, BHX-1234
+            var match = Regex.Match(content, @"BHX[\_\-\s]?(\d+)", RegexOptions.IgnoreCase);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int id1))
             {
                 return id1;
             }
 
-            // Nếu không có BHX, tìm số nguyên dạng từ 1000 trở lên
-            var numMatch = Regex.Match(content, @"\b(\d{3,8})\b");
-            if (numMatch.Success && int.TryParse(numMatch.Groups[1].Value, out int id2))
+            // 2. Tìm dạng DH1234, DH 1234, DONHANG1234
+            var match2 = Regex.Match(content, @"(?:DH|DONHANG)[\_\-\s]?(\d+)", RegexOptions.IgnoreCase);
+            if (match2.Success && int.TryParse(match2.Groups[1].Value, out int id2))
             {
                 return id2;
+            }
+
+            // 3. Tìm các chuỗi số nguyên riêng lẻ từ 1 đến 8 chữ số
+            var numMatch = Regex.Match(content, @"\b(\d{1,8})\b");
+            if (numMatch.Success && int.TryParse(numMatch.Groups[1].Value, out int id3))
+            {
+                return id3;
             }
 
             return 0;

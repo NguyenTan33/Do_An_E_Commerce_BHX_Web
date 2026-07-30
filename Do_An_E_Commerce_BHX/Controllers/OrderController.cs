@@ -262,7 +262,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { 
                     success = true, 
                     message = msgText, 
-                    redirectUrl = Url.Action("Index", "Home") 
+                    redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = 0 }) 
                 });
             }
             catch (Exception ex)
@@ -304,7 +304,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { 
                     success = true, 
                     message = msgText, 
-                    redirectUrl = Url.Action("Index", "Home") 
+                    redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = paymentMethod }) 
                 });
             }
             catch (Exception ex)
@@ -331,7 +331,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        // GET: /Order/CheckPaymentStatus?orderId=123 (Phục vụ Auto-Polling kiểm tra tiền về từ SePay VietinBank)
+        // GET: /Order/CheckPaymentStatus?orderId=123 (Auto-Polling gọi trực tiếp SePay REST API trên Localhost)
         [HttpGet]
         public ActionResult CheckPaymentStatus(int orderId)
         {
@@ -341,13 +341,170 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { isPaid = false, message = "Không tìm thấy đơn" }, JsonRequestBehavior.AllowGet);
             }
 
+            // 0. Kiểm tra nếu đơn hàng chuyển khoản đã quá hạn 10 phút mà chưa thanh toán
+            if (order.PaymentStatus == 0 && order.PaymentMethod == 1 && (DateTime.Now - order.OrderDate).TotalMinutes >= 10)
+            {
+                AutoCancelExpiredOrders();
+                return Json(new { 
+                    isPaid = false, 
+                    isExpired = true, 
+                    message = "Đơn hàng đã hết hạn thanh toán (quá 10 phút) và đã bị tự động hủy!",
+                    orderId = orderId
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            // 1. Nếu đơn đã ở trạng thái ĐÃ THANH TOÁN (1)
+            if (order.PaymentStatus == 1)
+            {
+                return Json(new { 
+                    isPaid = true, 
+                    paymentStatus = 1, 
+                    paymentMethod = order.PaymentMethod,
+                    orderId = orderId
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            // 2. TỰ ĐỘNG CHỦ ĐỘNG GỌI SEPAY REST API TỪ LOCALHOST (Không phụ thuộc Webhook / Ngrok)
+            bool isPaidFromSePay = CheckSePayApiForOrder(order);
+            if (isPaidFromSePay)
+            {
+                order.PaymentMethod = 1; // VietinBank / SePay
+                order.PaymentStatus = 1; // Đã thanh toán thành công
+                order.OrderStatus = 0;   // Chờ duyệt / chuẩn bị hàng
+                _dbContext.SaveChanges();
+
+                // Lấy thông tin order đầy đủ để gửi Email Hóa đơn
+                var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
+                string userEmail = GetLoggedUserEmail(fullOrder ?? order);
+                if (!string.IsNullOrWhiteSpace(userEmail))
+                {
+                    OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail);
+                }
+
+                return Json(new { 
+                    isPaid = true, 
+                    paymentStatus = 1, 
+                    paymentMethod = 1,
+                    orderId = orderId,
+                    message = "Thanh toán thành công (Xác thực tự động từ SePay REST API)!"
+                }, JsonRequestBehavior.AllowGet);
+            }
+
             return Json(new { 
-                isPaid = order.PaymentStatus == 1, 
+                isPaid = false, 
                 paymentStatus = order.PaymentStatus, 
                 paymentMethod = order.PaymentMethod,
                 orderId = orderId
             }, JsonRequestBehavior.AllowGet);
         }
+
+        private bool CheckSePayApiForOrder(Order order)
+        {
+            if (order == null) return false;
+            try
+            {
+                // 1. Kích hoạt TLS 1.2 cho .NET Framework 4.7.2 WebRequest
+                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls;
+
+                string apiKey = System.Configuration.ConfigurationManager.AppSettings["SePay_ApiKey"] ?? "";
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    LogSePay("[SEPAY API CHECK] SePay_ApiKey trong Web.config bị rỗng.");
+                    return false;
+                }
+
+                string url = "https://my.sepay.vn/userapi/transactions/list";
+                var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
+                request.Method = "GET";
+                request.Headers["Authorization"] = "Bearer " + apiKey;
+                request.ContentType = "application/json";
+                request.Timeout = 5000; // 5 giây timeout
+
+                using (var response = (System.Net.HttpWebResponse)request.GetResponse())
+                using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
+                {
+                    string json = reader.ReadToEnd();
+                    if (string.IsNullOrWhiteSpace(json)) return false;
+
+                    var jObj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                    var txs = jObj["transactions"] as Newtonsoft.Json.Linq.JArray;
+
+                    if (txs != null && txs.Count > 0)
+                    {
+                        string orderIdStr = order.Id.ToString();
+                        string pattern1 = "BHX" + orderIdStr;
+                        string pattern2 = "BHX " + orderIdStr;
+                        string pattern3 = "BHX_" + orderIdStr;
+                        string pattern4 = "BHX-" + orderIdStr;
+
+                        foreach (var item in txs)
+                        {
+                            string strAmount = item["amount_in"]?.ToString() ?? item["amountIn"]?.ToString() ?? "0";
+                            double amountIn = 0;
+                            double.TryParse(strAmount, out amountIn);
+
+                            string content = (item["transaction_content"]?.ToString() ?? item["content"]?.ToString() ?? item["description"]?.ToString() ?? "").ToUpper();
+
+                            if (amountIn > 0 || !string.IsNullOrEmpty(content))
+                            {
+                                if (content.Contains(pattern1) || 
+                                    content.Contains(pattern2) || 
+                                    content.Contains(pattern3) || 
+                                    content.Contains(pattern4) ||
+                                    (content.Contains("BHX") && content.Contains(orderIdStr)) ||
+                                    (content.Contains("SEVQR") && content.Contains(orderIdStr)) ||
+                                    content.Contains(orderIdStr))
+                                {
+                                    LogSePay($"[SEPAY API HIT THÀNH CÔNG] Tìm thấy giao dịch SePay khớp Đơn #{order.Id}: Content='{content}', Amount={amountIn}");
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogSePay("[LỖI GỌI SEPAY REST API] " + ex.Message + (ex.InnerException != null ? " -> " + ex.InnerException.Message : ""));
+            }
+            return false;
+        }
+
+        private void LogSePay(string message)
+        {
+            try
+            {
+                string logPath = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/sepay_transactions.log");
+                if (string.IsNullOrEmpty(logPath))
+                {
+                    logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "sepay_transactions.log");
+                }
+                string dir = System.IO.Path.GetDirectoryName(logPath);
+                if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", System.Text.Encoding.UTF8);
+            }
+            catch { }
+        }
+
+    public class SePayRestApiTransaction
+    {
+        public int id { get; set; }
+        public string bank_brand_name { get; set; }
+        public string account_number { get; set; }
+        public string transaction_date { get; set; }
+        public double amount_in { get; set; }
+        public double amount_out { get; set; }
+        public string transaction_content { get; set; }
+        public string reference_number { get; set; }
+    }
+
+    public class SePayRestApiResponse
+    {
+        public int status { get; set; }
+        public string[] messages { get; set; }
+        public System.Collections.Generic.List<SePayRestApiTransaction> transactions { get; set; }
+    }
 
         // GET: /Order/Track (Trang Tra cứu đơn hàng bằng SĐT hoặc Mã đơn)
         [AllowAnonymous]
@@ -393,10 +550,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { success = false, message = $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!" });
             }
 
+            // Tự động kiểm tra & hủy các đơn hàng VietQR chưa thanh toán quá 10 phút
+            AutoCancelExpiredOrders();
+
             var orderList = orders.Select(o => new
             {
                 id = o.Id,
                 orderDate = o.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                rawOrderDate = o.OrderDate,
                 receiverName = o.ReceiverName,
                 receiverPhone = o.ReceiverPhone,
                 shippingAddress = o.ShippingAddress,
@@ -411,6 +572,10 @@ namespace Do_An_E_Commerce_BHX.Controllers
                                  o.OrderStatus == 4 ? "Giao thành công" : "Đã hủy",
                 paymentMethod = o.PaymentMethod == 0 ? "COD (Tiền mặt)" : "Chuyển khoản VietinBank",
                 paymentStatus = o.PaymentStatus == 1 ? "Đã thanh toán" : "Chưa thanh toán",
+                rawPaymentStatus = o.PaymentStatus,
+                rawOrderStatus = o.OrderStatus,
+                isExpired = o.PaymentStatus == 0 && o.PaymentMethod == 1 && (DateTime.Now - o.OrderDate).TotalMinutes >= 10,
+                paymentUrl = Url.Action("Payment", "Order", new { orderId = o.Id }),
                 items = o.OrderDetails != null ? o.OrderDetails.Select(d => new
                 {
                     productId = d.ProductId,
@@ -423,6 +588,93 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }).ToList();
 
             return Json(new { success = true, count = orderList.Count, orders = orderList });
+        }
+
+        // POST: /Order/CancelOrder (Hủy đơn hàng chưa nhận / chưa thanh toán)
+        [AllowAnonymous]
+        [HttpPost]
+        public ActionResult CancelOrder(int orderId)
+        {
+            try
+            {
+                var order = _dbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
+                if (order == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+                }
+
+                // Không cho phép hủy đơn nếu đã giao thành công (4), đang giao hàng (3), hoặc đã hủy trước đó (5)
+                if (order.OrderStatus == 3 || order.OrderStatus == 4 || order.OrderStatus == 5)
+                {
+                    return Json(new { success = false, message = "Đơn hàng đang giao, đã giao thành công hoặc đã hủy trước đó, không thể hủy!" });
+                }
+
+                if (order.PaymentStatus == 1)
+                {
+                    return Json(new { success = false, message = "Đơn hàng đã được thanh toán thành công, vui lòng liên hệ bộ phận hỗ trợ để hoàn tiền!" });
+                }
+
+                // Cập nhật trạng thái sang 5 = Đã hủy
+                order.OrderStatus = 5;
+
+                // Hoàn lại số lượng sản phẩm vào kho
+                if (order.OrderDetails != null)
+                {
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        if (detail.Product != null)
+                        {
+                            detail.Product.Quantity += detail.Quantity;
+                        }
+                    }
+                }
+
+                _dbContext.SaveChanges();
+
+                return Json(new { success = true, message = $"Đã hủy thành công đơn hàng #{orderId}!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi hủy đơn hàng: " + ex.Message });
+            }
+        }
+
+        private void AutoCancelExpiredOrders()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var expiredOrders = _dbContext.Order
+                    .Include("OrderDetails.Product")
+                    .Where(o => o.PaymentStatus == 0 && o.PaymentMethod == 1 && o.OrderStatus != 5 && o.OrderStatus != 4)
+                    .ToList();
+
+                bool hasChanges = false;
+                foreach (var order in expiredOrders)
+                {
+                    if ((now - order.OrderDate).TotalMinutes >= 10)
+                    {
+                        order.OrderStatus = 5; // Đã hủy tự động do quá 10 phút chưa thanh toán
+                        if (order.OrderDetails != null)
+                        {
+                            foreach (var detail in order.OrderDetails)
+                            {
+                                if (detail.Product != null)
+                                {
+                                    detail.Product.Quantity += detail.Quantity;
+                                }
+                            }
+                        }
+                        hasChanges = true;
+                    }
+                }
+
+                if (hasChanges)
+                {
+                    _dbContext.SaveChanges();
+                }
+            }
+            catch { }
         }
 
         protected override void Dispose(bool disposing)

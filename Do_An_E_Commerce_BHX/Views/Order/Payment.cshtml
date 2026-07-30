@@ -5,7 +5,7 @@
     string sePayBank = System.Configuration.ConfigurationManager.AppSettings["SePay_Bank"] ?? "VietinBank";
     string sePayAccNum = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountNumber"] ?? "10123456789";
     string sePayAccName = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountName"] ?? "NGUYEN MINH TAN";
-    string qrUrl = $"https://img.vietqr.io/image/vietinbank-{sePayAccNum}-compact2.jpg?amount={(int)Model.TotalAmount}&addInfo=BHX{Model.Id}&accountName={HttpUtility.UrlEncode(sePayAccName)}";
+    string qrUrl = $"https://qr.sepay.vn/img?bank={sePayBank}&acc={sePayAccNum}&template=compact&amount={(int)Model.TotalAmount}&des=SEVQRBHX{Model.Id}";
 }
 
 <!DOCTYPE html>
@@ -227,85 +227,100 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-hand-pointer text-success me-2"></i>Nhấp chọn phương thức thanh toán:</h6>
+                <!-- HEADER NÚT CHỌN & THAY ĐỔI PHƯƠNG THỨC -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-hand-pointer text-success me-2"></i>Chọn phương thức thanh toán:</h6>
+                    <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold" type="button" id="btnChangePaymentMethod">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> Thay đổi phương thức
+                    </button>
+                </div>
 
-                <!-- NAV TABS -->
-                <ul class="nav nav-pills payment-tabs row g-2 mb-4" id="paymentTab" role="tablist">
-                    <li class="nav-item col-md-4" role="presentation">
-                        <button class="nav-link w-100 active" id="cod-tab" data-bs-toggle="pill" data-bs-target="#cod-content" type="button" role="tab">
-                            💵 1. COD (Tiền mặt)
+                <!-- NAV TABS (CHỈ GIỮ SEPAY VIETQR VÀ COD) -->
+                <ul class="nav nav-pills payment-tabs row g-3 mb-4" id="paymentTab" role="tablist">
+                    <li class="nav-item col-md-6" role="presentation">
+                        <button class="nav-link w-100 active py-3" id="bank-tab" data-bs-toggle="pill" data-bs-target="#bank-content" type="button" role="tab">
+                            🏦 1. Chuyển Khoản QR Ngân Hàng (SePay Tự Động 24/7)
                         </button>
                     </li>
-                    <li class="nav-item col-md-4" role="presentation">
-                        <button class="nav-link w-100" id="bank-tab" data-bs-toggle="pill" data-bs-target="#bank-content" type="button" role="tab">
-                            🏦 2. VietQR / Ngân Hàng API
-                        </button>
-                    </li>
-                    <li class="nav-item col-md-4" role="presentation">
-                        <button class="nav-link w-100" id="momo-tab" data-bs-toggle="pill" data-bs-target="#momo-content" type="button" role="tab">
-                            📱 3. Ví MoMo API
+                    <li class="nav-item col-md-6" role="presentation">
+                        <button class="nav-link w-100 py-3" id="cod-tab" data-bs-toggle="pill" data-bs-target="#cod-content" type="button" role="tab">
+                            💵 2. Thanh Toán Khi Nhận Hàng (COD)
                         </button>
                     </li>
                 </ul>
 
                 <!-- TAB CONTENTS -->
                 <div class="tab-content border rounded-3 p-4 bg-white shadow-sm" id="paymentTabContent">
-                    <!-- 1. COD -->
-                    <div class="tab-pane fade show active text-center py-3" id="cod-content" role="tabpanel">
-                        <div class="text-success mb-3">
-                            <i class="fa-solid fa-hand-holding-dollar" style="font-size: 3.5rem;"></i>
-                        </div>
-                        <h5 class="fw-bold">Thanh Toán Khi Nhận Hàng (COD)</h5>
-                        <p class="text-muted max-w-500 mx-auto">Bạn sẽ thanh toán số tiền <strong class="text-danger">@Model.TotalAmount.ToString("N0") VNĐ</strong> bằng tiền mặt cho shipper khi nhận được hàng.</p>
-                        <button id="btnConfirmCOD" class="btn btn-success btn-action-lg px-5 mt-2 shadow">
-                            <i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ
-                        </button>
-                    </div>
-
-                    <!-- 2. BANK TRANSFER / VIETQR SEPAY VIETINBANK -->
-                    <div class="tab-pane fade" id="bank-content" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-qrcode me-2"></i> Quét Mã VietQR Ngân Hàng VietinBank (SePay Webhook)</h5>
+                    <!-- 1. BANK TRANSFER / VIETQR SEPAY VIETINBANK (DEFAULT) -->
+                    <div class="tab-pane fade show active" id="bank-content" role="tabpanel">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                            <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-qrcode me-2"></i> Quét Mã VietQR Ngân Hàng VietinBank</h5>
                             <span class="badge bg-success px-3 py-2 fs-6 shadow-sm"><i class="fa-solid fa-bolt me-1"></i> Tự Động Gạch Nợ 24/7</span>
                         </div>
+
                         <div class="row align-items-center g-4">
                             <div class="col-md-5 text-center">
-                                <img src="@qrUrl"
-                                     alt="Mã VietQR VietinBank Đơn #@Model.Id"
-                                     class="img-fluid rounded-3 border shadow p-2 bg-white"
-                                     style="max-height: 240px;" />
-                                <div class="small text-success fw-bold mt-2"><i class="fa-solid fa-sync fa-spin me-1"></i> Đang chờ tiền vào tài khoản VietinBank...</div>
-                            </div>
-                            <div class="col-md-7">
-                                <div class="bg-light p-3 rounded-3 border">
-                                    <div class="mb-2"><strong>Ngân hàng:</strong> <span class="text-primary fw-bold">@sePayBank</span></div>
-                                    <div class="mb-2"><strong>Số tài khoản:</strong> <span class="text-danger fw-bold fs-4 ms-1">@sePayAccNum</span></div>
-                                    <div class="mb-2"><strong>Chủ tài khoản:</strong> <span class="text-dark fw-bold">@sePayAccName</span></div>
-                                    <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold fs-5">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
-                                    <div class="mb-0 p-2 bg-warning bg-opacity-25 rounded border border-warning">
-                                        <span class="text-secondary small d-block">Nội dung chuyển khoản (Bắt buộc giữ nguyên):</span>
-                                        <span class="text-danger fw-bold fs-5">BHX @Model.Id</span>
+                                <div class="position-relative d-inline-block">
+                                    <img src="@qrUrl"
+                                         alt="Mã VietQR VietinBank Đơn #@Model.Id"
+                                         class="img-fluid rounded-3 border shadow p-2 bg-white"
+                                         style="max-height: 260px;" />
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <span class="badge bg-danger rounded-pill shadow-sm fs-6 px-3 py-1"><i class="fa-solid fa-clock me-1"></i> <span id="countdown">15:00</span></span>
                                     </div>
                                 </div>
-                                <button id="btnConfirmBankApi" class="btn btn-primary btn-action-lg w-100 shadow mt-3">
-                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (MÔ PHỎNG THỦ CÔNG)
-                                </button>
+                                <div class="small text-success fw-bold mt-3 p-2 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25 shadow-sm">
+                                    <i class="fa-solid fa-spinner fa-spin me-1 fs-6"></i> Đang tự động kiểm tra biến động số dư qua SePay...
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="bg-light p-3 rounded-3 border shadow-sm">
+                                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                                        <span><strong>Ngân hàng:</strong> <span class="text-primary fw-bold fs-6">@sePayBank</span></span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                                        <span><strong>Số tài khoản:</strong> <span class="text-danger fw-bold fs-4 ms-1" id="txtAccNum">@sePayAccNum</span></span>
+                                        <button class="btn btn-sm btn-outline-primary py-1 px-3 rounded-pill fw-bold" onclick="copyText('@sePayAccNum', 'Số tài khoản')">
+                                            <i class="fa-regular fa-copy me-1"></i> Copy
+                                        </button>
+                                    </div>
+                                    <div class="mb-2"><strong>Chủ tài khoản:</strong> <span class="text-dark fw-bold">@sePayAccName</span></div>
+                                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                                        <span><strong>Số tiền thanh toán:</strong> <span class="text-danger fw-bold fs-4">@Model.TotalAmount.ToString("N0") VNĐ</span></span>
+                                        <button class="btn btn-sm btn-outline-primary py-1 px-3 rounded-pill fw-bold" onclick="copyText('@((int)Model.TotalAmount)', 'Số tiền')">
+                                            <i class="fa-regular fa-copy me-1"></i> Copy
+                                        </button>
+                                    </div>
+                                    <div class="mb-0 p-3 bg-warning bg-opacity-25 rounded-3 border border-warning d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="text-secondary small d-block fw-bold">Nội dung chuyển khoản (Bắt buộc):</span>
+                                            <span class="text-danger fw-bold fs-5" id="txtContent">SEVQR BHX @Model.Id</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-warning fw-bold text-dark px-3 py-2 rounded-pill shadow-sm" onclick="copyText('SEVQR BHX @Model.Id', 'Nội dung chuyển khoản')">
+                                            <i class="fa-regular fa-copy me-1"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. MOMO API -->
-                    <div class="tab-pane fade" id="momo-content" role="tabpanel">
-                        <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-mobile-screen-button me-2"></i> Thanh Toán Qua Ví Điện Tử MoMo</h5>
-                        <div class="p-3 bg-light rounded-3 border mb-3">
-                            <div class="mb-2"><strong>Số điện thoại MoMo:</strong> <span class="text-danger fw-bold fs-5">0909 888 999</span></div>
-                            <div class="mb-2"><strong>Chủ tài khoản:</strong> CÔNG TY TNHH BÁCH HÓA XANH</div>
-                            <div class="mb-2"><strong>Số tiền:</strong> <span class="text-danger fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span></div>
-                            <div class="mb-0"><strong>Nội dung chuyển tiền:</strong> <span class="text-primary fw-bold fs-6">BHX @Model.Id</span></div>
+                    <!-- 2. COD -->
+                    <div class="tab-pane fade text-center py-4" id="cod-content" role="tabpanel">
+                        <div class="text-success mb-3">
+                            <i class="fa-solid fa-hand-holding-dollar" style="font-size: 4rem;"></i>
                         </div>
-                        <button id="btnConfirmMomoApi" class="btn btn-danger btn-action-lg w-100 shadow">
-                            <i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)
-                        </button>
+                        <h5 class="fw-bold fs-4">Thanh Toán Khi Nhận Hàng (COD)</h5>
+                        <p class="text-muted max-w-500 mx-auto fs-6">Bạn sẽ thanh toán số tiền <strong class="text-danger fs-5">@Model.TotalAmount.ToString("N0") VNĐ</strong> bằng tiền mặt cho nhân viên giao hàng khi nhận sản phẩm.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <button class="btn btn-outline-secondary px-4 py-2 rounded-pill btn-switch-method">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Đổi sang VietQR
+                            </button>
+                            <button id="btnConfirmCOD" class="btn btn-success btn-action-lg px-5 py-2 rounded-pill shadow">
+                                <i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -317,10 +332,57 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Hàm sao chép nhanh
+        function copyText(strText, labelName) {
+            if (!strText) return;
+            navigator.clipboard.writeText(strText).then(function () {
+                alert("✅ Đã sao chép " + labelName + ": " + strText);
+            }).catch(function (err) {
+                var tempInput = document.createElement("input");
+                tempInput.value = strText;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                alert("✅ Đã sao chép " + labelName + ": " + strText);
+            });
+        }
+
         $(document).ready(function () {
             var orderId = @Model.Id;
 
-            // AUTO-POLLING SEPAY VIETINBANK (Kiểm tra tự động mỗi 3 giây)
+            // 1. ĐẾM NGƯỢC 10 PHÚT QR (TỰ ĐỘNG HỦY NẾU QUÁ 10 PHÚT)
+            var timerSeconds = 10 * 60;
+            var timerInterval = setInterval(function () {
+                var minutes = Math.floor(timerSeconds / 60);
+                var seconds = timerSeconds % 60;
+                var displaySec = seconds < 10 ? '0' + seconds : seconds;
+                var displayMin = minutes < 10 ? '0' + minutes : minutes;
+                $('#countdown').text(displayMin + ':' + displaySec);
+                
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    $('#countdown').text('Hết giờ');
+                } else {
+                    timerSeconds--;
+                }
+            }, 1000);
+
+            // 2. NÚT THAY ĐỔI PHƯƠNG THỨC THANH TOÁN
+            $('#btnChangePaymentMethod, .btn-switch-method').on('click', function (e) {
+                e.preventDefault();
+                $('html, body').animate({
+                    scrollTop: $("#paymentTab").offset().top - 80
+                }, 300);
+
+                // Highlight tabs
+                $('#paymentTab .nav-link').addClass('border-warning');
+                setTimeout(function() {
+                    $('#paymentTab .nav-link').removeClass('border-warning');
+                }, 1500);
+            });
+
+            // 3. AUTO-POLLING SEPAY VIETINBANK (Kiểm tra tự động mỗi 3 giây)
             var pollTimer = setInterval(function () {
                 $.ajax({
                     url: '@Url.Action("CheckPaymentStatus", "Order")',
@@ -329,14 +391,20 @@
                     success: function (res) {
                         if (res && res.isPaid) {
                             clearInterval(pollTimer);
-                            alert("🎉 THANH TOÁN VIETINBANK QUA SEPAY THÀNH CÔNG!\nHệ thống đã tự động gạch nợ đơn hàng #" + orderId + " và gửi Hóa đơn về Email của bạn.");
-                            window.location.href = '@Url.Action("Index", "Home")';
+                            clearInterval(timerInterval);
+                            alert("🎉 THANH TOÁN SEPAY VIETINBANK THÀNH CÔNG!\nHệ thống đã tự động gạch nợ đơn hàng #" + orderId + " và gửi Hóa đơn về Email của bạn.");
+                            window.location.href = '@Url.Action("Success", "Order", new { paymentMethod = 1, orderId = Model.Id })';
+                        } else if (res && res.isExpired) {
+                            clearInterval(pollTimer);
+                            clearInterval(timerInterval);
+                            alert("⚠️ ĐƠN HÀNG HẾT HẠN THANH TOÁN!\nĐơn hàng #" + orderId + " đã quá 10 phút chưa thanh toán và đã được hệ thống tự động hủy.");
+                            window.location.href = '@Url.Action("Track", "Order", new { query = Model.Id })';
                         }
                     }
                 });
             }, 3000);
 
-            // 1. COD
+            // 4. XỬ LÝ COD
             $('#btnConfirmCOD').on('click', function (e) {
                 e.preventDefault();
                 var btn = $(this);
@@ -349,70 +417,20 @@
                     success: function (res) {
                         if (res.success) {
                             alert("🎉 ĐẶT HÀNG COD THÀNH CÔNG!\nCảm ơn bạn đã lựa chọn Bách Hóa Xanh!");
-                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
+                            window.location.href = res.redirectUrl || '@Url.Action("Success", "Order", new { paymentMethod = 0, orderId = Model.Id })';
                         } else {
                             alert(res.message || "Xử lý COD thất bại!");
-                            btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ');
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD');
                         }
                     },
                     error: function (xhr, status, err) {
                         alert("Lỗi hệ thống: " + (xhr.responseText || err));
-                        btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD & VỀ TRANG CHỦ');
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-check-circle me-2"></i> HOÀN TẤT ĐẶT HÀNG COD');
                     }
                 });
             });
-
-            // 2. VietQR / Bank API
-            $('#btnConfirmBankApi').on('click', function (e) {
-                e.preventDefault();
-                var btn = $(this);
-                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG XÁC NHẬN VỚI API NGÂN HÀNG...');
-
-                $.ajax({
-                    url: '@Url.Action("ConfirmBankPaymentApi", "Order")',
-                    type: 'POST',
-                    data: { orderId: orderId, paymentMethod: 1 },
-                    success: function (res) {
-                        if (res.success) {
-                            alert("✅ API XÁC NHẬN THANH TOÁN THÀNH CÔNG!\nĐơn hàng đã được cập nhật trạng thái ĐÃ THANH TOÁN.");
-                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
-                        } else {
-                            alert(res.message || "Xác nhận chuyển khoản thất bại!");
-                            btn.prop('disabled', false).html('<i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)');
-                        }
-                    },
-                    error: function (xhr, status, err) {
-                        alert("Lỗi hệ thống API: " + (xhr.responseText || err));
-                        btn.prop('disabled', false).html('<i class="fa-solid fa-cloud-arrow-up me-2"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN (API XÁC NHẬN)');
-                    }
-                });
-            });
-
-            // 3. MoMo API
-            $('#btnConfirmMomoApi').on('click', function (e) {
-                e.preventDefault();
-                var btn = $(this);
-                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG XÁC NHẬN VỚI MOMO API...');
-
-                $.ajax({
-                    url: '@Url.Action("ConfirmBankPaymentApi", "Order")',
-                    type: 'POST',
-                    data: { orderId: orderId, paymentMethod: 2 },
-                    success: function (res) {
-                        if (res.success) {
-                            alert("✅ API XÁC NHẬN VÍ MOMO THÀNH CÔNG!\nĐơn hàng đã được cập nhật trạng thái ĐÃ THANH TOÁN.");
-                            window.location.href = res.redirectUrl || '@Url.Action("Index", "Home")';
-                        } else {
-                            alert(res.message || "Xác nhận MoMo thất bại!");
-                            btn.prop('disabled', false).html('<i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)');
-                        }
-                    },
-                    error: function (xhr, status, err) {
-                        alert("Lỗi hệ thống API: " + (xhr.responseText || err));
-                        btn.prop('disabled', false).html('<i class="fa-solid fa-circle-check me-2"></i> XÁC NHẬN ĐÃ THANH TOÁN MOMO (API XÁC NHẬN)');
-                    }
-                });
-            });
+        });
+    </script>
         });
     </script>
 </body>

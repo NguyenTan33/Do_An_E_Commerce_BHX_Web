@@ -140,11 +140,61 @@
                         html += '</tbody></table></div></div>';
                     }
 
+                    // THANH HÀNH ĐỘNG HỦY ĐƠN & THANH TOÁN
+                    var showCancel = (o.rawOrderStatus === 0 || o.rawOrderStatus === 1 || o.rawOrderStatus === 2) && o.rawOrderStatus !== 5;
+                    var showPay = o.rawPaymentStatus === 0 && !o.isExpired && o.rawOrderStatus !== 5;
+
+                    if (showCancel || showPay || o.isExpired) {
+                        html += '<div class="pt-3 border-top d-flex justify-content-end align-items-center gap-2 flex-wrap">';
+                        
+                        if (o.isExpired && o.rawOrderStatus === 5) {
+                            html += '<span class="text-danger small fw-bold me-auto"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đơn hàng tự động hủy do quá 10 phút chưa thanh toán.</span>';
+                        }
+
+                        if (showCancel) {
+                            html += '<button class="btn btn-outline-danger btn-sm rounded-pill px-3 btn-cancel-order" data-id="' + o.id + '">' +
+                                '<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng' +
+                                '</button>';
+                        }
+
+                        if (showPay) {
+                            html += '<a href="' + o.paymentUrl + '" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">' +
+                                '<i class="fa-solid fa-credit-card me-1"></i> THANH TOÁN NGAY (VIETQR)' +
+                                '</a>';
+                        }
+
+                        html += '</div>';
+                    }
+
                     html += '</div></div>';
                 });
 
                 container.html(html);
             }
+
+            // XỬ LÝ HỦY ĐƠN HÀNG
+            $(document).on('click', '.btn-cancel-order', function (e) {
+                e.preventDefault();
+                var orderId = $(this).data('id');
+                if (!confirm("Bạn có chắc chắn muốn hủy Đơn hàng #" + orderId + " này không?")) return;
+
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang hủy...');
+
+                $.post('@Url.Action("CancelOrder", "Order")', { orderId: orderId }, function (res) {
+                    if (res.success) {
+                        alert("✅ " + res.message);
+                        var query = $('#track-query').val().trim();
+                        if (query) doTrackSearch(query);
+                    } else {
+                        alert("❌ " + res.message);
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng');
+                    }
+                }).fail(function () {
+                    alert("Lỗi kết nối khi hủy đơn!");
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng');
+                });
+            });
         });
     </script>
 }
