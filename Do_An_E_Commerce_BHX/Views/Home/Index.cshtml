@@ -7,7 +7,7 @@
 
 @helper ProductCard(Do_An_E_Commerce_BHX.Models.Entities.Product item)
 {
-    bool soldOut = item.Quantity <= 0;
+    bool soldOut = item.IsOutOfStock;
     string img = string.IsNullOrEmpty(item.URLImage) ? "/Content/images/no-image.png" : item.URLImage;
     <div class="product-card @(soldOut ? "is-sold-out" : "")">
         <div class="product-media btn-open-detail" data-id="@item.Id" style="cursor: pointer;" title="Bấm xem chi tiết sản phẩm">

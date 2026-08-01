@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Services.Implementations;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
@@ -13,43 +15,28 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
     public class ManageOrderController : Controller
     {
         private readonly ApplicationDbContext _dbContext = new ApplicationDbContext();
+        private readonly OrderService _orderService;
+
+        public ManageOrderController()
+        {
+            var calc = new Calculate();
+            var cartSvc = new CartService(_dbContext);
+            _orderService = new OrderService(_dbContext, calc, cartSvc);
+        }
 
         // 1. GET: /Admin/ManageOrder (Mặc định chỉ hiện danh sách đơn CHƯA DUYỆT status = 0)
-        public ActionResult Index(string search = "", int? status = 0)
+        public async Task<ActionResult> Index(string search = "", int? status = 0)
         {
-            var query = _dbContext.Order
-                .Include(o => o.User)
-                .Include("OrderDetails.Product")
-                .AsQueryable();
+            var listOrders = await _orderService.GetAdminOrdersAsync(search, status);
+            var counts = await _orderService.GetOrderCountsAsync();
 
-            // Tìm kiếm theo SĐT người nhận hoặc Mã đơn hàng (#Id)
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                string s = search.Trim();
-                int orderIdSearch;
-                bool isNumeric = int.TryParse(s, out orderIdSearch);
-
-                query = query.Where(o => o.ReceiverPhone.Contains(s) || 
-                                         o.ReceiverName.Contains(s) || 
-                                         (isNumeric && o.Id == orderIdSearch));
-            }
-
-            // Lọc theo trạng thái (Mặc định status = 0 là đơn Chưa Duyệt, nếu status = -1 thì lấy tất cả)
-            if (status.HasValue && status.Value >= 0)
-            {
-                query = query.Where(o => o.OrderStatus == status.Value);
-            }
-
-            var listOrders = query.OrderByDescending(o => o.OrderDate).ToList();
-
-            // Đếm số lượng đơn hàng theo từng trạng thái để làm Badge Counter trên Tab
-            ViewBag.CountAll = _dbContext.Order.Count();
-            ViewBag.CountPending = _dbContext.Order.Count(o => o.OrderStatus == 0);
-            ViewBag.CountApproved = _dbContext.Order.Count(o => o.OrderStatus == 1);
-            ViewBag.CountPacked = _dbContext.Order.Count(o => o.OrderStatus == 2);
-            ViewBag.CountDelivering = _dbContext.Order.Count(o => o.OrderStatus == 3);
-            ViewBag.CountSuccess = _dbContext.Order.Count(o => o.OrderStatus == 4);
-            ViewBag.CountFailed = _dbContext.Order.Count(o => o.OrderStatus == 5);
+            ViewBag.CountAll = counts["CountAll"];
+            ViewBag.CountPending = counts["CountPending"];
+            ViewBag.CountApproved = counts["CountApproved"];
+            ViewBag.CountPacked = counts["CountPacked"];
+            ViewBag.CountDelivering = counts["CountDelivering"];
+            ViewBag.CountSuccess = counts["CountSuccess"];
+            ViewBag.CountFailed = counts["CountFailed"];
 
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentStatus = status;
@@ -59,36 +46,25 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
         // 2. POST: /Admin/ManageOrder/Approve (Duyệt đơn lẻ)
         [HttpPost]
-        public ActionResult Approve(int id)
+        public async Task<ActionResult> Approve(int id)
         {
-            var order = _dbContext.Order.FirstOrDefault(o => o.Id == id);
-            if (order == null)
+            bool success = await _orderService.ApproveOrderAsync(id);
+            if (!success)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
             }
-
-            order.OrderStatus = 1; // Đã duyệt / Chờ soạn hàng
-            _dbContext.SaveChanges();
 
             return Json(new { success = true, message = $"Đã duyệt đơn hàng #{id} thành công!" });
         }
 
         // 3. POST: /Admin/ManageOrder/Cancel (Hủy đơn lẻ + Hoàn trả tồn kho)
         [HttpPost]
-        public ActionResult Cancel(int id)
+        public async Task<ActionResult> Cancel(int id)
         {
-            var order = _dbContext.Order.Include("OrderDetails").FirstOrDefault(o => o.Id == id);
-            if (order == null)
+            bool success = await _orderService.CancelOrderAsync(id);
+            if (!success)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
-            }
-
-            // Nếu đơn hàng chưa hủy trước đó -> Hoàn lại tồn kho
-            if (order.OrderStatus != 5)
-            {
-                RestoreOrderStock(order);
-                order.OrderStatus = 5; // Đã hủy / Giao thất bại
-                _dbContext.SaveChanges();
             }
 
             return Json(new { success = true, message = $"Đã hủy đơn hàng #{id} và hoàn trả lại tồn kho!" });
@@ -96,23 +72,13 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
         // 4. POST: /Admin/ManageOrder/Delete (Xóa đơn lẻ)
         [HttpPost]
-        public ActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var order = _dbContext.Order.Include("OrderDetails").FirstOrDefault(o => o.Id == id);
-            if (order == null)
+            bool success = await _orderService.DeleteOrderAsync(id);
+            if (!success)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
             }
-
-            // Nếu chưa hủy thì hoàn tồn kho trước khi xóa
-            if (order.OrderStatus != 5 && order.OrderStatus != 4)
-            {
-                RestoreOrderStock(order);
-            }
-
-            _dbContext.OrderDetail.RemoveRange(order.OrderDetails);
-            _dbContext.Order.Remove(order);
-            _dbContext.SaveChanges();
 
             return Json(new { success = true, message = $"Đã xóa đơn hàng #{id} thành công!" });
         }

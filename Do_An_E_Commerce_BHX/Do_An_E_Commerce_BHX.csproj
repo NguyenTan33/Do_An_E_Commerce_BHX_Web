@@ -198,6 +198,7 @@
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\CustomerTierHelper.cs" />
+    <Compile Include="Models\UserPresence.cs" />
     <Compile Include="Models\Entities\Cart.cs" />
     <Compile Include="Models\Entities\CartDetail.cs" />
     <Compile Include="Models\Entities\Order.cs" />
@@ -224,15 +225,19 @@
     <Compile Include="Repositories\Interfaces\IGenericRepository.cs" />
     <Compile Include="Repositories\Interfaces\IOrderRepository.cs" />
     <Compile Include="Repositories\Interfaces\IProductRepository.cs" />
+    <Compile Include="Services\Implementations\AnalyticsService.cs" />
     <Compile Include="Services\Implementations\CartService.cs" />
     <Compile Include="Services\Implementations\CustomerSupportService.cs" />
     <Compile Include="Services\Implementations\OrderInvoiceEmailService.cs" />
     <Compile Include="Services\Implementations\OrderService.cs" />
     <Compile Include="Services\Implementations\PaymentService.cs" />
     <Compile Include="Services\Implementations\ProductService.cs" />
+    <Compile Include="Services\Implementations\UserService.cs" />
+    <Compile Include="Services\Interfaces\IAnalyticsService.cs" />
     <Compile Include="Services\Interfaces\ICartServices.cs" />
     <Compile Include="Services\Interfaces\IOrderServices.cs" />
     <Compile Include="Services\Interfaces\IPaymentService.cs" />
+    <Compile Include="Services\Interfaces\IUserService.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>

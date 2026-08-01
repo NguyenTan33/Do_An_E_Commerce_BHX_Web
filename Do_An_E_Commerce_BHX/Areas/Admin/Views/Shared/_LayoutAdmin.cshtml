@@ -143,15 +143,37 @@
                     {
                         adminName = ViewBag.FullName.ToString();
                     }
-                    else if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
+                    else if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
-                        adminName = User.Identity.Name;
+                        try
+                        {
+                            using (var db = new Do_An_E_Commerce_BHX.Models.ApplicationDbContext())
+                            {
+                                var uId = Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(User.Identity);
+                                var uObj = db.Users.Find(uId);
+                                if (uObj != null && !string.IsNullOrWhiteSpace(uObj.FullName))
+                                {
+                                    adminName = uObj.FullName;
+                                }
+                                else if (!string.IsNullOrEmpty(User.Identity.Name))
+                                {
+                                    adminName = User.Identity.Name.Contains("@") ? User.Identity.Name.Split('@')[0] : User.Identity.Name;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            if (!string.IsNullOrEmpty(User.Identity.Name))
+                            {
+                                adminName = User.Identity.Name.Contains("@") ? User.Identity.Name.Split('@')[0] : User.Identity.Name;
+                            }
+                        }
                     }
                     string initial = !string.IsNullOrEmpty(adminName) ? adminName.Substring(0, Math.Min(2, adminName.Length)).ToUpper() : "AD";
                 }
                 <div class="avatar">@initial</div>
-                <div>
-                    <div style="font-size:13.5px;font-weight:600;">@adminName</div>
+                <div style="overflow: hidden;">
+                    <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="@adminName">@adminName</div>
                     <small>Quản trị viên (Admin)</small>
                 </div>
             </div>

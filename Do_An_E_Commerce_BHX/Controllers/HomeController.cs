@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models.Entities;
@@ -28,8 +29,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             const int pageSize = 12;
 
-            // 1. Lấy dữ liệu cơ bản
-            var query = db.Product.Where(p => p.IsAvailable && !p.IsLock);
+            // 1. Lấy dữ liệu cơ bản (Include ParentProduct để tính tồn kho thùng quy đổi từ lon lẻ mẹ)
+            var query = db.Product.Include(p => p.ParentProduct).Where(p => p.IsAvailable && !p.IsLock);
 
             // 2. Lọc theo danh mục
             if (categoryId.HasValue)
@@ -81,12 +82,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 .ToList();
 
             var hotProducts = db.Product
+                .Include(p => p.ParentProduct)
                 .Where(p => p.IsAvailable && !p.IsLock && p.IsHot)
                 .OrderByDescending(p => p.CreatedDate)
                 .Take(10)
                 .ToList();
 
             var bestSellerProducts = db.Product
+                .Include(p => p.ParentProduct)
                 .Where(p => p.IsAvailable && !p.IsLock && p.IsBestSeller)
                 .OrderByDescending(p => p.CreatedDate)
                 .Take(10)

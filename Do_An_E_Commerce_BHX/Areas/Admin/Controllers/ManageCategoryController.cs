@@ -1,9 +1,11 @@
-﻿using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Microsoft.AspNet.Identity;
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
@@ -14,14 +16,14 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         private readonly ApplicationDbContext _db = new ApplicationDbContext();
 
         // GET: Admin/ManageCategory
-        public ActionResult Index(string tuKhoa, string sortBy)
+        public async Task<ActionResult> Index(string tuKhoa, string sortBy)
         {
             var userId = User.Identity.GetUserId();
-            var user = _db.Users.Find(userId);
+            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
             ViewBag.FullName = user?.FullName;
 
             // Lấy danh sách Danh mục (Category)
-            var ds = _db.Category.AsQueryable();
+            var ds = _db.Category.AsNoTracking().AsQueryable();
 
             // Lọc theo tên danh mục
             if (!string.IsNullOrWhiteSpace(tuKhoa))
@@ -43,7 +45,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                     break;
             }
 
-            return View(ds.ToList());
+            return View(await ds.ToListAsync());
         }
 
         // GET: Admin/ManageCategory/ThemDanhMuc
@@ -56,12 +58,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManageCategory/ThemDanhMuc
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ThemDanhMuc(Category themDmMoi)
+        public async Task<ActionResult> ThemDanhMuc(Category themDmMoi)
         {
             if (ModelState.IsValid)
             {
                 _db.Category.Add(themDmMoi);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync();
 
                 return RedirectToAction("Index");
             }
@@ -71,9 +73,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
         // GET: Admin/ManageCategory/SuaDanhMuc/5
         [HttpGet]
-        public ActionResult SuaDanhMuc(int id)
+        public async Task<ActionResult> SuaDanhMuc(int id)
         {
-            var danhmuc = _db.Category.FirstOrDefault(x => x.Id == id);
+            var danhmuc = await _db.Category.FirstOrDefaultAsync(x => x.Id == id);
 
             if (danhmuc == null)
             {
@@ -86,16 +88,16 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManageCategory/SuaDanhMuc
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SuaDanhMuc(Category danhMucMoi)
+        public async Task<ActionResult> SuaDanhMuc(Category danhMucMoi)
         {
             if (ModelState.IsValid)
             {
-                var danhMuccu = _db.Category.FirstOrDefault(x => x.Id == danhMucMoi.Id);
+                var danhMuccu = await _db.Category.FirstOrDefaultAsync(x => x.Id == danhMucMoi.Id);
                 if (danhMuccu != null)
                 {
                     danhMuccu.Name = danhMucMoi.Name;
                 }
-                _db.SaveChanges();
+                await _db.SaveChangesAsync();
 
                 return RedirectToAction("Index");
             }
@@ -103,27 +105,35 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return View(danhMucMoi);
         }
 
-        // POST: Admin/ManageCategory/XoaDm/5
+        // POST: Admin/ManageCategory/XoaDanhMuc/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult XoaDm(int id)
+        public async Task<ActionResult> XoaDanhMuc(int id)
         {
-            var danhmuc = _db.Category.FirstOrDefault(x => x.Id == id);
-            if (danhmuc != null)
+            var category = await _db.Category.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
             {
-                _db.Category.Remove(danhmuc);
-                _db.SaveChanges();
+                return HttpNotFound();
             }
 
+            var hasProducts = await _db.Product.AnyAsync(p => p.CategoryId == id);
+            if (hasProducts)
+            {
+                TempData["ErrorMessage"] = "Không thể xóa danh mục này vì đang chứa sản phẩm!";
+                return RedirectToAction("Index");
+            }
+
+            _db.Category.Remove(category);
+            await _db.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Xóa danh mục thành công!";
             return RedirectToAction("Index");
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _db.Dispose();
-            }
+            if (disposing) _db?.Dispose();
             base.Dispose(disposing);
         }
     }

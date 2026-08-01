@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Models.Entities; // Thay bằng namespace chứa ApplicationUser nếu cần
+using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
-using System.Data.Entity; //  Thêm dòng này ở đầu file ManageUserController.cs
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
@@ -20,16 +21,18 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
     {
         private ApplicationDbContext _db = new ApplicationDbContext();
         private ApplicationUserManager _userManager;
-        private RoleManager<IdentityRole> _roleManager; // Đổi ApplicationRoleManager thành RoleManager<IdentityRole>
+        private RoleManager<IdentityRole> _roleManager;
+        private IUserService _userService;
 
         public ManageUserController()
         {
         }
 
-        public ManageUserController(ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager)
+        public ManageUserController(ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager, IUserService userService = null)
         {
             UserManager = userManager;
             RoleManager = roleManager;
+            _userService = userService;
         }
 
         public ApplicationUserManager UserManager
@@ -44,51 +47,21 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             private set => _roleManager = value;
         }
 
+        private IUserService UserService
+        {
+            get => _userService ?? new UserService(_db, UserManager, RoleManager);
+        }
+
         // GET: Admin/ManageUser
         public async Task<ActionResult> Index(string tuKhoa, string roleFilter)
         {
             var currentUserId = User.Identity.GetUserId();
-            var currentUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == currentUserId); 
+            var currentUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId); 
             ViewBag.FullName = currentUser?.FullName;
 
-            var usersQuery = _db.Users.AsQueryable();
+            var userViewModels = await UserService.GetUserViewModelsAsync(tuKhoa, roleFilter);
 
-            // Tìm kiếm theo Email, Username hoặc FullName
-            if (!string.IsNullOrWhiteSpace(tuKhoa))
-            {
-                usersQuery = usersQuery.Where(u => u.UserName.Contains(tuKhoa) ||
-                                                   u.Email.Contains(tuKhoa) ||
-                                                   u.FullName.Contains(tuKhoa));
-            }
-
-            var usersList = await usersQuery.ToListAsync();
-
-            // Ghép Role Name vào từng User để hiển thị
-            var userViewModels = new List<UserViewModel>();
-            foreach (var user in usersList)
-            {
-                var roles = await UserManager.GetRolesAsync(user.Id);
-
-                // Lọc theo Role nếu có chọn filter
-                if (!string.IsNullOrEmpty(roleFilter) && !roles.Contains(roleFilter))
-                {
-                    continue;
-                }
-
-                userViewModels.Add(new UserViewModel
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    FullName = user.FullName,
-                    PhoneNumber = user.PhoneNumber,
-                    LoyaltyPoints = user.LoyaltyPoints,
-                    Roles = roles.ToList(),
-                    IsLocked = user.LockoutEndDateUtc.HasValue && user.LockoutEndDateUtc.Value > DateTime.UtcNow
-                });
-            }
-
-            ViewBag.RolesList = new SelectList(await _db.Roles.Select(r => r.Name).ToListAsync());
+            ViewBag.RolesList = new SelectList(await _db.Roles.AsNoTracking().Select(r => r.Name).ToListAsync());
             return View(userViewModels);
         }
 
@@ -96,7 +69,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> ThemUser()
         {
-            ViewBag.Roles = new SelectList(await _db.Roles.ToListAsync(), "Name", "Name");
+            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name");
             return View();
         }
 
@@ -107,21 +80,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    FullName = model.FullName,
-                    PhoneNumber = model.PhoneNumber
-                };
-
-                var result = await UserManager.CreateAsync(user, model.Password);
+                var result = await UserService.CreateUserAsync(model);
                 if (result.Succeeded)
                 {
-                    if (!string.IsNullOrEmpty(model.RoleName))
-                    {
-                        await UserManager.AddToRoleAsync(user.Id, model.RoleName);
-                    }
                     return RedirectToAction("Index");
                 }
 
@@ -131,7 +92,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
             }
 
-            ViewBag.Roles = new SelectList(await _db.Roles.ToListAsync(), "Name", "Name", model.RoleName);
+            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.RoleName);
             return View(model);
         }
 
@@ -155,7 +116,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 SelectedRole = userRoles.FirstOrDefault()
             };
 
-            ViewBag.Roles = new SelectList(await _db.Roles.ToListAsync(), "Name", "Name", model.SelectedRole);
+            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
             return View(model);
         }
 
@@ -166,26 +127,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await UserManager.FindByIdAsync(model.Id);
-                if (user == null) return HttpNotFound();
-
-                user.FullName = model.FullName;
-                user.PhoneNumber = model.PhoneNumber;
-                user.Email = model.Email;
-                user.UserName = model.Email;
-
-                var result = await UserManager.UpdateAsync(user);
+                var result = await UserService.EditUserAsync(model);
                 if (result.Succeeded)
                 {
-                    // Cập nhật lại Role
-                    var currentRoles = await UserManager.GetRolesAsync(user.Id);
-                    await UserManager.RemoveFromRolesAsync(user.Id, currentRoles.ToArray());
-
-                    if (!string.IsNullOrEmpty(model.SelectedRole))
-                    {
-                        await UserManager.AddToRoleAsync(user.Id, model.SelectedRole);
-                    }
-
                     return RedirectToAction("Index");
                 }
 
@@ -195,7 +139,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
             }
 
-            ViewBag.Roles = new SelectList(await _db.Roles.ToListAsync(), "Name", "Name", model.SelectedRole);
+            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
             return View(model);
         }
 
@@ -343,6 +287,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         public int LoyaltyPoints { get; set; }
         public List<string> Roles { get; set; }
         public bool IsLocked { get; set; }
+        public DateTime? LastActivityDate { get; set; }
+
+        public UserPresence Presence => new UserPresence(LastActivityDate);
     }
 
     public class CreateUserViewModel

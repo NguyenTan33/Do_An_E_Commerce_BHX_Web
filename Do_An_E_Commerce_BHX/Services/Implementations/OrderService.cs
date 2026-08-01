@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Data.Entity;
+using System.Threading.Tasks;
+
 namespace Do_An_E_Commerce_BHX.Services.Implementations
 {
     public class OrderService
@@ -204,7 +206,96 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                     targetStockProduct.Quantity += quantityToRestore;
                 }
             }
+            dbContext.Order.Remove(order);
             dbContext.SaveChanges();
+        }
+
+        // ===== CÁC PHƯƠNG THỨC DÀNH CHO ADMIN MANAGE ORDER =====
+        public async Task<List<Order>> GetAdminOrdersAsync(string search = "", int? status = 0)
+        {
+            var query = dbContext.Order
+                .Include(o => o.User)
+                .Include(o => o.OrderDetails.Select(d => d.Product))
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string s = search.Trim();
+                int orderIdSearch;
+                bool isNumeric = int.TryParse(s, out orderIdSearch);
+
+                query = query.Where(o => o.ReceiverPhone.Contains(s) || 
+                                         o.ReceiverName.Contains(s) || 
+                                         (isNumeric && o.Id == orderIdSearch));
+            }
+
+            if (status.HasValue && status.Value >= 0)
+            {
+                query = query.Where(o => o.OrderStatus == status.Value);
+            }
+
+            return await query.OrderByDescending(o => o.OrderDate).ToListAsync();
+        }
+
+        public async Task<Dictionary<string, int>> GetOrderCountsAsync()
+        {
+            var dict = new Dictionary<string, int>();
+            dict["CountAll"] = await dbContext.Order.AsNoTracking().CountAsync();
+            dict["CountPending"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 0);
+            dict["CountApproved"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 1);
+            dict["CountPacked"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 2);
+            dict["CountDelivering"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 3);
+            dict["CountSuccess"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 4);
+            dict["CountFailed"] = await dbContext.Order.AsNoTracking().CountAsync(o => o.OrderStatus == 5);
+            return dict;
+        }
+
+        public async Task<bool> ApproveOrderAsync(int id)
+        {
+            var order = await dbContext.Order.FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null) return false;
+
+            order.OrderStatus = 1;
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CancelOrderAsync(int id)
+        {
+            var order = await dbContext.Order.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null) return false;
+
+            if (order.OrderDetails != null)
+            {
+                foreach (var item in order.OrderDetails)
+                {
+                    var product = await dbContext.Product.FirstOrDefaultAsync(p => p.Id == item.ProductId);
+                    if (product != null)
+                    {
+                        product.Quantity += item.Quantity;
+                    }
+                }
+            }
+
+            order.OrderStatus = 5;
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteOrderAsync(int id)
+        {
+            var order = await dbContext.Order.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null) return false;
+
+            if (order.OrderDetails != null && order.OrderDetails.Any())
+            {
+                dbContext.OrderDetail.RemoveRange(order.OrderDetails);
+            }
+
+            dbContext.Order.Remove(order);
+            await dbContext.SaveChangesAsync();
+            return true;
         }
 
         //♥cái này là hàm tính tiền chưa Discount nha Tân - nếu null cart return 0

@@ -36,8 +36,8 @@
                     <p class="text-dark small m-0">@(string.IsNullOrEmpty(Model.Description) ? "Sản phẩm tươi ngon, đảm bảo chất lượng chính hãng từ Bách Hóa Xanh." : Model.Description)</p>
                 </div>
 
-                <button type="button" class="btn btn-success btn-lg px-5 fw-bold rounded-3 shadow btn-add-cart" data-id="@Model.Id" @(Model.Quantity <= 0 ? "disabled" : "")>
-                    <i class="fa-solid fa-cart-plus me-2"></i> @(Model.Quantity <= 0 ? "Hết Hàng" : "Thêm Vào Giỏ Hàng")
+                <button type="button" class="btn btn-success btn-lg px-5 fw-bold rounded-3 shadow btn-add-cart" data-id="@Model.Id" @(Model.IsOutOfStock ? "disabled" : "")>
+                    <i class="fa-solid fa-cart-plus me-2"></i> @(Model.IsOutOfStock ? "Hết Hàng" : "Thêm Vào Giỏ Hàng")
                 </button>
             </div>
         </div>

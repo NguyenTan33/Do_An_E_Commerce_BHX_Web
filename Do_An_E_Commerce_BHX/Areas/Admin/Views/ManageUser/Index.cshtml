@@ -16,15 +16,57 @@
             <h3 class="mb-1" style="font-size: 20px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 10px;">
                 <i class="fa-solid fa-users text-primary"></i> Quản Lý Người Dùng
             </h3>
-            <p class="mb-0" style="font-size: 13.5px; color: var(--adm-text-2);">Danh sách tài khoản, điểm thưởng và phân quyền hệ thống</p>
+            <p class="mb-0" style="font-size: 13.5px; color: var(--adm-text-2);">Danh sách tài khoản, điểm thưởng, phân quyền và trạng thái trực tuyến</p>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-secondary" style="font-size: 13px; padding: 8px 12px;">
-                <i class="fa-solid fa-user-check me-1"></i> @(Model?.Count() ?? 0) User
-            </span>
-            <a href="@Url.Action("ThemUser", "ManageUser")" class="btn btn-success">
+            <a href="@Url.Action("ThemUser", "ManageUser")" class="btn btn-success fw-bold">
                 <i class="fa-solid fa-user-plus"></i> Thêm tài khoản
             </a>
+        </div>
+    </div>
+
+    @{
+        int onlineUsersCount = Model != null ? Model.Count(u => u.Presence.IsOnline) : 0;
+        int offlineUsersCount = Model != null ? Model.Count(u => !u.Presence.IsOnline) : 0;
+        int totalUsersCount = Model != null ? Model.Count() : 0;
+    }
+
+    <!-- ===== THẺ THỐNG KÊ SỐ LƯỢNG NGƯỜI DÙNG ONLINE / OFFLINE ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 border border-success d-flex align-items-center justify-content-between shadow-sm" style="background: rgba(16, 185, 129, 0.08);">
+                <div>
+                    <div class="small text-uppercase fw-bold text-success" style="letter-spacing: 0.5px;">Đang Trực Tuyến (Online)</div>
+                    <h3 class="m-0 fw-bold text-white font-monospace mt-1">@onlineUsersCount <span class="fs-6 text-muted font-sans-serif fw-normal">tài khoản</span></h3>
+                </div>
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fa-solid fa-signal"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 border border-warning d-flex align-items-center justify-content-between shadow-sm" style="background: rgba(240, 180, 41, 0.08);">
+                <div>
+                    <div class="small text-uppercase fw-bold text-warning" style="letter-spacing: 0.5px;">Đang Ngoại Tuyến (Offline)</div>
+                    <h3 class="m-0 fw-bold text-white font-monospace mt-1">@offlineUsersCount <span class="fs-6 text-muted font-sans-serif fw-normal">tài khoản</span></h3>
+                </div>
+                <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fa-solid fa-moon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 border border-secondary d-flex align-items-center justify-content-between shadow-sm" style="background: var(--adm-surface-2);">
+                <div>
+                    <div class="small text-uppercase fw-bold text-info" style="letter-spacing: 0.5px;">Tổng Số Người Dùng</div>
+                    <h3 class="m-0 fw-bold text-white font-monospace mt-1">@totalUsersCount <span class="fs-6 text-muted font-sans-serif fw-normal">tài khoản</span></h3>
+                </div>
+                <div class="rounded-circle bg-info text-dark d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -135,13 +177,16 @@
                                     }
                                 </td>
                                 <td>
+                                    <div class="mb-1">
+                                        @Html.Raw(user.Presence.BadgeHtml)
+                                    </div>
                                     @if (user.IsLocked)
                                     {
-                                        <span class="badge bg-dark border border-secondary text-muted">Đang bị khóa 🔒</span>
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">🔒 Đã khóa</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-success">Đang hoạt động ✅</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">✅ Mở khóa</span>
                                     }
                                 </td>
                                 <td class="text-end pe-4">

@@ -143,14 +143,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
             if (string.IsNullOrWhiteSpace(content)) return 0;
 
             // 1. Tìm dạng BHX1234, BHX 1234, BHX_1234, BHX-1234
-            var match = Regex.Match(content, @"BHX[\_\-\s]?(\d+)", RegexOptions.IgnoreCase);
+            var match = Regex.Match(content, @"BHX[-_\s]?(\d+)", RegexOptions.IgnoreCase);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int id1))
             {
                 return id1;
             }
 
             // 2. Tìm dạng DH1234, DH 1234, DONHANG1234
-            var match2 = Regex.Match(content, @"(?:DH|DONHANG)[\_\-\s]?(\d+)", RegexOptions.IgnoreCase);
+            var match2 = Regex.Match(content, @"(?:DH|DONHANG)[-_\s]?(\d+)", RegexOptions.IgnoreCase);
             if (match2.Success && int.TryParse(match2.Groups[1].Value, out int id2))
             {
                 return id2;

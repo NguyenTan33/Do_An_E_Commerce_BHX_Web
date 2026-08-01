@@ -1,4 +1,5 @@
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
@@ -49,7 +50,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpGet]
         public ActionResult Detail(int productId)
         {
-            Product product = _dbContext.Product.Find(productId);
+            Product product = _dbContext.Product.Include(p => p.ParentProduct).FirstOrDefault(p => p.Id == productId);
             if (product == null) return HttpNotFound();
 
             // Nhét reviews và questions vào ViewBag để View xài

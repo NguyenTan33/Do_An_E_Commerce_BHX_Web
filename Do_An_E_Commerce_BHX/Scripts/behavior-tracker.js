@@ -86,9 +86,16 @@
 
     function sendDwellTimeLog() {
         if (activeDwellSeconds > 0) {
+            var targetId = null;
+            var pathname = window.location.pathname || '';
+            var match = pathname.match(/\/Product\/Detail\/(\d+)/i);
+            if (match) {
+                targetId = parseInt(match[1]);
+            }
             sendLog({
                 EventType: 'PageDwellTime',
-                TargetName: window.location.pathname,
+                TargetId: targetId,
+                TargetName: pathname,
                 DurationSeconds: activeDwellSeconds
             });
         }

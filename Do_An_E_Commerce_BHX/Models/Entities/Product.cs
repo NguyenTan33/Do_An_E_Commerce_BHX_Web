@@ -63,5 +63,39 @@ namespace Do_An_E_Commerce_BHX.Models.Entities
         public virtual Category Category { get; set; }
 
         public virtual ICollection<ProductUnit> ProductUnits { get; set; } = new List<ProductUnit>();
+
+        /// <summary>
+        /// Tồn kho khả dụng thực tế (Nếu là sản phẩm con dạng Thùng/Hộp thì tính số Thùng quy đổi từ số lượng sản phẩm mẹ)
+        /// </summary>
+        [NotMapped]
+        public int AvailableStock
+        {
+            get
+            {
+                if (ParentProductId.HasValue && ParentProduct != null)
+                {
+                    int multiplier = UnitMultiplier > 0 ? UnitMultiplier : 1;
+                    return ParentProduct.Quantity / multiplier;
+                }
+                return Quantity;
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra sản phẩm có hết hàng thực sự không (Nếu là sản phẩm con dạng Thùng/Hộp thì hết hàng khi tồn kho sản phẩm mẹ không đủ 1 Thùng)
+        /// </summary>
+        [NotMapped]
+        public bool IsOutOfStock
+        {
+            get
+            {
+                if (ParentProductId.HasValue && ParentProduct != null)
+                {
+                    int multiplier = UnitMultiplier > 0 ? UnitMultiplier : 1;
+                    return ParentProduct.Quantity < multiplier;
+                }
+                return Quantity <= 0;
+            }
+        }
     }
 }

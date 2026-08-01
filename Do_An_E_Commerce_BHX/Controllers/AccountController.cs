@@ -80,9 +80,15 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 case SignInStatus.Success:
                     var user = await UserManager.FindByEmailAsync(model.Email) ?? await UserManager.FindByNameAsync(model.Email);
-                    if (user != null && await UserManager.IsInRoleAsync(user.Id, "Admin"))
+                    if (user != null)
                     {
-                        return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
+                        user.LastActivityDate = DateTime.Now;
+                        await UserManager.UpdateAsync(user);
+
+                        if (await UserManager.IsInRoleAsync(user.Id, "Admin"))
+                        {
+                            return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
+                        }
                     }
                     return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:

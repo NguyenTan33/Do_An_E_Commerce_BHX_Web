@@ -12,6 +12,7 @@ namespace Do_An_E_Commerce_BHX.Models
         public string FullName { get; set; }
         public string Address { get; set; }
         public int LoyaltyPoints { get; set; } = 0; // Điểm tích lũy Bách Hóa Xanh (100 điểm = 1.000đ)
+        public System.DateTime? LastActivityDate { get; set; } // Thời điểm hoạt động / tương tác gần nhất
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
@@ -114,6 +115,8 @@ namespace Do_An_E_Commerce_BHX.Models
                             ALTER TABLE [dbo].[AspNetUsers] ADD [Address] NVARCHAR(500) NULL;
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[AspNetUsers]') AND name = 'LoyaltyPoints')
                             ALTER TABLE [dbo].[AspNetUsers] ADD [LoyaltyPoints] INT DEFAULT 0 NOT NULL;
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[AspNetUsers]') AND name = 'LastActivityDate')
+                            ALTER TABLE [dbo].[AspNetUsers] ADD [LastActivityDate] DATETIME NULL;
                     END
                 ";
                 db.Database.ExecuteSqlCommand(sql);

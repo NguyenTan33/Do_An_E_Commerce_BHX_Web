@@ -186,6 +186,99 @@
             </div>
         </div>
     </div>
+
+    <!-- BẢNG THEO DÕI KHÁCH VÃNG LAI & ĐỊA CHỈ IP TRUY CẬP (FULL-WIDTH Ở CUỐI TRANG) -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0">
+                        <i class="fa-solid fa-network-wired text-primary me-2"></i>Danh Sách Khách Vãng Lai & Địa Chỉ IP Truy Cập Mới Nhất
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold px-3 py-2 fs-6">
+                            <i class="fa-solid fa-user-secret me-1"></i> Khách vãng lai: @Model.GuestSessionsCount phiên
+                        </span>
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 fs-6">
+                            <i class="fa-solid fa-user-check me-1"></i> Thành viên: @Model.RegisteredSessionsCount phiên
+                        </span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle m-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã Phiên (Session ID)</th>
+                                <th>Địa Chỉ IP</th>
+                                <th>Thiết Bị</th>
+                                <th>Loại Khách</th>
+                                <th>Số Trang Đã Xem</th>
+                                <th>Trang Giới Thiệu (Referrer)</th>
+                                <th>Thời Gian Tương Tác Cuối</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentGuestVisitors != null && Model.RecentGuestVisitors.Any())
+                            {
+                                foreach (var g in Model.RecentGuestVisitors)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code class="text-primary fw-bold">@g.SessionId</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-dark font-monospace text-warning px-2 py-1 fs-6">
+                                                <i class="fa-solid fa-globe me-1"></i>@g.IPAddress
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (g.DeviceType == "Mobile")
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-mobile-screen me-1"></i>Mobile</span>
+                                            }
+                                            else if (g.DeviceType == "Tablet")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-tablet-screen-button me-1"></i>Tablet</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info bg-opacity-10 text-info"><i class="fa-solid fa-desktop me-1"></i>Desktop</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (g.IsGuest)
+                                            {
+                                                <span class="badge bg-secondary"><i class="fa-solid fa-user-ghost me-1"></i> Khách Vãng Lai</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success"><i class="fa-solid fa-user-check me-1"></i> @g.UserFullName</span>
+                                            }
+                                        </td>
+                                        <td class="fw-bold text-dark">
+                                            @g.PageViewCount lượt
+                                        </td>
+                                        <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@g.ReferrerUrl">
+                                            <span class="small text-muted">@g.ReferrerUrl</span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            @g.LastVisitDate.ToString("dd/MM/yyyy HH:mm:ss")
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-3 text-muted">Chưa ghi nhận dữ liệu phiên truy cập từ khách.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- SCRIPT KHỞI TẠO BIỂU ĐỒ CHART.JS -->

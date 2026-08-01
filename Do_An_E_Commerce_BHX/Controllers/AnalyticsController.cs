@@ -1,9 +1,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
 using Newtonsoft.Json;
 
@@ -13,10 +16,17 @@ namespace Do_An_E_Commerce_BHX.Controllers
     public class AnalyticsController : Controller
     {
         private readonly ApplicationDbContext _db = new ApplicationDbContext();
+        private readonly IAnalyticsService _analyticsService;
 
         public AnalyticsController()
         {
             ApplicationDbContext.EnsureProductColumnsExist(_db);
+            _analyticsService = new AnalyticsService(_db);
+        }
+
+        public AnalyticsController(IAnalyticsService analyticsService)
+        {
+            _analyticsService = analyticsService;
         }
 
         // DTO đại diện dữ liệu từ client
@@ -36,7 +46,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
         // POST: /Analytics/LogEvent (Hỗ trợ AJAX & Beacon ngầm)
         [HttpPost]
-        public ActionResult LogEvent(BehaviorEventDto data)
+        public async Task<ActionResult> LogEvent(BehaviorEventDto data)
         {
             try
             {
@@ -46,7 +56,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     Request.InputStream.Position = 0;
                     using (var reader = new StreamReader(Request.InputStream))
                     {
-                        string body = reader.ReadToEnd();
+                        string body = await reader.ReadToEndAsync();
                         if (!string.IsNullOrEmpty(body))
                         {
                             data = JsonConvert.DeserializeObject<BehaviorEventDto>(body);
@@ -60,58 +70,36 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 }
 
                 string userId = User != null && User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
-                string ip = Request.UserHostAddress;
 
-                // Tự động phân loại thiết bị nếu không được truyền từ client
-                string device = data.DeviceType;
-                if (string.IsNullOrEmpty(device))
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    string userAgent = Request.UserAgent ?? "";
-                    if (userAgent.Contains("Mobile") || userAgent.Contains("Android") || userAgent.Contains("iPhone"))
-                    {
-                        device = "Mobile";
-                    }
-                    else if (userAgent.Contains("iPad") || userAgent.Contains("Tablet"))
-                    {
-                        device = "Tablet";
-                    }
-                    else
-                    {
-                        device = "Desktop";
-                    }
+                    var userSvc = new UserService(_db, null, null);
+                    await userSvc.UpdateLastActivityAsync(userId);
                 }
 
-                var log = new UserBehaviorLog
-                {
-                    SessionId = !string.IsNullOrEmpty(data.SessionId) ? data.SessionId : Session.SessionID,
-                    UserId = userId,
-                    EventType = data.EventType,
-                    TargetId = data.TargetId,
-                    TargetName = data.TargetName,
-                    DurationSeconds = data.DurationSeconds,
-                    ScrollPercent = data.ScrollPercent,
-                    ReferrerUrl = !string.IsNullOrEmpty(data.ReferrerUrl) ? data.ReferrerUrl : Request.UrlReferrer?.ToString(),
-                    PageLoadMs = data.PageLoadMs,
-                    ExtraDataJson = data.ExtraDataJson,
-                    DeviceType = device,
-                    IPAddress = ip,
-                    CreatedDate = DateTime.Now
-                };
-
-                _db.UserBehaviorLog.Add(log);
-                _db.SaveChanges();
+                await _analyticsService.LogBehaviorEventAsync(
+                    data,
+                    userId,
+                    Request.UserHostAddress,
+                    Request.UserAgent,
+                    Session.SessionID,
+                    Request.UrlReferrer
+                );
 
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, error = ex.Message });
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) _db.Dispose();
+            if (disposing)
+            {
+                _db?.Dispose();
+            }
             base.Dispose(disposing);
         }
     }
