@@ -140,30 +140,8 @@
                         html += '</tbody></table></div></div>';
                     }
 
-                    // THANH HÀNH ĐỘNG HỦY ĐƠN & THANH TOÁN
-                    var showCancel = (o.rawOrderStatus === 0 || o.rawOrderStatus === 1 || o.rawOrderStatus === 2) && o.rawOrderStatus !== 5;
-                    var showPay = o.rawPaymentStatus === 0 && !o.isExpired && o.rawOrderStatus !== 5;
-
-                    if (showCancel || showPay || o.isExpired) {
-                        html += '<div class="pt-3 border-top d-flex justify-content-end align-items-center gap-2 flex-wrap">';
-                        
-                        if (o.isExpired && o.rawOrderStatus === 5) {
-                            html += '<span class="text-danger small fw-bold me-auto"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đơn hàng tự động hủy do quá 10 phút chưa thanh toán.</span>';
-                        }
-
-                        if (showCancel) {
-                            html += '<button class="btn btn-outline-danger btn-sm rounded-pill px-3 btn-cancel-order" data-id="' + o.id + '">' +
-                                '<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng' +
-                                '</button>';
-                        }
-
-                        if (showPay) {
-                            html += '<a href="' + o.paymentUrl + '" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">' +
-                                '<i class="fa-solid fa-credit-card me-1"></i> THANH TOÁN NGAY (VIETQR)' +
-                                '</a>';
-                        }
-
-                        html += '</div>';
+                    if (o.isExpired && o.rawOrderStatus === 5) {
+                        html += '<div class="pt-2 border-top"><span class="text-danger small fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đơn hàng tự động hủy do quá 10 phút chưa thanh toán.</span></div>';
                     }
 
                     html += '</div></div>';

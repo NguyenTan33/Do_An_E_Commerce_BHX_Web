@@ -1,396 +1,335 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.UserAddress>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.UserAddress>
 @{
-    Layout = null;
-    ViewBag.Title = "Địa chỉ nhận hàng";
+    ViewBag.Title = "Sổ địa chỉ giao hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Lấy thông tin user hiện tại từ DB/ViewBag nếu có
+    string currentUserId = Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(User.Identity);
+    string fullName = "Khách hàng";
+    int points = 0;
+
+    try
+    {
+        using (var db = new Do_An_E_Commerce_BHX.Models.ApplicationDbContext())
+        {
+            var u = db.Users.Find(currentUserId);
+            if (u != null)
+            {
+                fullName = !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : User.Identity.Name;
+                points = u.LoyaltyPoints;
+            }
+        }
+    }
+    catch { }
+
+    string initial = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, Math.Min(2, fullName.Length)).ToUpper() : "KH";
 }
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+@section Styles {
     <style>
-        :root {
-            --leaf: #20b04c;
-            --forest: #0e8133;
-            --bg: #f4f7f6;
-            --ink: #1f2937;
-            --muted: #6b7280;
-            --card: #ffffff;
-            --line: #e5e7eb;
-            --danger: #ef4444;
+        /* ===== ADDRESS BOOK DASHBOARD STYLES ===== */
+        .profile-container {
+            max-width: 1140px;
+            margin: 0 auto;
         }
 
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--ink);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .header-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 30px;
-            box-sizing: border-box;
-        }
-
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--forest);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            padding: 8px 16px;
-            background: rgba(32, 176, 76, 0.1);
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-            .btn-back:hover {
-                background: var(--leaf);
-                color: #fff;
-            }
-
-        .card-container {
-            background: var(--card);
-            width: 100%;
-            max-width: 600px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        .profile-sidebar-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
             overflow: hidden;
-            margin: 80px 20px 40px;
+            box-shadow: 0 4px 20px rgba(14, 42, 32, 0.05);
         }
 
-        .card-header {
-            background: linear-gradient(135deg, var(--leaf), var(--forest));
-            padding: 24px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #fff;
-        }
-
-            .card-header h2 {
-                margin: 0;
-                font-size: 18px;
-                font-weight: 700;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-        .btn-add-toggle {
-            background: #fff;
-            color: var(--forest);
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-        }
-
-            .btn-add-toggle:hover {
-                background: #e6f4ea;
-            }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        /* ===== Form Thêm Mới Ẩn/Hiện Tại Chỗ ===== */
-        .add-address-form {
-            display: none;
-            background: #fafafa;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-title {
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 14px;
-            color: var(--forest);
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-            .form-group label {
-                display: block;
-                font-size: 13px;
-                font-weight: 600;
-                margin-bottom: 6px;
-                color: var(--ink);
-            }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            box-sizing: border-box;
-            outline: none;
-            background: #fff;
-        }
-
-            .form-control:focus {
-                border-color: var(--leaf);
-            }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--ink);
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .btn-cancel {
-            background: transparent;
-            color: var(--muted);
-            border: 1px solid var(--line);
-            padding: 9px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .btn-save {
-            background: var(--leaf);
-            color: #fff;
-            border: none;
-            padding: 9px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* ===== Danh Sách Địa Chỉ ===== */
-        .address-item {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 14px;
-            position: relative;
-            background: #fff;
-        }
-
-            .address-item.is-default {
-                border-color: var(--leaf);
-                background: #f0fdf4;
-            }
-
-        .address-head {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-
-        .address-tag {
-            background: var(--line);
-            color: var(--ink);
-            font-size: 12px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .badge-default {
-            background: var(--leaf);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .receiver-info {
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--ink);
-        }
-
-        .address-detail {
-            color: var(--muted);
-            font-size: 14px;
-            margin-top: 6px;
-            line-height: 1.4;
-        }
-
-        .address-actions {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--line);
-        }
-
-        .action-links {
-            display: flex;
-            gap: 12px;
-        }
-
-            .action-links a, .action-links button {
-                color: var(--leaf);
-                text-decoration: none;
-                font-size: 13px;
-                font-weight: 600;
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 0;
-            }
-
-                .action-links button.btn-delete {
-                    color: var(--danger);
-                }
-
-        .btn-set-default {
-            background: transparent;
-            border: 1px solid var(--leaf);
-            color: var(--leaf);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .empty-state {
+        .profile-avatar-header {
+            background: linear-gradient(135deg, #163B2E 0%, #1F6B3F 100%);
+            padding: 32px 20px;
             text-align: center;
-            padding: 40px 20px;
-            color: var(--muted);
+            color: #ffffff;
         }
 
-            .empty-state i {
-                font-size: 40px;
-                margin-bottom: 10px;
-                color: var(--line);
-            }
-    </style>
-</head>
-<body>
+        .profile-avatar-circle {
+            width: 84px;
+            height: 84px;
+            background: #ffffff;
+            color: #1F6B3F;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
 
-    <!-- Nút quay lại trang Quản lý tài khoản -->
-    <div class="header-bar">
-        <a href="@Url.Action("Index", "Manage", new { area = "" })" class="btn-back">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại tài khoản
-        </a>
+        .profile-menu-list {
+            list-style: none;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .profile-menu-item a, .profile-menu-item button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+        }
+
+        .profile-menu-item a:hover, .profile-menu-item button:hover {
+            background: #f0fdf4;
+            color: #1F6B3F;
+        }
+
+        .profile-menu-item.active a {
+            background: #1F6B3F;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(31, 107, 63, 0.25);
+        }
+
+        .address-card-container {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(14, 42, 32, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .address-item-box {
+            background: #ffffff;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .address-item-box:hover {
+            border-color: #1F6B3F;
+            box-shadow: 0 6px 18px rgba(31, 107, 63, 0.08);
+        }
+
+        .address-item-box.is-default {
+            border-color: #1F6B3F;
+            background: #f0fdf4;
+        }
+
+        .badge-address-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .badge-default-tag {
+            background: #1F6B3F;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .add-address-form-box {
+            display: none;
+            background: #f9fafb;
+            border: 1.5px solid #d1d5db;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+    </style>
+}
+
+<div class="container py-4 profile-container">
+    <!-- TIÊU ĐỀ BREADCRUMB -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-map-location-dot text-danger me-2"></i>Sổ Địa Chỉ Giao Hàng</h3>
+            <small class="text-muted">Quản lý và cập nhật danh sách địa chỉ nhận hàng tiện lợi khi mua sắm</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index", "Manage")" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                <i class="fa-solid fa-arrow-left me-1"></i> Về quản lý tài khoản
+            </a>
+        </div>
     </div>
 
-    <div class="card-container">
-        <div class="card-header">
-            <h2><i class="fa-solid fa-location-dot"></i> Sổ địa chỉ nhận hàng</h2>
-            <button type="button" class="btn-add-toggle" onclick="toggleAddForm()">
-                <i class="fa-solid fa-plus"></i> Thêm mới
-            </button>
+    <!-- NỘI DUNG CHÍNH 2 CỘT -->
+    <div class="row g-4">
+        <!-- CỘT TRÁI: SIDEBAR -->
+        <div class="col-lg-4">
+            <div class="profile-sidebar-card">
+                <!-- AVATAR HEADER -->
+                <div class="profile-avatar-header">
+                    <div class="profile-avatar-circle">
+                        @initial
+                    </div>
+                    <h4 class="fw-bold m-0 mb-1">@fullName</h4>
+                    <div class="d-inline-flex align-items-center gap-2 mt-2">
+                        @Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(points)
+                    </div>
+                </div>
+
+                <!-- MENU CÁ NHÂN -->
+                <ul class="profile-menu-list">
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("Index", "Manage")">
+                            <i class="fa-solid fa-user text-success"></i>
+                            <span>Thông tin tài khoản</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("MyOrders", "Manage")">
+                            <i class="fa-solid fa-boxes-packing text-primary"></i>
+                            <span>Đơn hàng của tôi</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("MyVouchers", "Manage")">
+                            <i class="fa-solid fa-ticket text-warning"></i>
+                            <span>Ví Mã Giảm Giá</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item active">
+                        <a href="@Url.Action("Index", "UserAddress")">
+                            <i class="fa-solid fa-map-location-dot text-danger"></i>
+                            <span>Sổ địa chỉ nhận hàng</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("ChangePassword", "Manage")">
+                            <i class="fa-solid fa-lock text-info"></i>
+                            <span>Đổi mật khẩu</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item border-top mt-2 pt-2">
+                        @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutFormSideAddr" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="text-danger fw-bold">
+                                <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng xuất tài khoản
+                            </button>
+                        }
+                    </li>
+                </ul>
+            </div>
         </div>
 
-        <div class="card-body">
+        <!-- CỘT PHẢI: DANH SÁCH ĐỊA CHỈ & KHỐI THÊM MỚI -->
+        <div class="col-lg-8">
+            <div class="address-card-container">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h5 class="fw-bold m-0 text-dark">
+                        <i class="fa-solid fa-house-chimney text-success me-2"></i>Địa chỉ đã lưu (@(Model != null ? Model.Count() : 0))
+                    </h5>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" onclick="toggleForm('form-add-address')">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm địa chỉ mới
+                    </button>
+                </div>
 
-            <!-- FORM THÊM ĐỊA CHỈ TRỰC TIẾP TẠI CHỖ (BÌNH THƯỜNG SẼ ẨN) -->
-            <div id="add-form-block" class="add-address-form">
-                <div class="form-title"><i class="fa-solid fa-map-pin"></i> Nhập thông tin địa chỉ mới</div>
-                @using (Html.BeginForm("Create", "UserAddress", FormMethod.Post))
+                <!-- FORM THÊM ĐỊA CHỈ MỚI -->
+                <div class="add-address-form-box" id="form-add-address">
+                    <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-location-plus me-2"></i>Nhập thông tin địa chỉ giao hàng mới</h6>
+                    @using (Html.BeginForm("Create", "UserAddress", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Tên người nhận <span class="text-danger">*</span></label>
+                                <input type="text" name="ReceiverName" class="form-control" placeholder="VD: Nguyễn Minh Tân" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Số điện thoại người nhận <span class="text-danger">*</span></label>
+                                <input type="text" name="ReceiverPhone" class="form-control" placeholder="VD: 0703342732" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Tên gợi nhớ địa chỉ <span class="text-danger">*</span></label>
+                                <input type="text" name="AddressName" class="form-control" placeholder="VD: Nhà riêng, Công ty, Căn hộ..." required />
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="IsDefault" value="true" id="chkNewDefault" />
+                                    <input type="hidden" name="IsDefault" value="false" />
+                                    <label class="form-check-label fw-bold text-dark cursor-pointer" for="chkNewDefault">
+                                        Đặt làm địa chỉ giao hàng mặc định
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                <textarea name="DetailedAddress" class="form-control" rows="2" placeholder="Số nhà, tên đường, Phường/Xã, Quận/Huyện, Tỉnh/Thành phố..." required></textarea>
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="toggleForm('form-add-address')">Hủy</button>
+                                <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">Lưu địa chỉ</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- DANH SÁCH ĐỊA CHỈ -->
+                @if (Model == null || !Model.Any())
                 {
-                    @Html.AntiForgeryToken()
-
-                    <div class="form-group">
-                        <label>Tên gợi nhớ (VD: Nhà riêng, Cơ quan, Nhà bạn)</label>
-                        <input type="text" name="AddressName" class="form-control" placeholder="VD: Nhà riêng" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Họ tên người nhận</label>
-                        <input type="text" name="ReceiverName" class="form-control" placeholder="Nhập họ tên người nhận" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Số điện thoại người nhận</label>
-                        <input type="text" name="ReceiverPhone" class="form-control" placeholder="Nhập số điện thoại" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Địa chỉ chi tiết (Số nhà, đường, phường/xã, quận/huyện)</label>
-                        <textarea name="DetailedAddress" class="form-control" rows="3" placeholder="VD: 123 Đường số 1, P. Vĩnh Lộc, Bình Chánh..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="checkbox-group">
-                            <input type="checkbox" name="IsDefault" value="true" />
-                            Đặt làm địa chỉ giao hàng mặc định
-                        </label>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-cancel" onclick="toggleAddForm()">Hủy bỏ</button>
-                        <button type="submit" class="btn-save">Lưu địa chỉ</button>
+                    <div class="text-center py-5 bg-light rounded-4 border border-dashed">
+                        <i class="fa-solid fa-map-location-dot text-muted" style="font-size: 3.5rem;"></i>
+                        <h6 class="fw-bold mt-3 text-dark">Bạn chưa lưu địa chỉ giao hàng nào</h6>
+                        <p class="text-muted small">Hãy thêm địa chỉ để quá trình đặt hàng Bách Hóa Xanh diễn ra nhanh chóng hơn!</p>
+                        <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold mt-2" onclick="toggleForm('form-add-address')">
+                            <i class="fa-solid fa-plus me-1"></i> Thêm địa chỉ đầu tiên
+                        </button>
                     </div>
                 }
-            </div>
-
-            <!-- DANH SÁCH ĐỊA CHỈ HIỆN CÓ -->
-            @if (Model != null && Model.Any())
-            {
-                foreach (var item in Model)
+                else
                 {
-                    <div class="address-item @(item.IsDefault ? "is-default" : "")">
-                        <div class="address-head">
-                            <span class="receiver-info">@item.ReceiverName &bull; @item.ReceiverPhone</span>
-                            <span class="address-tag">@item.AddressName</span>
-                            @if (item.IsDefault)
-                            {
-                                <span class="badge-default">Mặc định</span>
-                            }
-                        </div>
-                        <div class="address-detail">
-                            @item.DetailedAddress
-                        </div>
-                        <div class="address-actions">
-                            <div class="action-links">
-                                <a href="@Url.Action("Edit", "UserAddress", new { id = item.Id })"><i class="fa-regular fa-pen-to-square"></i> Sửa</a>
+                    foreach (var item in Model)
+                    {
+                        <div class="address-item-box @(item.IsDefault ? "is-default" : "")">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="fw-bold text-dark fs-6"><i class="fa-solid fa-user me-1 text-secondary"></i>@item.ReceiverName</span>
+                                    <span class="text-muted">|</span>
+                                    <span class="fw-bold text-dark"><i class="fa-solid fa-phone me-1 text-secondary"></i>@item.ReceiverPhone</span>
+                                    <span class="badge-address-tag ms-1">@item.AddressName</span>
+                                    @if (item.IsDefault)
+                                    {
+                                        <span class="badge-default-tag"><i class="fa-solid fa-check-circle me-1"></i>Mặc định</span>
+                                    }
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="toggleForm('edit-box-@item.Id')">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i> Sửa
+                                    </button>
+                                    @if (!item.IsDefault)
+                                    {
+                                        using (Html.BeginForm("Delete", "UserAddress", new { id = item.Id }, FormMethod.Post, new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn xóa địa chỉ này?');">
+                                                <i class="fa-solid fa-trash-can me-1"></i> Xóa
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
 
-                                @using (Html.BeginForm("Delete", "UserAddress", new { id = item.Id }, FormMethod.Post, new { style = "display:inline;", onsubmit = "return confirm('Bạn có chắc muốn xóa địa chỉ này?');" }))
-                                {
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn-delete"><i class="fa-regular fa-trash-can"></i> Xóa</button>
-                                }
+                            <div class="text-dark small mb-3">
+                                <i class="fa-solid fa-location-dot text-danger me-2"></i><strong>Địa chỉ:</strong> @item.DetailedAddress
                             </div>
 
                             @if (!item.IsDefault)
@@ -398,31 +337,71 @@
                                 using (Html.BeginForm("SetDefault", "UserAddress", new { id = item.Id }, FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn-set-default">Thiết lập mặc định</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
+                                        <i class="fa-solid fa-star me-1"></i> Thiết lập làm địa chỉ mặc định
+                                    </button>
                                 }
                             }
+
+                            <!-- FORM SỬA ĐỊA CHỈ (COLLAPSIBLE) -->
+                            <div class="add-address-form-box mt-3" id="edit-box-@item.Id">
+                                <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa thông tin địa chỉ</h6>
+                                @using (Html.BeginForm("Edit", "UserAddress", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@item.Id" />
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Tên người nhận <span class="text-danger">*</span></label>
+                                            <input type="text" name="ReceiverName" value="@item.ReceiverName" class="form-control" required />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Số điện thoại <span class="text-danger">*</span></label>
+                                            <input type="text" name="ReceiverPhone" value="@item.ReceiverPhone" class="form-control" required />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Tên gợi nhớ địa chỉ <span class="text-danger">*</span></label>
+                                            <input type="text" name="AddressName" value="@item.AddressName" class="form-control" required />
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-end">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="IsDefault" value="true" id="chkEditDef-@item.Id" @(item.IsDefault ? "checked" : "") />
+                                                <input type="hidden" name="IsDefault" value="false" />
+                                                <label class="form-check-label fw-bold text-dark cursor-pointer" for="chkEditDef-@item.Id">
+                                                    Đặt làm địa chỉ giao hàng mặc định
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-dark">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                            <textarea name="DetailedAddress" class="form-control" rows="2" required>@item.DetailedAddress</textarea>
+                                        </div>
+                                        <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="toggleForm('edit-box-@item.Id')">Hủy</button>
+                                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Cập nhật địa chỉ</button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
-            }
-            else
-            {
-                <div class="empty-state">
-                    <i class="fa-solid fa-map-location-dot"></i>
-                    <p>Bạn chưa có địa chỉ nhận hàng nào. Bấm nút "Thêm mới" bên trên để tạo nhé!</p>
-                </div>
-            }
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- SCRIPT XỬ LÝ BẬT/TẮT FORM THÊM NHAU -->
-    <script>function toggleAddForm() {
-            var formBlock = document.getElementById("add-form-block");
-            if (formBlock.style.display === "block") {
-                formBlock.style.display = "none";
-            } else {
-                formBlock.style.display = "block";
+@section Scripts {
+    <script>
+        function toggleForm(id) {
+            var box = document.getElementById(id);
+            if (box) {
+                if (box.style.display === "block") {
+                    box.style.display = "none";
+                } else {
+                    box.style.display = "block";
+                }
             }
-        }</script>
-</body>
-</html>
+        }
+    </script>
+}

@@ -5,7 +5,9 @@
     string sePayBank = System.Configuration.ConfigurationManager.AppSettings["SePay_Bank"] ?? "VietinBank";
     string sePayAccNum = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountNumber"] ?? "10123456789";
     string sePayAccName = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountName"] ?? "NGUYEN MINH TAN";
-    string qrUrl = $"https://qr.sepay.vn/img?bank={sePayBank}&acc={sePayAccNum}&template=compact&amount={(int)Model.TotalAmount}&des=SEVQRBHX{Model.Id}";
+    string desCode = Model.Id > 0 ? $"SEVQRBHX{Model.Id}" : $"SEVQR{Model.Note}";
+    string qrUrl = $"https://qr.sepay.vn/img?bank={sePayBank}&acc={sePayAccNum}&template=compact&amount={(int)Model.TotalAmount}&des={desCode}";
+    string orderTitle = Model.Id > 0 ? $"Thanh Toán Đơn Hàng #{Model.Id}" : "Thanh Toán Đơn Hàng Qua VietQR";
 }
 
 <!DOCTYPE html>
@@ -13,7 +15,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thanh Toán Đơn Hàng #@Model.Id - Bách Hóa Xanh</title>
+    <title>@orderTitle - Bách Hóa Xanh</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,20 +177,25 @@
 
             <!-- Stepper -->
             <div class="checkout-stepper d-none d-md-flex">
-                <div class="step-item done">
-                    <span class="step-number"><i class="fa-solid fa-check"></i></span>
-                    <span>Thông tin đặt hàng</span>
-                </div>
+                <a href="@Url.Action("Index", "Order")" class="step-item done text-decoration-none" title="Bấm để quay lại sửa thông tin đặt hàng">
+                    <span class="step-number"><i class="fa-solid fa-pen"></i></span>
+                    <span>1. Thông tin đặt hàng</span>
+                </a>
                 <div class="step-divider"></div>
                 <div class="step-item active">
                     <span class="step-number">2</span>
-                    <span>Phương thức thanh toán</span>
+                    <span>2. Phương thức thanh toán</span>
                 </div>
             </div>
 
-            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                <i class="fa-solid fa-house me-1"></i> Trang chủ
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="@Url.Action("Index", "Order")" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Sửa thông tin
+                </a>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-house me-1"></i> Trang chủ
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -199,9 +206,9 @@
             <div class="payment-header d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="m-0 font-weight-bold"><i class="fa-solid fa-wallet text-warning me-2"></i>Chọn Phương Thức Thanh Toán</h4>
-                    <div class="small text-muted mt-1">Đơn hàng đã khởi tạo thành công. Chọn phương thức để hoàn tất đơn hàng.</div>
+                    <div class="small text-muted mt-1">Đơn hàng chưa chốt vĩnh viễn. Chọn phương thức thanh toán bên dưới để hoàn tất.</div>
                 </div>
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">Mã đơn #@Model.Id</span>
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">@(Model.Id > 0 ? $"Mã đơn #{Model.Id}" : $"Phiên thanh toán #{Model.Note}")</span>
             </div>
 
             <div class="p-4 p-md-5">
@@ -213,16 +220,21 @@
                             <div class="fw-bold fs-6">@Model.ReceiverName (@Model.ReceiverPhone)</div>
                         </div>
                         <div class="col-md-6 text-md-end">
-                            <span class="text-secondary small">Thời gian tạo đơn:</span>
+                            <span class="text-secondary small">Thời gian khởi tạo:</span>
                             <div class="fw-bold text-dark">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
                         </div>
                         <div class="col-12 pt-2 border-top">
                             <span class="text-secondary small">Địa chỉ nhận hàng:</span>
                             <div class="fw-bold"><i class="fa-solid fa-map-marker-alt text-danger me-1"></i>@Model.ShippingAddress</div>
                         </div>
-                        <div class="col-12 pt-3 border-top d-flex justify-content-between align-items-center">
-                            <span class="fs-5 fw-bold">TỔNG TIỀN CẦN THANH TOÁN:</span>
-                            <span class="text-danger fs-2 fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</span>
+                        <div class="col-12 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="fs-5 fw-bold">TỔNG TIỀN CẦN THANH TOÁN:</span>
+                                <span class="text-danger fs-2 fw-bold ms-2">@Model.TotalAmount.ToString("N0") VNĐ</span>
+                            </div>
+                            <a href="@Url.Action("Index", "Order")" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Quay lại sửa thông tin đặt hàng
+                            </a>
                         </div>
                     </div>
                 </div>

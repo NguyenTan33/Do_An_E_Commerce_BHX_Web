@@ -644,7 +644,7 @@
                 calculateFinalTotal();
             });
 
-            // Bấm Nút Tạo Đơn & Chuyển Sang Bước Thanh Toán
+            // Bấm Nút Xác Nhận & Chuyển Sang Bước Thanh Toán
             $('#btnSubmitOrder').on('click', function (e) {
                 e.preventDefault();
 
@@ -666,7 +666,7 @@
                 var usedPoints = parseInt($('#inputUsedPoints').val()) || 0;
 
                 var btn = $(this);
-                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG TẠO ĐƠN HÀNG...');
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG CHUYỂN SANG BƯỚC THANH TOÁN...');
 
                 $.ajax({
                     url: '@Url.Action("Checkout", "Order")',
