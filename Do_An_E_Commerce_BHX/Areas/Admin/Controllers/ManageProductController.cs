@@ -173,11 +173,53 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
         private void PopulateProductDropdowns(int? categoryId = null, int? parentProductId = null)
         {
-            ViewBag.CategoryId = new SelectList(_db.Category.OrderBy(c => c.Name).ToList(), "Id", "Name", categoryId);
-            ViewBag.Category = ViewBag.CategoryId;
+            var categoriesList = _db.Category.OrderBy(c => c.Name).ToList();
+            var catSelectList = new SelectList(categoriesList, "Id", "Name", categoryId);
+
+            ViewBag.CategoriesList = catSelectList;
+            ViewBag.CategoryId = catSelectList;
+            ViewBag.Category = catSelectList;
 
             var baseProducts = _db.Product.Where(p => p.ParentProductId == null).OrderBy(p => p.Name).ToList();
             ViewBag.ParentProductId = new SelectList(baseProducts, "Id", "Name", parentProductId);
+        }
+
+        // POST: /Admin/ManageProduct/UploadProductImage (Hỗ trợ tải ảnh từ thiết bị & chụp ảnh trực tiếp)
+        [HttpPost]
+        public ActionResult UploadProductImage(System.Web.HttpPostedFileBase imageFile)
+        {
+            try
+            {
+                if (imageFile != null && imageFile.ContentLength > 0)
+                {
+                    string ext = System.IO.Path.GetExtension(imageFile.FileName).ToLower();
+                    if (string.IsNullOrEmpty(ext)) ext = ".jpg";
+                    string[] allowedExts = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+
+                    if (!allowedExts.Contains(ext))
+                    {
+                        return Json(new { success = false, message = "Định dạng file không được hỗ trợ! Chỉ chấp nhận JPG, PNG, WEBP, GIF." });
+                    }
+
+                    string uploadDir = Server.MapPath("~/Content/images/products/");
+                    if (!System.IO.Directory.Exists(uploadDir))
+                    {
+                        System.IO.Directory.CreateDirectory(uploadDir);
+                    }
+
+                    string filename = "prod_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + ext;
+                    string filePath = System.IO.Path.Combine(uploadDir, filename);
+                    imageFile.SaveAs(filePath);
+
+                    string relativePath = "/Content/images/products/" + filename;
+                    return Json(new { success = true, imagePath = relativePath, message = "Tải ảnh thành công!" });
+                }
+                return Json(new { success = false, message = "Vui lòng chọn tệp hình ảnh!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi xử lý ảnh: " + ex.Message });
+            }
         }
 
         [HttpGet]

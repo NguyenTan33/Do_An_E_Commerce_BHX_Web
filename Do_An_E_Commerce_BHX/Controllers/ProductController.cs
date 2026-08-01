@@ -1,6 +1,7 @@
 using System;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
@@ -30,6 +31,27 @@ namespace Do_An_E_Commerce_BHX.Controllers
         // Trang hiển thị danh sách sản phẩm + tìm kiếm
         public ActionResult Index(string searchName, int? categoryId)
         {
+            if (!string.IsNullOrWhiteSpace(searchName))
+            {
+                try
+                {
+                    var analyticsService = new AnalyticsService(_dbContext);
+                    string currentUserId = User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
+                    string userIp = Request.UserHostAddress;
+                    string userAgent = Request.UserAgent;
+                    string sessionId = Session.SessionID;
+
+                    var dto = new AnalyticsController.BehaviorEventDto
+                    {
+                        EventType = "SearchKeyword",
+                        TargetName = searchName.Trim()
+                    };
+
+                    Task.Run(() => analyticsService.LogBehaviorEventAsync(dto, currentUserId, userIp, userAgent, sessionId, Request.UrlReferrer));
+                }
+                catch { }
+            }
+
             // 1. Chuẩn bị đối tượng ProductType đúng theo class backend bạn định nghĩa
             var filter = new ProductType
             {
@@ -52,6 +74,26 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             Product product = _dbContext.Product.Include(p => p.ParentProduct).FirstOrDefault(p => p.Id == productId);
             if (product == null) return HttpNotFound();
+
+            // Tự động ghi nhận lượt xem sản phẩm ViewProduct trực tiếp từ C# backend
+            try
+            {
+                var analyticsService = new AnalyticsService(_dbContext);
+                string currentUserId = User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
+                string userIp = Request.UserHostAddress;
+                string userAgent = Request.UserAgent;
+                string sessionId = Session.SessionID;
+
+                var dto = new AnalyticsController.BehaviorEventDto
+                {
+                    EventType = "ViewProduct",
+                    TargetId = productId,
+                    TargetName = product.Name
+                };
+
+                Task.Run(() => analyticsService.LogBehaviorEventAsync(dto, currentUserId, userIp, userAgent, sessionId, Request.UrlReferrer));
+            }
+            catch { }
 
             // Nhét reviews và questions vào ViewBag để View xài
             ViewBag.Reviews = customerSupportService.GetAllReviewsByProductID(productId);

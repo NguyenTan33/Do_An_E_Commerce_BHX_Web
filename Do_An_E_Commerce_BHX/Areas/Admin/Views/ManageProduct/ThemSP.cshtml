@@ -54,7 +54,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-layer-group me-1"></i>Danh mục sản phẩm (*)</label>
-                        @Html.DropDownListFor(m => m.CategoryId, ViewBag.Category as SelectList, "-- Chọn danh mục --", new { @class = "form-select bg-dark text-white border-secondary", required = "required" })
+                        @Html.DropDownListFor(m => m.CategoryId, ViewBag.CategoriesList as SelectList, "-- Chọn danh mục --", new { @class = "form-select bg-dark text-white border-secondary", required = "required" })
                     </div>
                 </div>
 
@@ -84,10 +84,28 @@
                     @Html.TextAreaFor(m => m.Description, new { rows = "3", @class = "form-control bg-dark text-white border-secondary", placeholder = "Nhập mô tả sản phẩm tươi ngon, nguồn gốc xuất xứ..." })
                 </div>
 
-                <!-- HÌNH ẢNH URL -->
-                <div class="mb-4">
-                    <label class="form-label text-warning fw-bold small text-uppercase"><i class="fa-solid fa-image me-1"></i>Đường dẫn hình ảnh (URL Image)</label>
-                    @Html.TextBoxFor(m => m.URLImage, new { @class = "form-control bg-dark text-white border-secondary", placeholder = "coca.jpg" })
+                <!-- HÌNH ẢNH URL & NÚT TẢI/CHỤP ẢNH TRỰC TIẾP -->
+                <div class="mb-4 p-3 rounded-3 border border-secondary" style="background: rgba(255,255,255,0.02);">
+                    <label class="form-label text-warning fw-bold small text-uppercase d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-image me-1"></i>Hình Ảnh Sản Phẩm</span>
+                    </label>
+                    <div class="input-group mb-2">
+                        @Html.TextBoxFor(m => m.URLImage, new { id = "inputURLImage", @class = "form-control bg-dark text-white border-secondary", placeholder = "/Content/images/products/coca.jpg hoặc nhập URL..." })
+                        <button type="button" class="btn btn-outline-warning fw-bold" onclick="$('#fileUploadInput').click();">
+                            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Tải ảnh từ thiết bị
+                        </button>
+                        <button type="button" class="btn btn-outline-info fw-bold" onclick="$('#fileCameraInput').click();">
+                            <i class="fa-solid fa-camera me-1"></i> Chụp ảnh
+                        </button>
+                    </div>
+                    <!-- Hidden File Inputs -->
+                    <input type="file" id="fileUploadInput" accept="image/*" class="d-none" onchange="uploadProductImage(this);" />
+                    <input type="file" id="fileCameraInput" accept="image/*" capture="environment" class="d-none" onchange="uploadProductImage(this);" />
+
+                    <div class="mt-3 text-center p-3 rounded-3 border border-secondary bg-dark">
+                        <small class="text-secondary d-block mb-2">Xem trước hình ảnh:</small>
+                        <img id="imgPreview" src="/Content/images/no-image.png" style="max-height: 140px; object-fit: contain;" class="rounded border p-1 bg-white" onerror="this.src='/Content/images/no-image.png'" />
+                    </div>
                 </div>
 
                 <!-- TRẠNG THÁI HIỂN THỊ -->
@@ -117,3 +135,38 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function uploadProductImage(fileInput) {
+            if (fileInput.files && fileInput.files[0]) {
+                var formData = new FormData();
+                formData.append("imageFile", fileInput.files[0]);
+
+                $('#imgPreview').css('opacity', '0.5');
+
+                $.ajax({
+                    url: '@Url.Action("UploadProductImage", "ManageProduct")',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        $('#imgPreview').css('opacity', '1');
+                        if (res.success) {
+                            $('#inputURLImage').val(res.imagePath);
+                            $('#imgPreview').attr('src', res.imagePath);
+                            alert("✅ " + res.message);
+                        } else {
+                            alert("❌ " + res.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        $('#imgPreview').css('opacity', '1');
+                        alert("Lỗi tải ảnh: " + (xhr.responseText || xhr.statusText));
+                    }
+                });
+            }
+        }
+    </script>
+}

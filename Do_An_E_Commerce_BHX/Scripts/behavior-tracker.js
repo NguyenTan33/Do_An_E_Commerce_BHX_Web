@@ -1,11 +1,10 @@
 /**
- * BÁCH HÓA XANH - BEHAVIOR TRACKER ENGINE v1.0
+ * BÁCH HÓA XANH - BEHAVIOR TRACKER ENGINE v4.0 (Tối ưu hóa Modal Chi Tiết & searchTerm)
  * Tự động ghi nhận Dwell Time, Scroll Depth, Rage Click, Search & Funnel Events
  */
 (function () {
     'use strict';
 
-    // 1. Tạo hoặc lấy Session ID cố định cho phiên truy cập
     function getSessionId() {
         var sid = sessionStorage.getItem('bhx_sid');
         if (!sid) {
@@ -16,13 +15,9 @@
     }
 
     var sessionId = getSessionId();
-    var pageStartTime = Date.now();
-    var activeDwellSeconds = 0;
-    var lastActiveTimestamp = Date.now();
     var isTabActive = true;
     var loggedScrollDepths = {};
 
-    // 2. Gửi dữ liệu ngầm (Beacon API hoặc fetch)
     function sendLog(data) {
         data.SessionId = sessionId;
         data.ReferrerUrl = data.ReferrerUrl || document.referrer;
@@ -31,7 +26,16 @@
         var url = '/Analytics/LogEvent';
         var payload = JSON.stringify(data);
 
-        if (navigator.sendBeacon) {
+        if (window.jQuery) {
+            window.jQuery.ajax({
+                url: url,
+                type: 'POST',
+                data: payload,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true
+            });
+        } else if (navigator.sendBeacon) {
             var blob = new Blob([payload], { type: 'application/json' });
             navigator.sendBeacon(url, blob);
         } else {
@@ -44,7 +48,6 @@
         }
     }
 
-    // Export API toàn cục cho các view gọi thủ công
     window.BHXTracker = {
         logEvent: function (eventType, targetId, targetName, extraData) {
             sendLog({
@@ -56,57 +59,93 @@
         }
     };
 
-    // Tự động ghi nhận lượt truy cập trang (PageView) ngay khi mở web
+    var pathname = window.location.pathname || '/';
+    var urlParams = new URLSearchParams(window.location.search);
+
+    // TRÍCH XUẤT THÔNG TIN SẢN PHẨM (HỖ TRỢ CẢ TRANG CHI TIẾT LẪN POPUP MODAL TẠI TRANG CHỦ)
+    function getProductInfo() {
+        // 1. Ưu tiên kiểm tra Modal Chi Tiết đang mở trên giao diện
+        var modalId = window.BHX_CURRENT_MODAL_PRODUCT_ID;
+        if (!modalId && window.jQuery && window.jQuery('#pmd-current-id').length > 0) {
+            var val = window.jQuery('#pmd-current-id').val();
+            if (val && !isNaN(parseInt(val))) modalId = parseInt(val);
+        }
+        if (modalId && window.jQuery && window.jQuery('#homeProductDetailModal').is(':visible')) {
+            var modalName = window.BHX_CURRENT_MODAL_PRODUCT_NAME || (window.jQuery('#pmd-name').text()) || ('Sản phẩm #' + modalId);
+            return { id: modalId, name: modalName };
+        }
+
+        // 2. Kiểm tra trang chi tiết thuần (/Product/Detail)
+        var pid = window.BHX_PRODUCT_ID || null;
+        var pname = window.BHX_PRODUCT_NAME || '';
+
+        if (!pid) {
+            var qId = urlParams.get('productId') || urlParams.get('id');
+            if (qId && !isNaN(parseInt(qId))) pid = parseInt(qId);
+        }
+        if (!pid) {
+            var m = pathname.match(/\/Product\/Detail\/(\d+)/i) || (window.location.href).match(/productId=(\d+)/i);
+            if (m) pid = parseInt(m[1]);
+        }
+        if (pid && !pname && document.title) {
+            pname = document.title.split('-')[0].trim();
+        }
+        return { id: pid, name: pname };
+    }
+
     try {
+        // Ghi nhận lượt xem trang (PageView)
         sendLog({
             EventType: 'PageView',
-            TargetName: window.location.pathname || '/'
+            TargetName: pathname + window.location.search
         });
-    } catch (e) { }
 
-    // 3. TỰ ĐỘNG ĐO THỜI GIAN LƯU LẠI TRANG (PAGE DWELL TIME) & VISIBILITY API
-    function updateActiveDwellTime() {
-        if (isTabActive) {
-            var now = Date.now();
-            activeDwellSeconds += Math.floor((now - lastActiveTimestamp) / 1000);
-            lastActiveTimestamp = now;
-        }
-    }
-
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') {
-            updateActiveDwellTime();
-            isTabActive = false;
-            sendDwellTimeLog();
-        } else {
-            isTabActive = true;
-            lastActiveTimestamp = Date.now();
-        }
-    });
-
-    function sendDwellTimeLog() {
-        if (activeDwellSeconds > 0) {
-            var targetId = null;
-            var pathname = window.location.pathname || '';
-            var match = pathname.match(/\/Product\/Detail\/(\d+)/i);
-            if (match) {
-                targetId = parseInt(match[1]);
-            }
+        // Ghi nhận ViewProduct
+        var pInfo = getProductInfo();
+        if (pInfo.id) {
             sendLog({
-                EventType: 'PageDwellTime',
-                TargetId: targetId,
-                TargetName: pathname,
-                DurationSeconds: activeDwellSeconds
+                EventType: 'ViewProduct',
+                TargetId: pInfo.id,
+                TargetName: pInfo.name || ('Sản phẩm #' + pInfo.id)
             });
         }
-    }
 
-    window.addEventListener('beforeunload', function () {
-        updateActiveDwellTime();
-        sendDwellTimeLog();
+        // TỰ ĐỘNG BẮT TỪ KHÓA TÌM KIẾM (TRÍCH XUẤT CHÍNH XÁC THAM SỐ searchTerm)
+        var q = urlParams.get('searchTerm') || urlParams.get('searchName') || urlParams.get('searchKey') || urlParams.get('tuKhoa') || urlParams.get('q') || urlParams.get('search') || urlParams.get('keyword');
+        if (q && q.trim().length > 0) {
+            sendLog({
+                EventType: 'SearchKeyword',
+                TargetName: q.trim()
+            });
+        }
+
+        // Ghi nhận CheckoutStarted
+        if (pathname.indexOf('/Order') >= 0 || pathname.indexOf('/Payment') >= 0) {
+            sendLog({
+                EventType: 'CheckoutStarted',
+                TargetName: pathname
+            });
+        }
+    } catch (e) { }
+
+    // HEARTBEAT PING 5s TÍCH LŨY THỜI GIAN ĐỌC CHI TIẾT SẢN PHẨM & MODAL
+    setInterval(function () {
+        if (isTabActive) {
+            var pInfo = getProductInfo();
+            sendLog({
+                EventType: 'PageDwellTime',
+                TargetId: pInfo.id,
+                TargetName: pInfo.id ? ('/Product/Detail/' + pInfo.id) : pathname,
+                DurationSeconds: 5
+            });
+        }
+    }, 5000);
+
+    document.addEventListener('visibilitychange', function () {
+        isTabActive = (document.visibilityState === 'visible');
     });
 
-    // 4. TỰ ĐỘNG ĐO TỐC ĐỘ TẢI TRANG (PAGE LOAD SPEED)
+    // Tốc độ tải trang
     window.addEventListener('load', function () {
         setTimeout(function () {
             var loadMs = 0;
@@ -116,14 +155,14 @@
             if (loadMs > 0) {
                 sendLog({
                     EventType: 'PageLoadSpeed',
-                    TargetName: window.location.pathname,
+                    TargetName: pathname,
                     PageLoadMs: loadMs
                 });
             }
         }, 500);
     });
 
-    // 5. TỰ ĐỘNG ĐO ĐỘ CUỘN TRANG (SCROLL DEPTH TRACKING 25%, 50%, 75%, 100%)
+    // Độ cuộn trang (Scroll Depth)
     function checkScrollDepth() {
         var winHeight = window.innerHeight;
         var docHeight = document.documentElement.scrollHeight - winHeight;
@@ -138,7 +177,7 @@
                 loggedScrollDepths[t] = true;
                 sendLog({
                     EventType: 'ScrollDepth',
-                    TargetName: window.location.pathname,
+                    TargetName: pathname,
                     ScrollPercent: t
                 });
             }
@@ -151,13 +190,27 @@
         scrollDebounceTimer = setTimeout(checkScrollDepth, 200);
     });
 
-    // 6. TỰ ĐỘNG PHÁT HIỆN CÚ NHẤP BỰC BỘI (RAGE CLICKS)
+    // Nút thêm vào giỏ hàng
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-add-to-cart, .btn-add-cart, [data-action="add-cart"]');
+        if (btn) {
+            var pInfo = getProductInfo();
+            var prodId = btn.getAttribute('data-product-id') || btn.getAttribute('data-id') || pInfo.id;
+            var prodName = btn.getAttribute('data-product-name') || btn.getAttribute('data-name') || pInfo.name || 'Sản phẩm';
+            sendLog({
+                EventType: 'AddToCart',
+                TargetId: prodId ? parseInt(prodId) : null,
+                TargetName: prodName
+            });
+        }
+    }, true);
+
+    // Rage Clicks
     var clickHistory = [];
     document.addEventListener('click', function (e) {
         var now = Date.now();
         clickHistory.push({ time: now, x: e.clientX, y: e.clientY });
 
-        // Giữ tối đa 5 click gần nhất
         if (clickHistory.length > 5) clickHistory.shift();
 
         if (clickHistory.length >= 3) {
@@ -166,15 +219,14 @@
             var timeDiff = last.time - first.time;
             var dist = Math.hypot(last.x - first.x, last.y - first.y);
 
-            // 3+ clicks trong 800ms ở cùng vị trí (< 30px) -> Rage Click
             if (timeDiff <= 800 && dist < 30) {
                 var targetText = (e.target.innerText || e.target.tagName || '').substring(0, 50);
                 sendLog({
                     EventType: 'RageClick',
                     TargetName: targetText,
-                    ExtraDataJson: JSON.stringify({ path: window.location.pathname, x: e.clientX, y: e.clientY })
+                    ExtraDataJson: JSON.stringify({ path: pathname, x: e.clientX, y: e.clientY })
                 });
-                clickHistory = []; // Reset sau khi log
+                clickHistory = [];
             }
         }
     }, true);

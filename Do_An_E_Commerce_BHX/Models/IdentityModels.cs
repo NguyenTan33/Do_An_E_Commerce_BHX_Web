@@ -45,6 +45,9 @@ namespace Do_An_E_Commerce_BHX.Models
         public DbSet<Entities.Review> Review { get; set; }
         public DbSet<Entities.Waranty> Waranty { get; set; }
         public DbSet<Entities.UserBehaviorLog> UserBehaviorLog { get; set; }
+        public DbSet<Entities.UserWallet> UserWallet { get; set; }
+        public DbSet<Entities.WithdrawalRequest> WithdrawalRequest { get; set; }
+        public DbSet<Entities.WalletTransaction> WalletTransaction { get; set; }
 
         public static void EnsureProductColumnsExist(ApplicationDbContext db)
         {
@@ -67,6 +70,49 @@ namespace Do_An_E_Commerce_BHX.Models
                             [ExtraDataJson] NVARCHAR(MAX) NULL,
                             [DeviceType] NVARCHAR(50) NULL,
                             [IPAddress] NVARCHAR(50) NULL,
+                            [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE()
+                        );
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserWallet')
+                    BEGIN
+                        CREATE TABLE [dbo].[UserWallet] (
+                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [UserId] NVARCHAR(128) NOT NULL UNIQUE,
+                            [Balance] DECIMAL(18,2) NOT NULL DEFAULT 0,
+                            [UpdatedAt] DATETIME NOT NULL DEFAULT GETDATE()
+                        );
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WithdrawalRequest')
+                    BEGIN
+                        CREATE TABLE [dbo].[WithdrawalRequest] (
+                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [UserId] NVARCHAR(128) NOT NULL,
+                            [Amount] DECIMAL(18,2) NOT NULL,
+                            [BankName] NVARCHAR(100) NOT NULL,
+                            [AccountNumber] NVARCHAR(50) NOT NULL,
+                            [AccountHolderName] NVARCHAR(100) NOT NULL,
+                            [Status] INT NOT NULL DEFAULT 0,
+                            [ExpectedPayoutDate] DATETIME NOT NULL,
+                            [AdminNote] NVARCHAR(500) NULL,
+                            [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE(),
+                            [ProcessedDate] DATETIME NULL
+                        );
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WalletTransaction')
+                    BEGIN
+                        CREATE TABLE [dbo].[WalletTransaction] (
+                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [UserId] NVARCHAR(128) NOT NULL,
+                            [TransactionType] INT NOT NULL,
+                            [Amount] DECIMAL(18,2) NOT NULL,
+                            [BalanceBefore] DECIMAL(18,2) NOT NULL,
+                            [BalanceAfter] DECIMAL(18,2) NOT NULL,
+                            [Description] NVARCHAR(500) NOT NULL,
+                            [OrderId] INT NULL,
+                            [WithdrawalRequestId] INT NULL,
                             [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE()
                         );
                     END

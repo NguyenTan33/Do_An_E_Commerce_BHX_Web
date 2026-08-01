@@ -5,7 +5,10 @@
     string sePayBank = System.Configuration.ConfigurationManager.AppSettings["SePay_Bank"] ?? "VietinBank";
     string sePayAccNum = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountNumber"] ?? "10123456789";
     string sePayAccName = System.Configuration.ConfigurationManager.AppSettings["SePay_AccountName"] ?? "NGUYEN MINH TAN";
-    string desCode = Model.Id > 0 ? $"SEVQRBHX{Model.Id}" : $"SEVQR{Model.Note}";
+
+    string transferCode = Model.Id > 0 ? $"BHX{Model.Id}" : (string.IsNullOrWhiteSpace(Model.Note) ? "BHX0" : Model.Note);
+    string displayNote = $"SEVQR {transferCode}";
+    string desCode = $"SEVQR{transferCode}";
     string qrUrl = $"https://qr.sepay.vn/img?bank={sePayBank}&acc={sePayAccNum}&template=compact&amount={(int)Model.TotalAmount}&des={desCode}";
     string orderTitle = Model.Id > 0 ? $"Thanh Toán Đơn Hàng #{Model.Id}" : "Thanh Toán Đơn Hàng Qua VietQR";
 }
@@ -306,9 +309,9 @@
                                     <div class="mb-0 p-3 bg-warning bg-opacity-25 rounded-3 border border-warning d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="text-secondary small d-block fw-bold">Nội dung chuyển khoản (Bắt buộc):</span>
-                                            <span class="text-danger fw-bold fs-5" id="txtContent">SEVQR BHX @Model.Id</span>
+                                            <span class="text-danger fw-bold fs-5" id="txtContent">@displayNote</span>
                                         </div>
-                                        <button class="btn btn-sm btn-warning fw-bold text-dark px-3 py-2 rounded-pill shadow-sm" onclick="copyText('SEVQR BHX @Model.Id', 'Nội dung chuyển khoản')">
+                                        <button class="btn btn-sm btn-warning fw-bold text-dark px-3 py-2 rounded-pill shadow-sm" onclick="copyText('@displayNote', 'Nội dung chuyển khoản')">
                                             <i class="fa-regular fa-copy me-1"></i> Copy
                                         </button>
                                     </div>
@@ -395,21 +398,48 @@
             });
 
             // 3. AUTO-POLLING SEPAY VIETINBANK (Kiểm tra tự động mỗi 3 giây)
+            var isRedirecting = false;
             var pollTimer = setInterval(function () {
+                if (isRedirecting) return;
+
                 $.ajax({
                     url: '@Url.Action("CheckPaymentStatus", "Order")',
                     type: 'GET',
-                    data: { orderId: orderId },
+                    cache: false,
+                    data: { orderId: orderId, t: new Date().getTime() },
                     success: function (res) {
-                        if (res && res.isPaid) {
+                        if (isRedirecting) return;
+
+                        if (res && (res.isPaid || res.success)) {
+                            isRedirecting = true;
                             clearInterval(pollTimer);
                             clearInterval(timerInterval);
-                            alert("🎉 THANH TOÁN SEPAY VIETINBANK THÀNH CÔNG!\nHệ thống đã tự động gạch nợ đơn hàng #" + orderId + " và gửi Hóa đơn về Email của bạn.");
-                            window.location.href = '@Url.Action("Success", "Order", new { paymentMethod = 1, orderId = Model.Id })';
+
+                            var redirectTarget = res.redirectUrl || '@Url.Action("Success", "Order", new { paymentMethod = 1, orderId = Model.Id })';
+                            if (res.orderId && res.orderId > 0 && redirectTarget.indexOf('orderId=0') >= 0) {
+                                redirectTarget = redirectTarget.replace('orderId=0', 'orderId=' + res.orderId);
+                            }
+
+                            // Banner Overlay Thông Báo Sắc Nét & Tự Động Chuyển Trang
+                            $('body').append(`
+                                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                                    <div class="text-center text-white p-5 rounded-4 bg-dark border border-success border-2 shadow-lg" style="max-width: 480px; width: 90%;">
+                                        <div class="mb-3 text-success"><i class="fa-solid fa-circle-check fa-4x animate__animated animate__bounceIn"></i></div>
+                                        <h3 class="fw-bold text-success mb-2">Thanh Toán Thành Công!</h3>
+                                        <p class="text-light mb-4">Hệ thống SePay đã ghi nhận số tiền và tự động gạch nợ đơn hàng. Đang chuyển hướng...</p>
+                                        <div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>
+                                    </div>
+                                </div>
+                            `);
+
+                            setTimeout(function() {
+                                window.location.href = redirectTarget;
+                            }, 1000);
                         } else if (res && res.isExpired) {
+                            isRedirecting = true;
                             clearInterval(pollTimer);
                             clearInterval(timerInterval);
-                            alert("⚠️ ĐƠN HÀNG HẾT HẠN THANH TOÁN!\nĐơn hàng #" + orderId + " đã quá 10 phút chưa thanh toán và đã được hệ thống tự động hủy.");
+                            alert("⚠️ ĐƠN HÀNG HẾT HẠN THANH TOÁN!\nĐơn hàng đã quá 10 phút chưa thanh toán.");
                             window.location.href = '@Url.Action("Track", "Order", new { query = Model.Id })';
                         }
                     }

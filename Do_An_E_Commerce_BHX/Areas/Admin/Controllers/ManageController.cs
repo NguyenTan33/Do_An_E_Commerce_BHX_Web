@@ -216,6 +216,14 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 {
                     order.OrderStatus = 5; // 5 = Đã hủy
                     await db.SaveChangesAsync();
+
+                    try
+                    {
+                        var walletSvc = new WalletService(db);
+                        await walletSvc.RefundOrderToWalletAsync(order.Id, "Khách hàng tự hủy đơn hàng");
+                    }
+                    catch { }
+
                     TempData["Message"] = $"Đã hủy thành công đơn hàng #{orderId}.";
                 }
                 else

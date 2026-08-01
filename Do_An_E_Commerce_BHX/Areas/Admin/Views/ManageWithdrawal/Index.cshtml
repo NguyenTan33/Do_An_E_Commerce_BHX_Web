@@ -1,0 +1,341 @@
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.WithdrawalRequest>
+@{
+    ViewBag.Title = "Quản lý Hoàn Tiền & Yêu Cầu Rút Tiền";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    int countPending = ViewBag.CountPending ?? 0;
+    int countCompleted = ViewBag.CountCompleted ?? 0;
+    int countRejected = ViewBag.CountRejected ?? 0;
+    decimal totalPendingAmount = ViewBag.TotalPendingAmount ?? 0;
+    decimal totalCompletedAmount = ViewBag.TotalCompletedAmount ?? 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="fw-bold m-0 text-white"><i class="fa-solid fa-hand-holding-dollar text-warning me-2"></i>Quản Lý Hoàn Tiền & Yêu Cầu Rút Tiền</h4>
+        <small class="text-secondary">Xử lý yêu cầu rút tiền từ Ví cá nhân của khách hàng về ngân hàng thụ hưởng</small>
+    </div>
+</div>
+
+<!-- 1. THỐNG KÊ TỔNG QUAN -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="bg-dark p-3 rounded-3 border border-warning border-opacity-50 text-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-warning small fw-bold"><i class="fa-solid fa-clock me-1"></i> Chờ duyệt chuyển khoản</span>
+                <span class="badge bg-warning text-dark fw-bold">@countPending yêu cầu</span>
+            </div>
+            <div class="fs-3 fw-bold text-warning">@totalPendingAmount.ToString("N0") VNĐ</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-dark p-3 rounded-3 border border-success border-opacity-50 text-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-success small fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Đã hoàn thành chuyển khoản</span>
+                <span class="badge bg-success fw-bold">@countCompleted yêu cầu</span>
+            </div>
+            <div class="fs-3 fw-bold text-success">@totalCompletedAmount.ToString("N0") VNĐ</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-dark p-3 rounded-3 border border-danger border-opacity-50 text-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-danger small fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Từ chối / Hoàn ví</span>
+                <span class="badge bg-danger fw-bold">@countRejected yêu cầu</span>
+            </div>
+            <div class="fs-3 fw-bold text-danger">@countRejected đơn</div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. BỘ LỌC TÌM KIẾM NÂNG CAO -->
+<div class="bg-dark p-3 rounded-3 border border-secondary border-opacity-25 mb-4">
+    <form method="get" action="@Url.Action("Index", "ManageWithdrawal")">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" name="searchKeyword" value="@ViewBag.SearchKeyword" class="form-control bg-dark text-white border-secondary" placeholder="Tên khách, SĐT, STK, Ngân hàng, Mã YC..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="statusFilter" class="form-select bg-dark text-white border-secondary">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="0" @(ViewBag.StatusFilter == 0 ? "selected" : "")>⏳ Đang rút (Chờ duyệt)</option>
+                    <option value="1" @(ViewBag.StatusFilter == 1 ? "selected" : "")>✅ Thành công (Đã chuyển)</option>
+                    <option value="2" @(ViewBag.StatusFilter == 2 ? "selected" : "")>❌ Thất bại (Đã hoàn lại ví)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control bg-dark text-white border-secondary" title="Từ ngày" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control bg-dark text-white border-secondary" title="Đến ngày" />
+            </div>
+            <div class="col-md-1 d-grid">
+                <button type="submit" class="btn btn-success fw-bold"><i class="fa-solid fa-filter"></i> Lọc</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 3. DANH SÁCH YÊU CẦU RÚT TIỀN -->
+<div class="table-responsive rounded-3 border border-secondary border-opacity-25 bg-dark">
+    <table class="table table-dark table-hover align-middle mb-0">
+        <thead>
+            <tr class="table-active text-secondary">
+                <th>Mã YC</th>
+                <th>Khách hàng</th>
+                <th>Số tiền rút</th>
+                <th>Thông tin Ngân hàng</th>
+                <th>Hạn dự kiến</th>
+                <th>Trạng thái</th>
+                <th class="text-end me-3">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-inbox fs-3 mb-2 d-block"></i>Không tìm thấy yêu cầu rút tiền nào phù hợp.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var req in Model)
+                {
+                    string customerName = req.User != null ? (!string.IsNullOrWhiteSpace(req.User.FullName) ? req.User.FullName : req.User.UserName) : "Khách hàng";
+                    string customerPhone = req.User != null ? req.User.PhoneNumber : "N/A";
+
+                    <tr>
+                        <td class="fw-bold text-warning">#@req.Id</td>
+                        <td>
+                            <div class="fw-bold text-white">@customerName</div>
+                            <div class="small text-secondary"><i class="fa-solid fa-phone me-1"></i>@customerPhone</div>
+                        </td>
+                        <td class="fw-bold text-danger fs-6">@req.Amount.ToString("N0") VNĐ</td>
+                        <td>
+                            <div class="fw-bold text-info"><i class="fa-solid fa-building-columns me-1"></i>@req.BankName</div>
+                            <div class="text-white">STK: <strong class="text-warning">@req.AccountNumber</strong></div>
+                            <div class="small text-secondary">Tên TK: <strong>@req.AccountHolderName</strong></div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-primary">@req.ExpectedPayoutDate.ToString("dd/MM/yyyy")</div>
+                            <div class="small text-secondary">sau 17:00</div>
+                        </td>
+                        <td>
+                            @if (req.Status == 0)
+                            {
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-spinner fa-spin me-1"></i> Đang rút (Chờ chuyển)</span>
+                            }
+                            else if (req.Status == 1)
+                            {
+                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Đã chuyển tiền</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger px-3 py-2 rounded-pill" title="@req.AdminNote"><i class="fa-solid fa-circle-xmark me-1"></i> Đã từ chối (Hoàn ví)</span>
+                            }
+                        </td>
+                        <td class="text-end pe-3">
+                            <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-1 btn-show-detail"
+                                    data-id="@req.Id"
+                                    data-name="@customerName"
+                                    data-phone="@customerPhone"
+                                    data-bank="@req.BankName"
+                                    data-account="@req.AccountNumber"
+                                    data-holder="@req.AccountHolderName"
+                                    data-amount="@req.Amount.ToString("N0")"
+                                    data-payout="@req.ExpectedPayoutDate.ToString("dd/MM/yyyy HH:mm")"
+                                    data-status="@req.Status"
+                                    data-note="@(req.AdminNote ?? "")">
+                                <i class="fa-solid fa-eye me-1"></i> Chi tiết
+                            </button>
+                            @if (req.Status == 0)
+                            {
+                                <button class="btn btn-sm btn-success rounded-pill px-3 me-1 fw-bold btn-approve" data-id="@req.Id">
+                                    <i class="fa-solid fa-check me-1"></i> Đã hoàn
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-reject" data-id="@req.Id">
+                                    <i class="fa-solid fa-xmark me-1"></i> Hủy / Hoàn ví
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- MODAL XEM CHI TIẾT VÀ XỬ LÝ CHUYỂN KHOẢN -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-warning"><i class="fa-solid fa-money-bill-transfer me-2"></i>Thông Tin Chuyển Khoản Rút Tiền</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalReqId" />
+                <div class="bg-secondary bg-opacity-25 p-3 rounded-3 mb-3 border border-secondary">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Tên khách hàng:</span>
+                        <strong id="modalCustName" class="text-white"></strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Số điện thoại:</span>
+                        <strong id="modalCustPhone" class="text-warning"></strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Số tiền cần chuyển:</span>
+                        <strong id="modalAmount" class="text-danger fs-5 fw-bold"></strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-0">
+                        <span class="text-secondary">Hạn chuyển dự kiến:</span>
+                        <strong id="modalPayoutDate" class="text-primary"></strong>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-dark border border-warning rounded-3 mb-3">
+                    <h6 class="fw-bold text-warning mb-3"><i class="fa-solid fa-building-columns me-1"></i>Thông tin Ngân hàng thụ hưởng:</h6>
+                    <div class="mb-2"><strong>Ngân hàng:</strong> <span id="modalBank" class="text-info fw-bold fs-6"></span></div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div><strong>Số tài khoản:</strong> <span id="modalAccNum" class="text-warning fw-bold fs-5"></span></div>
+                        <button class="btn btn-sm btn-outline-warning py-0 px-2 rounded" onclick="copyModalText('modalAccNum', 'Số tài khoản')"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                    <div class="mb-0"><strong>Chủ tài khoản:</strong> <span id="modalAccHolder" class="text-white fw-bold text-uppercase"></span></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">Ghi chú của Admin (Không bắt buộc):</label>
+                    <textarea id="modalAdminNote" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Nhập ghi chú hoặc lý do nếu hủy..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary" id="modalFooterActions">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyModalText(elementId, labelName) {
+            var txt = $('#' + elementId).text();
+            if (txt) {
+                navigator.clipboard.writeText(txt).then(function () {
+                    alert("✅ Đã copy " + labelName + ": " + txt);
+                }).catch(function() {
+                    alert("✅ Đã chọn " + labelName + ": " + txt);
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            // NÚT XEM CHI TIẾT
+            $('.btn-show-detail').on('click', function () {
+                var btn = $(this);
+                var id = btn.data('id');
+                var custName = btn.data('name');
+                var custPhone = btn.data('phone');
+                var bank = btn.data('bank');
+                var accNum = btn.data('account');
+                var accHolder = btn.data('holder');
+                var amount = btn.data('amount');
+                var payoutDate = btn.data('payout');
+                var status = parseInt(btn.data('status'));
+                var note = btn.data('note');
+
+                $('#modalReqId').val(id);
+                $('#modalCustName').text(custName);
+                $('#modalCustPhone').text(custPhone);
+                $('#modalBank').text(bank);
+                $('#modalAccNum').text(accNum);
+                $('#modalAccHolder').text(accHolder);
+                $('#modalAmount').text(amount + ' VNĐ');
+                $('#modalPayoutDate').text(payoutDate);
+                $('#modalAdminNote').val(note);
+
+                var actionsHtml = '';
+                if (status === 0) {
+                    actionsHtml += '<button type="button" class="btn btn-outline-danger rounded-pill px-3 me-2" id="btnModalReject"><i class="fa-solid fa-xmark me-1"></i> Hủy & Hoàn ví</button>';
+                    actionsHtml += '<button type="button" class="btn btn-success rounded-pill px-4 fw-bold" id="btnModalApprove"><i class="fa-solid fa-check me-1"></i> Xác Nhận Đã Hoàn</button>';
+                } else {
+                    actionsHtml += '<button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>';
+                }
+                $('#modalFooterActions').html(actionsHtml);
+
+                var modalElement = document.getElementById('detailModal');
+                if (modalElement) {
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            });
+
+            // SỰ KIỆN NÚT TRONG MODAL
+            $(document).on('click', '#btnModalApprove', function () {
+                var id = $('#modalReqId').val();
+                var note = $('#modalAdminNote').val();
+                approveRequest(id, note);
+            });
+
+            $(document).on('click', '#btnModalReject', function () {
+                var id = $('#modalReqId').val();
+                var note = $('#modalAdminNote').val();
+                rejectRequest(id, note);
+            });
+
+            // NÚT ĐÃ HOÀN Ở BẢNG
+            $('.btn-approve').on('click', function () {
+                var id = $(this).data('id');
+                approveRequest(id, "Đã chuyển khoản hoàn tiền thành công.");
+            });
+
+            // NÚT HỦY / HOÀN VÍ Ở BẢNG
+            $('.btn-reject').on('click', function () {
+                var id = $(this).data('id');
+                var reason = prompt("Nhập lý do từ chối / hủy yêu cầu rút tiền (Tiền sẽ hoàn trả lại Ví khách):");
+                if (reason !== null && reason.trim() !== "") {
+                    rejectRequest(id, reason);
+                }
+            });
+
+            function approveRequest(id, note) {
+                if (confirm("Xác nhận bạn đã chuyển khoản hoàn tiền thành công cho yêu cầu #" + id + "?")) {
+                    $.ajax({
+                        url: '@Url.Action("Approve", "ManageWithdrawal")',
+                        type: 'POST',
+                        data: { id: id, adminNote: note },
+                        success: function (res) {
+                            alert(res.message);
+                            if (res.success) window.location.reload();
+                        },
+                        error: function (xhr) {
+                            alert("Lỗi kết nối: " + (xhr.responseText || xhr.statusText));
+                        }
+                    });
+                }
+            }
+
+            function rejectRequest(id, note) {
+                if (confirm("Xác nhận HỦY yêu cầu #" + id + "? Số tiền sẽ được hoàn trả lại Ví của khách hàng.")) {
+                    $.ajax({
+                        url: '@Url.Action("Reject", "ManageWithdrawal")',
+                        type: 'POST',
+                        data: { id: id, adminNote: note },
+                        success: function (res) {
+                            alert(res.message);
+                            if (res.success) window.location.reload();
+                        },
+                        error: function (xhr) {
+                            alert("Lỗi kết nối: " + (xhr.responseText || xhr.statusText));
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+}

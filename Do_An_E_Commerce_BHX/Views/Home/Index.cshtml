@@ -1214,6 +1214,9 @@
                         renderReviewsList(d.reviews);
                         renderQuestionsList(d.questions, res.isAdmin);
 
+                        window.BHX_CURRENT_MODAL_PRODUCT_ID = d.id;
+                        window.BHX_CURRENT_MODAL_PRODUCT_NAME = d.name || '';
+
                         // Ghi log hành vi xem sản phẩm ngầm
                         if (window.BHXTracker) {
                             window.BHXTracker.logEvent('ViewProduct', d.id, d.name);
@@ -1286,6 +1289,8 @@
 
         // Tự động ẩn lại modal khi bấm nút Đóng hoặc click backdrop
         $(document).on('hidden.bs.modal', '#homeProductDetailModal', function () {
+            window.BHX_CURRENT_MODAL_PRODUCT_ID = null;
+            window.BHX_CURRENT_MODAL_PRODUCT_NAME = null;
             this.style.setProperty('display', 'none', 'important');
             this.style.setProperty('visibility', 'hidden', 'important');
         });

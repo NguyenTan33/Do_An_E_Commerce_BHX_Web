@@ -9,7 +9,10 @@
 
     double avgRating = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating), 1) : 5.0;
     int reviewCount = reviews.Count;
-}
+<script>
+    window.BHX_PRODUCT_ID = @Model.Id;
+    window.BHX_PRODUCT_NAME = "@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Name))";
+</script>
 
 <div class="container py-4">
     <!-- KHUNG THÔNG TIN SẢN PHẨM -->

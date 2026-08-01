@@ -1,0 +1,500 @@
+@model Do_An_E_Commerce_BHX.Models.Entities.UserWallet
+@{
+    ViewBag.Title = "Ví tiền cá nhân & Hoàn tiền";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string currentUserId = Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(User.Identity);
+    string fullName = "Khách hàng";
+    int points = 0;
+
+    try
+    {
+        using (var db = new Do_An_E_Commerce_BHX.Models.ApplicationDbContext())
+        {
+            var u = db.Users.Find(currentUserId);
+            if (u != null)
+            {
+                fullName = !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : User.Identity.Name;
+                points = u.LoyaltyPoints;
+            }
+        }
+    }
+    catch { }
+
+    string initial = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, Math.Min(2, fullName.Length)).ToUpper() : "KH";
+
+    var transactions = ViewBag.Transactions as List<Do_An_E_Commerce_BHX.Models.Entities.WalletTransaction> ?? new List<Do_An_E_Commerce_BHX.Models.Entities.WalletTransaction>();
+    var withdrawalRequests = ViewBag.WithdrawalRequests as List<Do_An_E_Commerce_BHX.Models.Entities.WithdrawalRequest> ?? new List<Do_An_E_Commerce_BHX.Models.Entities.WithdrawalRequest>();
+    DateTime nextPayoutDate = ViewBag.NextPayoutDate != null ? (DateTime)ViewBag.NextPayoutDate : DateTime.Now;
+}
+
+@section Styles {
+    <style>
+        .profile-container {
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+
+        .profile-sidebar-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(14, 42, 32, 0.05);
+        }
+
+        .profile-avatar-header {
+            background: linear-gradient(135deg, #163B2E 0%, #1F6B3F 100%);
+            padding: 32px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .profile-avatar-circle {
+            width: 84px;
+            height: 84px;
+            background: #ffffff;
+            color: #1F6B3F;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-menu-list {
+            list-style: none;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .profile-menu-item a, .profile-menu-item button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+        }
+
+        .profile-menu-item a:hover, .profile-menu-item button:hover {
+            background: #f0fdf4;
+            color: #1F6B3F;
+        }
+
+        .profile-menu-item.active a {
+            background: #1F6B3F;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(31, 107, 63, 0.25);
+        }
+
+        .wallet-card-container {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(14, 42, 32, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .wallet-balance-banner {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+            border-radius: 20px;
+            padding: 28px;
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-balance-banner::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 180px;
+            height: 180px;
+            background: rgba(34, 197, 94, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .payout-rule-box {
+            background: #fffbe8;
+            border: 1.5px solid #fde68a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-withdraw-box {
+            display: none;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 18px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .badge-status-pending {
+            background: #fef3c7;
+            color: #d97706;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+        }
+
+        .badge-status-completed {
+            background: #dcfce7;
+            color: #15803d;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+        }
+
+        .badge-status-rejected {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+        }
+    </style>
+}
+
+<div class="container py-4 profile-container">
+    <!-- BREADCRUMB HEADER -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-wallet text-warning me-2"></i>Ví Tiền Cá Nhân & Hoàn Tiền</h3>
+            <small class="text-muted">Quản lý số dư hoàn tiền từ các đơn hàng hủy và gửi yêu cầu rút tiền về ngân hàng</small>
+        </div>
+        <a href="@Url.Action("Index", "Manage")" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Về trang tài khoản
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- CỘT TRÁI: SIDEBAR -->
+        <div class="col-lg-4">
+            <div class="profile-sidebar-card">
+                <!-- AVATAR HEADER -->
+                <div class="profile-avatar-header">
+                    <div class="profile-avatar-circle">
+                        @initial
+                    </div>
+                    <h4 class="fw-bold m-0 mb-1">@fullName</h4>
+                    <div class="d-inline-flex align-items-center gap-2 mt-2">
+                        @Do_An_E_Commerce_BHX.Models.CustomerTierHelper.GetTierBadgeHtml(points)
+                    </div>
+                </div>
+
+                <!-- MENU CÁ NHÂN -->
+                <ul class="profile-menu-list">
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("Index", "Manage")">
+                            <i class="fa-solid fa-user text-success"></i>
+                            <span>Thông tin tài khoản</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("MyOrders", "Manage")">
+                            <i class="fa-solid fa-boxes-packing text-primary"></i>
+                            <span>Đơn hàng của tôi</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("MyVouchers", "Manage")">
+                            <i class="fa-solid fa-ticket text-warning"></i>
+                            <span>Ví Mã Giảm Giá</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("Index", "UserAddress")">
+                            <i class="fa-solid fa-map-location-dot text-danger"></i>
+                            <span>Sổ địa chỉ nhận hàng</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item active">
+                        <a href="@Url.Action("Index", "Wallet")">
+                            <i class="fa-solid fa-wallet text-warning"></i>
+                            <span>Ví tiền cá nhân</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item">
+                        <a href="@Url.Action("ChangePassword", "Manage")">
+                            <i class="fa-solid fa-lock text-info"></i>
+                            <span>Đổi mật khẩu</span>
+                        </a>
+                    </li>
+                    <li class="profile-menu-item border-top mt-2 pt-2">
+                        @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutFormSideW" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="text-danger fw-bold">
+                                <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng xuất tài khoản
+                            </button>
+                        }
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: BANNER SỐ DƯ & ĐỔI RÚT TIỀN -->
+        <div class="col-lg-8">
+            <!-- THÔNG BÁO STATUS NẾU CÓ -->
+            @if (!string.IsNullOrEmpty(TempData["Message"] as string))
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-circle-check me-2 fs-5"></i> <strong>@TempData["Message"]</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(TempData["Error"] as string))
+            {
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i> <strong>@TempData["Error"]</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- 1. BANNER SỐ DƯ VÍ -->
+            <div class="wallet-balance-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <span class="text-muted text-uppercase fw-bold small"><i class="fa-solid fa-shield-halved text-success me-1"></i> Số dư khả dụng trong ví</span>
+                        <div class="display-5 fw-extrabold text-warning mt-1 mb-0">
+                            @((Model != null ? Model.Balance : 0).ToString("N0")) <span class="fs-4 text-white">VNĐ</span>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            <i class="fa-solid fa-circle-info me-1"></i> Tiền hoàn từ các đơn hàng VietQR hủy/thất bại sẽ tự động cộng vào đây.
+                        </div>
+                    </div>
+                    <div>
+                        @if (Model != null && Model.Balance > 0)
+                        {
+                            <button type="button" class="btn btn-warning btn-lg rounded-pill px-4 fw-extrabold text-dark shadow" onclick="toggleWithdrawForm()">
+                                <i class="fa-solid fa-building-columns me-2"></i> RÚT TIỀN VỀ NGÂN HÀNG
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-outline-light btn-lg rounded-pill px-4 fw-bold opacity-75" disabled title="Số dư ví hiện tại là 0đ">
+                                <i class="fa-solid fa-building-columns me-2"></i> RÚT TIỀN VỀ NGÂN HÀNG
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- FORM ĐIỀN THÔNG TIN RÚT TIỀN -->
+                <div class="form-withdraw-box text-dark" id="box-withdraw-form">
+                    <h5 class="fw-bold text-success mb-3">
+                        <i class="fa-solid fa-money-bill-transfer me-2"></i>Điền Thông Tin Ngân Hàng Rút Tiền
+                    </h5>
+                    @using (Html.BeginForm("RequestWithdrawal", "Wallet", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Số tiền rút (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" name="Amount" class="form-control fw-bold text-danger" value="@((Model != null ? (int)Model.Balance : 0))" max="@((Model != null ? (int)Model.Balance : 0))" min="10000" required />
+                                <small class="text-muted">Tối đa có thể rút: <strong>@((Model != null ? Model.Balance : 0).ToString("N0")) VNĐ</strong></small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Ngân hàng thụ hưởng <span class="text-danger">*</span></label>
+                                <input type="text" name="BankName" class="form-control" list="bankList" placeholder="VD: Vietcombank, MBBank..." required />
+                                <datalist id="bankList">
+                                    <option value="Vietcombank (VCB)">
+                                    <option value="MB Bank (MB)">
+                                    <option value="Techcombank (TCB)">
+                                    <option value="VietinBank (CTG)">
+                                    <option value="BIDV">
+                                    <option value="VPBank">
+                                    <option value="Agribank">
+                                    <option value="ACB">
+                                    <option value="Sacombank">
+                                    <option value="TPBank">
+                                    <option value="VIB">
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Số tài khoản ngân hàng <span class="text-danger">*</span></label>
+                                <input type="text" name="AccountNumber" class="form-control" placeholder="Nhập chính xác số tài khoản..." required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Tên chủ tài khoản <span class="text-danger">*</span></label>
+                                <input type="text" name="AccountHolderName" class="form-control text-uppercase" placeholder="VD: NGUYEN MINH TAN" required />
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="toggleWithdrawForm()">Hủy bỏ</button>
+                                <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow">
+                                    <i class="fa-solid fa-paper-plane me-1"></i> XÁC NHẬN RÚT TIỀN
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 2. BANNER QUY TẮC RÚT TIỀN -->
+            <div class="payout-rule-box">
+                <h6 class="fw-bold text-warning-emphasis mb-2">
+                    <i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>Quy tắc thời gian tiền về tài khoản (Lịch chuyển tiền cố định):
+                </h6>
+                <ul class="mb-2 small text-secondary ps-3">
+                    <li class="mb-1">📌 <strong>Rút tiền TRƯỚC 10:00 sáng Thứ 5</strong>: Tiền được xử lý chuyển về tài khoản sau <strong>17:00 chiều Thứ 5 tuần này</strong>.</li>
+                    <li>📌 <strong>Rút tiền SAU 10:00 sáng Thứ 5</strong>: Tiền được xử lý chuyển về tài khoản sau <strong>17:00 chiều Thứ 5 tuần sau</strong>.</li>
+                </ul>
+                <div class="small fw-bold text-success mt-2 pt-2 border-top border-warning border-opacity-50">
+                    <i class="fa-solid fa-calendar-check me-1"></i> Lần chuyển khoản tiếp theo dự kiến: <span class="text-danger fs-6">@nextPayoutDate.ToString("dd/MM/yyyy") (sau 17:00)</span>
+                </div>
+            </div>
+
+            <!-- 3. BẢNG LỊCH SỬ YÊU CẦU RÚT TIỀN -->
+            <div class="wallet-card-container">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fa-solid fa-list-check text-primary me-2"></i>Lịch Sử Yêu Cầu Rút Tiền (@(withdrawalRequests.Count))
+                </h5>
+
+                @if (!withdrawalRequests.Any())
+                {
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fa-solid fa-inbox fs-2 mb-2 d-block text-secondary"></i>Bạn chưa tạo yêu cầu rút tiền nào.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã YC</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Số tiền rút</th>
+                                    <th>Ngân hàng & STK</th>
+                                    <th>Hạn tiền về dự kiến</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var req in withdrawalRequests)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#@req.Id</td>
+                                        <td>@req.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="fw-bold text-danger">@req.Amount.ToString("N0") VNĐ</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@req.BankName</div>
+                                            <div class="text-muted">STK: @req.AccountNumber (@req.AccountHolderName)</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-primary">@req.ExpectedPayoutDate.ToString("dd/MM/yyyy")</div>
+                                            <div class="small text-muted">sau 17:00</div>
+                                        </td>
+                                        <td>
+                                            @if (req.Status == 0)
+                                            {
+                                                <span class="badge-status-pending"><i class="fa-solid fa-spinner fa-spin me-1"></i> Đang rút</span>
+                                            }
+                                            else if (req.Status == 1)
+                                            {
+                                                <span class="badge-status-completed"><i class="fa-solid fa-circle-check me-1"></i> Thành công</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge-status-rejected" title="@req.AdminNote"><i class="fa-solid fa-circle-xmark me-1"></i> Thất bại (Đã hoàn lại ví)</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- 4. BẢNG NẬT KÝ BIẾN ĐỘNG SỐ DƯ VÍ -->
+            <div class="wallet-card-container">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fa-solid fa-clock-rotate-left text-success me-2"></i>Nhật Ký Biến Động Số Dư Ví (@(transactions.Count))
+                </h5>
+
+                @if (!transactions.Any())
+                {
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fa-solid fa-receipt fs-2 mb-2 d-block text-secondary"></i>Chưa có lịch sử biến động ví.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Biến động</th>
+                                    <th>Số tiền</th>
+                                    <th>Số dư sau</th>
+                                    <th>Nội dung diễn giải</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tx in transactions)
+                                {
+                                    <tr>
+                                        <td>@tx.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (tx.TransactionType == 0 || tx.TransactionType == 2)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">+ Cộng tiền</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1">- Trừ tiền rút</span>
+                                            }
+                                        </td>
+                                        <td class="fw-bold @(tx.TransactionType == 1 ? "text-danger" : "text-success")">
+                                            @(tx.TransactionType == 1 ? "-" : "+")@tx.Amount.ToString("N0") VNĐ
+                                        </td>
+                                        <td class="fw-bold text-dark">@tx.BalanceAfter.ToString("N0") VNĐ</td>
+                                        <td class="text-secondary">@tx.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleWithdrawForm() {
+            var box = document.getElementById("box-withdraw-form");
+            if (box) {
+                if (box.style.display === "block") {
+                    box.style.display = "none";
+                } else {
+                    box.style.display = "block";
+                }
+            }
+        }
+    </script>
+}

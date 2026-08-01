@@ -215,6 +215,13 @@
     <Compile Include="Models\Entities\UserAddress.cs" />
     <Compile Include="Models\Entities\Waranty.cs" />
     <Compile Include="Models\Entities\UserBehaviorLog.cs" />
+    <Compile Include="Models\Entities\UserWallet.cs" />
+    <Compile Include="Models\Entities\WithdrawalRequest.cs" />
+    <Compile Include="Models\Entities\WalletTransaction.cs" />
+    <Compile Include="Services\Interfaces\IWalletService.cs" />
+    <Compile Include="Services\Implementations\WalletService.cs" />
+    <Compile Include="Controllers\WalletController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ManageWithdrawalController.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\ViewModels\HomeIndexViewModel.cs" />
@@ -359,6 +366,8 @@
     <Content Include="Views\Order\Track.cshtml" />
     <Content Include="Scripts\behavior-tracker.js" />
     <Content Include="Areas\Admin\Views\BehaviorAnalytics\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\ManageWithdrawal\Index.cshtml" />
+    <Content Include="Views\Wallet\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

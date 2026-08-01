@@ -38,11 +38,29 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 query = query.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            // 3. Lọc theo từ khóa
+            // 3. Lọc theo từ khóa & Ghi nhận Log Hành vi Tìm kiếm
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var term = searchTerm.Trim();
                 query = query.Where(p => p.Name.Contains(term) || p.Barcode.Contains(term));
+
+                try
+                {
+                    var analyticsService = new Do_An_E_Commerce_BHX.Services.Implementations.AnalyticsService(db);
+                    string currentUserId = User != null && User.Identity.IsAuthenticated ? Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(User.Identity) : null;
+                    string userIp = Request.UserHostAddress;
+                    string userAgent = Request.UserAgent;
+                    string sessionId = Session.SessionID;
+
+                    var dto = new AnalyticsController.BehaviorEventDto
+                    {
+                        EventType = "SearchKeyword",
+                        TargetName = term
+                    };
+
+                    System.Threading.Tasks.Task.Run(() => analyticsService.LogBehaviorEventAsync(dto, currentUserId, userIp, userAgent, sessionId, Request.UrlReferrer));
+                }
+                catch { }
             }
 
             // 4. Lọc theo khoảng giá (Đã bỏ ép kiểu double, dùng trực tiếp decimal)

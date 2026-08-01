@@ -5,29 +5,39 @@
     ViewData["Subtitle"] = "Theo dõi thói quen mua sắm, độ cuộn trang, dwell time và phễu chuyển đổi";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
     int selectedDays = ViewBag.SelectedDays != null ? (int)ViewBag.SelectedDays : 30;
+
+    int pViews = Model.Funnel.ProductViews;
+    int cAdds = Model.Funnel.CartAdditions;
+    int checkouts = Model.Funnel.CheckoutStarted;
+    int orders = Model.Funnel.OrdersCompleted;
+
+    double cartRate = pViews > 0 ? Math.Round((double)cAdds / pViews * 100, 1) : 0;
+    double checkoutRate = cAdds > 0 ? Math.Round((double)checkouts / cAdds * 100, 1) : 0;
+    double orderRate = checkouts > 0 ? Math.Round((double)orders / checkouts * 100, 1) : 0;
+    double totalConversionRate = pViews > 0 ? Math.Round((double)orders / pViews * 100, 1) : 0;
 }
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="container-fluid py-3">
     <!-- FILTERS & HEADER BAR -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-dark text-white border-secondary">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h4 class="fw-bold text-dark m-0"><i class="fa-solid fa-chart-pie text-success me-2"></i>BÁO CÁO HÀNH VI NGƯỜI DÙNG</h4>
-                <small class="text-muted">Dữ liệu thu thập tự động ngầm qua Behavior Tracker Engine</small>
+                <h4 class="fw-bold text-warning m-0"><i class="fa-solid fa-chart-pie text-warning me-2"></i>BÁO CÁO HÀNH VI NGƯỜI DÙNG</h4>
+                <small class="text-secondary">Dữ liệu thu thập tự động ngầm qua Behavior Tracker Engine v2.0</small>
             </div>
 
             <!-- FORM LỌC KHOẢNG THỜI GIAN & PRESETS -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <form action="@Url.Action("Index", "BehaviorAnalytics")" method="get" class="d-flex align-items-center gap-2 m-0 flex-wrap">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted fw-bold">Từ ngày</span>
-                        <input type="date" name="startDate" class="form-control form-control-sm" value="@ViewBag.StartDate" />
+                        <span class="input-group-text bg-dark text-secondary border-secondary fw-bold">Từ ngày</span>
+                        <input type="date" name="startDate" class="form-control form-control-sm bg-dark text-white border-secondary" value="@ViewBag.StartDate" />
                     </div>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted fw-bold">Đến ngày</span>
-                        <input type="date" name="endDate" class="form-control form-control-sm" value="@ViewBag.EndDate" />
+                        <span class="input-group-text bg-dark text-secondary border-secondary fw-bold">Đến ngày</span>
+                        <input type="date" name="endDate" class="form-control form-control-sm bg-dark text-white border-secondary" value="@ViewBag.EndDate" />
                     </div>
                     <button type="submit" class="btn btn-sm btn-success fw-bold px-3">
                         <i class="fa-solid fa-filter me-1"></i> Áp dụng
@@ -35,9 +45,9 @@
                 </form>
 
                 <div class="btn-group" role="group">
-                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 7 })" class="btn btn-sm @(selectedDays == 7 ? "btn-success fw-bold" : "btn-outline-secondary")">7 ngày qua</a>
-                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 30 })" class="btn btn-sm @(selectedDays == 30 ? "btn-success fw-bold" : "btn-outline-secondary")">30 ngày qua</a>
-                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 90 })" class="btn btn-sm @(selectedDays == 90 ? "btn-success fw-bold" : "btn-outline-secondary")">90 ngày qua</a>
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 7 })" class="btn btn-sm @(selectedDays == 7 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary text-white")">7 ngày qua</a>
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 30 })" class="btn btn-sm @(selectedDays == 30 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary text-white")">30 ngày qua</a>
+                    <a href="@Url.Action("Index", "BehaviorAnalytics", new { days = 90 })" class="btn btn-sm @(selectedDays == 90 ? "btn-warning text-dark fw-bold" : "btn-outline-secondary text-white")">90 ngày qua</a>
                 </div>
             </div>
         </div>
@@ -45,39 +55,39 @@
 
     <!-- METRIC CARDS ANALYTICS -->
     <div class="row g-3 mb-4">
-        <!-- CARD 1: TỔNG LƯỢT XEM TRANG (PAGE VIEWS) -->
+        <!-- CARD 1: TỔNG LƯỢT XEM TRANG -->
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info">
-                <div class="text-muted small fw-bold text-uppercase">Tổng lượt xem trang</div>
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-dark text-white border-start border-4 border-info">
+                <div class="text-secondary small fw-bold text-uppercase">Tổng lượt xem (Theo kỳ lọc)</div>
                 <div class="fs-2 fw-bold text-info mt-1">@Model.TotalPageViews.ToString("N0")</div>
-                <small class="text-muted"><i class="fa-solid fa-clock text-info me-1"></i>Hôm nay: <strong>@Model.TodayPageViews.ToString("N0")</strong> lượt xem</small>
+                <small class="text-secondary"><i class="fa-solid fa-clock text-info me-1"></i>Xem hôm nay: <strong class="text-white">@Model.TodayPageViews.ToString("N0")</strong> lượt</small>
             </div>
         </div>
 
-        <!-- CARD 2: KHÁCH TRUY CẬP ĐỘC LẬP (UNIQUE VISITORS) -->
+        <!-- CARD 2: KHÁCH TRUY CẬP ĐỘC LẬP -->
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
-                <div class="text-muted small fw-bold text-uppercase">Khách truy cập độc lập</div>
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-dark text-white border-start border-4 border-success">
+                <div class="text-secondary small fw-bold text-uppercase">Khách truy cập độc lập</div>
                 <div class="fs-2 fw-bold text-success mt-1">@Model.TotalUniqueVisitors.ToString("N0")</div>
-                <small class="text-muted"><i class="fa-solid fa-users text-success me-1"></i>Phiên người dùng (Sessions)</small>
+                <small class="text-secondary"><i class="fa-solid fa-users text-success me-1"></i>Phiên người dùng (Sessions)</small>
             </div>
         </div>
 
         <!-- CARD 3: THỜI GIAN XEM TRANG TB -->
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
-                <div class="text-muted small fw-bold text-uppercase">Thời gian xem trang TB</div>
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-dark text-white border-start border-4 border-warning">
+                <div class="text-secondary small fw-bold text-uppercase">Thời gian xem trang TB</div>
                 <div class="fs-2 fw-bold text-warning mt-1">@Model.AvgDwellSeconds.ToString("N1")s</div>
-                <small class="text-muted"><i class="fa-solid fa-stopwatch text-warning me-1"></i>Dwell Time (Active tab)</small>
+                <small class="text-secondary"><i class="fa-solid fa-stopwatch text-warning me-1"></i>Dwell Time (Active tab)</small>
             </div>
         </div>
 
         <!-- CARD 4: RAGE CLICKS -->
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-                <div class="text-muted small fw-bold text-uppercase">Cú nhấp bực bội (Rage Clicks)</div>
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-dark text-white border-start border-4 border-danger">
+                <div class="text-secondary small fw-bold text-uppercase">Cú nhấp bực bội (Rage Clicks)</div>
                 <div class="fs-2 fw-bold text-danger mt-1">@Model.TotalRageClicks.ToString("N0")</div>
-                <small class="text-muted"><i class="fa-solid fa-hand-pointer text-danger me-1"></i>Bấm dồn dập khi đơ/lag</small>
+                <small class="text-secondary"><i class="fa-solid fa-hand-pointer text-danger me-1"></i>Bấm dồn dập khi đơ/lag</small>
             </div>
         </div>
     </div>
@@ -86,19 +96,66 @@
     <div class="row g-4 mb-4">
         <!-- PHỄU CHUYỂN ĐỔI (FUNNEL ANALYTICS) -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-filter text-primary me-2"></i>Phễu Chuyển Đổi (Conversion Funnel)</h5>
-                <div style="height: 280px;">
-                    <canvas id="funnelChart"></canvas>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white border border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-warning m-0"><i class="fa-solid fa-filter me-2"></i>Phễu Chuyển Đổi (Conversion Funnel)</h5>
+                    <span class="badge bg-success px-3 py-2 fs-6">Tỷ lệ mua hàng chung: <strong>@totalConversionRate%</strong></span>
+                </div>
+
+                <!-- BIỂU ĐỒ BARS TIẾN TRÌNH RÕ RÀNG -->
+                <div class="vstack gap-3 my-2">
+                    <!-- Step 1: Xem Sản Phẩm -->
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-bold text-info"><i class="fa-solid fa-eye me-1"></i>1. Xem sản phẩm</span>
+                            <span class="fw-bold text-white">@pViews.ToString("N0") lượt (100%)</span>
+                        </div>
+                        <div class="progress bg-secondary bg-opacity-25" style="height: 20px;">
+                            <div class="progress-bar bg-info fw-bold" style="width: 100%;">100%</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Thêm Vào Giỏ Hàng -->
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-bold text-warning"><i class="fa-solid fa-cart-plus me-1"></i>2. Thêm vào giỏ hàng</span>
+                            <span class="fw-bold text-white">@cAdds.ToString("N0") lượt (@cartRate% từ Xem SP)</span>
+                        </div>
+                        <div class="progress bg-secondary bg-opacity-25" style="height: 20px;">
+                            <div class="progress-bar bg-warning text-dark fw-bold" style="width: @(Math.Min(100, Math.Max(5, cartRate)))%;">@cartRate%</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Vào Thanh Toán -->
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-bold text-primary"><i class="fa-solid fa-credit-card me-1"></i>3. Vào thanh toán</span>
+                            <span class="fw-bold text-white">@checkouts.ToString("N0") lượt (@checkoutRate% từ Giỏ hàng)</span>
+                        </div>
+                        <div class="progress bg-secondary bg-opacity-25" style="height: 20px;">
+                            <div class="progress-bar bg-primary fw-bold" style="width: @(Math.Min(100, Math.Max(5, checkoutRate)))%;">@checkoutRate%</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Đặt Hàng Thành Công -->
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-bold text-success"><i class="fa-solid fa-circle-check me-1"></i>4. Đặt thành công (Đơn thực tế)</span>
+                            <span class="fw-bold text-white">@orders.ToString("N0") đơn (@orderRate% từ Thanh toán)</span>
+                        </div>
+                        <div class="progress bg-secondary bg-opacity-25" style="height: 20px;">
+                            <div class="progress-bar bg-success fw-bold" style="width: @(Math.Min(100, Math.Max(5, orderRate)))%;">@orderRate%</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- TỶ LỆ THIẾT BỊ (MOBILE VS DESKTOP) -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-mobile-screen text-success me-2"></i>Tỷ Lệ Thiết Bị Truy Cập</h5>
-                <div style="height: 280px; position: relative;">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white border border-secondary h-100">
+                <h5 class="fw-bold text-warning mb-3"><i class="fa-solid fa-mobile-screen text-success me-2"></i>Tỷ Lệ Thiết Bị Truy Cập</h5>
+                <div style="height: 230px; position: relative;">
                     <canvas id="deviceChart"></canvas>
                 </div>
             </div>
@@ -109,12 +166,12 @@
     <div class="row g-4 mb-4">
         <!-- TOP SẢN PHẨM ĐƯỢC XEM & THỜI GIAN XEM -->
         <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-fire text-danger me-2"></i>Top 10 Sản Phẩm Xem Nhiều & Đọc Lâu Nhất</h5>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white border border-secondary">
+                <h5 class="fw-bold text-warning mb-3"><i class="fa-solid fa-fire text-danger me-2"></i>Top 10 Sản Phẩm Xem Nhiều & Đọc Lâu Nhất</h5>
                 <div class="table-responsive">
-                    <table class="table align-middle table-hover">
-                        <thead class="table-light">
-                            <tr>
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary">
                                 <th>Sản phẩm</th>
                                 <th class="text-center">Lượt xem</th>
                                 <th class="text-end">Thời gian đọc TB</th>
@@ -125,23 +182,27 @@
                             {
                                 foreach (var p in Model.TopViewedProducts)
                                 {
+                                    string durationFormatted = p.AvgDurationSeconds >= 60 
+                                        ? $"{(int)(p.AvgDurationSeconds / 60)} phút {(int)(p.AvgDurationSeconds % 60)}s" 
+                                        : $"{p.AvgDurationSeconds:N0} giây";
+
                                     <tr>
                                         <td>
-                                            <div class="fw-bold text-dark">@p.ProductName</div>
-                                            <small class="text-muted">Mã SP: #@p.ProductId</small>
+                                            <div class="fw-bold text-white">@p.ProductName</div>
+                                            <small class="text-secondary">Mã SP: #@p.ProductId</small>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2">@p.ViewCount lượt</span>
+                                            <span class="badge bg-success bg-opacity-25 text-success fw-bold px-3 py-2 rounded-pill">@p.ViewCount lượt</span>
                                         </td>
                                         <td class="text-end fw-bold text-warning">
-                                            <i class="fa-regular fa-clock me-1"></i>@p.AvgDurationSeconds giây
+                                            <i class="fa-regular fa-clock me-1"></i>@durationFormatted
                                         </td>
                                     </tr>
                                 }
                             }
                             else
                             {
-                                <tr><td colspan="3" class="text-center py-3 text-muted">Chưa có dữ liệu lượt xem sản phẩm.</td></tr>
+                                <tr><td colspan="3" class="text-center py-4 text-muted">Chưa có dữ liệu lượt xem sản phẩm.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -151,12 +212,12 @@
 
         <!-- TOP TỪ KHÓA TÌM KIẾM HOT -->
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-magnifying-glass text-warning me-2"></i>Top Từ Khóa Tìm Kiếm Hot</h5>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white border border-secondary">
+                <h5 class="fw-bold text-warning mb-3"><i class="fa-solid fa-magnifying-glass text-info me-2"></i>Top Từ Khóa Tìm Kiếm Hot</h5>
                 <div class="table-responsive">
-                    <table class="table align-middle table-hover">
-                        <thead class="table-light">
-                            <tr>
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary">
                                 <th>Từ khóa tìm kiếm</th>
                                 <th class="text-end">Tần suất</th>
                             </tr>
@@ -167,18 +228,18 @@
                                 foreach (var k in Model.TopSearchKeywords)
                                 {
                                     <tr>
-                                        <td class="fw-bold text-dark">
-                                            <i class="fa-solid fa-search text-muted me-2"></i>@k.Keyword
+                                        <td class="fw-bold text-white">
+                                            <i class="fa-solid fa-magnifying-glass text-info me-2"></i>@k.Keyword
                                         </td>
                                         <td class="text-end">
-                                            <span class="badge bg-primary px-3 py-2">@k.Count lần</span>
+                                            <span class="badge bg-primary px-3 py-2 rounded-pill fw-bold">@k.Count lần</span>
                                         </td>
                                     </tr>
                                 }
                             }
                             else
                             {
-                                <tr><td colspan="2" class="text-center py-3 text-muted">Chưa có dữ liệu từ khóa tìm kiếm.</td></tr>
+                                <tr><td colspan="2" class="text-center py-4 text-muted">Chưa có dữ liệu từ khóa tìm kiếm.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -187,91 +248,76 @@
         </div>
     </div>
 
-    <!-- BẢNG THEO DÕI KHÁCH VÃNG LAI & ĐỊA CHỈ IP TRUY CẬP (FULL-WIDTH Ở CUỐI TRANG) -->
+    <!-- BẢNG THEO DÕI KHÁCH VÃNG LAI & ĐỊA CHỈ IP TRUY CẬP -->
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white border border-secondary">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark m-0">
+                    <h5 class="fw-bold text-warning m-0">
                         <i class="fa-solid fa-network-wired text-primary me-2"></i>Danh Sách Khách Vãng Lai & Địa Chỉ IP Truy Cập Mới Nhất
                     </h5>
                     <div class="d-flex gap-2">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold px-3 py-2 fs-6">
+                        <span class="badge bg-secondary text-white fw-bold px-3 py-2 fs-6">
                             <i class="fa-solid fa-user-secret me-1"></i> Khách vãng lai: @Model.GuestSessionsCount phiên
                         </span>
-                        <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 fs-6">
-                            <i class="fa-solid fa-user-check me-1"></i> Thành viên: @Model.RegisteredSessionsCount phiên
+                        <span class="badge bg-success fw-bold px-3 py-2 fs-6">
+                            <i class="fa-solid fa-user-check me-1"></i> Đã đăng nhập: @Model.RegisteredSessionsCount phiên
                         </span>
                     </div>
                 </div>
+
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle m-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Mã Phiên (Session ID)</th>
-                                <th>Địa Chỉ IP</th>
-                                <th>Thiết Bị</th>
-                                <th>Loại Khách</th>
-                                <th>Số Trang Đã Xem</th>
-                                <th>Trang Giới Thiệu (Referrer)</th>
-                                <th>Thời Gian Tương Tác Cuối</th>
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Session ID</th>
+                                <th>Tài khoản / Khách</th>
+                                <th>Địa chỉ IP</th>
+                                <th>Thiết bị</th>
+                                <th class="text-center">Số trang đã xem</th>
+                                <th>Thời gian xem cuối</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (Model.RecentGuestVisitors != null && Model.RecentGuestVisitors.Any())
                             {
-                                foreach (var g in Model.RecentGuestVisitors)
+                                foreach (var v in Model.RecentGuestVisitors)
                                 {
                                     <tr>
+                                        <td class="font-monospace text-info small">@v.SessionId</td>
                                         <td>
-                                            <code class="text-primary fw-bold">@g.SessionId</code>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-dark font-monospace text-warning px-2 py-1 fs-6">
-                                                <i class="fa-solid fa-globe me-1"></i>@g.IPAddress
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if (g.DeviceType == "Mobile")
+                                            @if (v.IsGuest)
                                             {
-                                                <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-mobile-screen me-1"></i>Mobile</span>
-                                            }
-                                            else if (g.DeviceType == "Tablet")
-                                            {
-                                                <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-tablet-screen-button me-1"></i>Tablet</span>
+                                                <span class="badge bg-secondary text-white px-2 py-1"><i class="fa-solid fa-user-ghost me-1"></i> Khách vãng lai</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-info bg-opacity-10 text-info"><i class="fa-solid fa-desktop me-1"></i>Desktop</span>
+                                                <span class="badge bg-success px-2 py-1"><i class="fa-solid fa-user me-1"></i> @v.UserFullName</span>
                                             }
                                         </td>
+                                        <td class="fw-bold text-warning">@v.IPAddress</td>
                                         <td>
-                                            @if (g.IsGuest)
+                                            @if (v.DeviceType == "Mobile")
                                             {
-                                                <span class="badge bg-secondary"><i class="fa-solid fa-user-ghost me-1"></i> Khách Vãng Lai</span>
+                                                <span class="text-info fw-bold"><i class="fa-solid fa-mobile-screen me-1"></i> Mobile</span>
+                                            }
+                                            else if (v.DeviceType == "Tablet")
+                                            {
+                                                <span class="text-warning fw-bold"><i class="fa-solid fa-tablet-screen-button me-1"></i> Tablet</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-success"><i class="fa-solid fa-user-check me-1"></i> @g.UserFullName</span>
+                                                <span class="text-success fw-bold"><i class="fa-solid fa-desktop me-1"></i> Desktop</span>
                                             }
                                         </td>
-                                        <td class="fw-bold text-dark">
-                                            @g.PageViewCount lượt
-                                        </td>
-                                        <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@g.ReferrerUrl">
-                                            <span class="small text-muted">@g.ReferrerUrl</span>
-                                        </td>
-                                        <td class="text-muted small">
-                                            @g.LastVisitDate.ToString("dd/MM/yyyy HH:mm:ss")
-                                        </td>
+                                        <td class="text-center fw-bold text-white">@v.PageViewCount trang</td>
+                                        <td class="text-secondary small">@v.LastVisitDate.ToString("dd/MM/yyyy HH:mm:ss")</td>
                                     </tr>
                                 }
                             }
                             else
                             {
-                                <tr>
-                                    <td colspan="7" class="text-center py-3 text-muted">Chưa ghi nhận dữ liệu phiên truy cập từ khách.</td>
-                                </tr>
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Chưa có dữ liệu khách truy cập.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -281,59 +327,24 @@
     </div>
 </div>
 
-<!-- SCRIPT KHỞI TẠO BIỂU ĐỒ CHART.JS -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // 1. BIỂU ĐỒ PHỄU CHUYỂN ĐỔI (FUNNEL CHART)
-        var funnelCtx = document.getElementById('funnelChart').getContext('2d');
-        new Chart(funnelCtx, {
-            type: 'bar',
-            data: {
-                labels: ['1. Xem sản phẩm', '2. Thêm vào giỏ', '3. Vào thanh toán', '4. Đặt thành công'],
-                datasets: [{
-                    label: 'Số lượng chuyển đổi',
-                    data: [@Model.Funnel.ProductViews, @Model.Funnel.CartAdditions, @Model.Funnel.CheckoutStarted, @Model.Funnel.OrdersCompleted],
-                    backgroundColor: [
-                        'rgba(13, 110, 253, 0.85)',
-                        'rgba(255, 193, 7, 0.85)',
-                        'rgba(13, 202, 240, 0.85)',
-                        'rgba(25, 135, 84, 0.85)'
-                    ],
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-
-        // 2. BIỂU ĐỒ TỶ LỆ THIẾT BỊ (DEVICE CHART)
-        var deviceCtx = document.getElementById('deviceChart').getContext('2d');
-        new Chart(deviceCtx, {
+        // CHART: TỶ LỆ THIẾT BỊ (DONUT)
+        var ctxDevice = document.getElementById('deviceChart').getContext('2d');
+        new Chart(ctxDevice, {
             type: 'doughnut',
             data: {
-                labels: ['Điện thoại Mobile', 'Máy tính Desktop', 'Máy tính bảng Tablet'],
+                labels: ['Điện thoại (Mobile)', 'Máy tính (Desktop)', 'Máy tính bảng (Tablet)'],
                 datasets: [{
                     data: [@Model.Devices.MobileCount, @Model.Devices.DesktopCount, @Model.Devices.TabletCount],
-                    backgroundColor: [
-                        '#198754',
-                        '#0d6efd',
-                        '#ffc107'
-                    ]
+                    backgroundColor: ['#0dcaf0', '#198754', '#ffc107']
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom', labels: { color: '#ffffff' } }
                 }
             }
         });

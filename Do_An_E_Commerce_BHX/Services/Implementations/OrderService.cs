@@ -280,6 +280,15 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
 
             order.OrderStatus = 5;
             await dbContext.SaveChangesAsync();
+
+            // Tự động hoàn tiền vào Ví cá nhân nếu đơn đã thanh toán VietQR / Ngân hàng
+            try
+            {
+                var walletSvc = new WalletService(dbContext);
+                await walletSvc.RefundOrderToWalletAsync(order.Id, "Hủy đơn hàng");
+            }
+            catch { }
+
             return true;
         }
 

@@ -50,23 +50,46 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                // Nếu gửi bằng navigator.sendBeacon dữ liệu có thể nằm trong Request.InputStream
+                // 1. Nếu Model Binder trả về null, đọc từ Form
                 if (data == null || string.IsNullOrEmpty(data.EventType))
                 {
-                    Request.InputStream.Position = 0;
-                    using (var reader = new StreamReader(Request.InputStream))
+                    data = new BehaviorEventDto();
+                    data.SessionId = Request.Form["SessionId"];
+                    data.EventType = Request.Form["EventType"];
+                    if (int.TryParse(Request.Form["TargetId"], out int tid)) data.TargetId = tid;
+                    data.TargetName = Request.Form["TargetName"];
+                    if (int.TryParse(Request.Form["DurationSeconds"], out int ds)) data.DurationSeconds = ds;
+                    if (int.TryParse(Request.Form["ScrollPercent"], out int sp)) data.ScrollPercent = sp;
+                    data.ReferrerUrl = Request.Form["ReferrerUrl"];
+                    data.ExtraDataJson = Request.Form["ExtraDataJson"];
+                    data.DeviceType = Request.Form["DeviceType"];
+                }
+
+                // 2. Nếu vẫn null, đọc InputStream JSON Body
+                if (string.IsNullOrEmpty(data.EventType) && Request.InputStream != null && Request.InputStream.Length > 0)
+                {
+                    try
                     {
-                        string body = await reader.ReadToEndAsync();
-                        if (!string.IsNullOrEmpty(body))
+                        Request.InputStream.Position = 0;
+                        using (var reader = new StreamReader(Request.InputStream))
                         {
-                            data = JsonConvert.DeserializeObject<BehaviorEventDto>(body);
+                            string body = await reader.ReadToEndAsync();
+                            if (!string.IsNullOrEmpty(body))
+                            {
+                                var parsed = JsonConvert.DeserializeObject<BehaviorEventDto>(body);
+                                if (parsed != null && !string.IsNullOrEmpty(parsed.EventType))
+                                {
+                                    data = parsed;
+                                }
+                            }
                         }
                     }
+                    catch { }
                 }
 
                 if (data == null || string.IsNullOrEmpty(data.EventType))
                 {
-                    return Json(new { success = false, message = "Invalid data" });
+                    return Json(new { success = false, message = "Invalid data" }, JsonRequestBehavior.AllowGet);
                 }
 
                 string userId = User != null && User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
@@ -86,11 +109,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     Request.UrlReferrer
                 );
 
-                return Json(new { success = true });
+                return Json(new { success = true }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 
@@ -98,7 +121,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             if (disposing)
             {
-                _db?.Dispose();
+                _db.Dispose();
             }
             base.Dispose(disposing);
         }
