@@ -1,7 +1,7 @@
 # 🛒 Bách Hóa Xanh E-Commerce Platform
 
 > **Hệ thống E-Commerce thương mại điện tử chuyên nghiệp mô phỏng Bách Hóa Xanh**  
-> Được xây dựng trên nền tảng **ASP.NET MVC 5 (.NET Framework 4.7.2)** theo kiến trúc **Thin Controller / Fat Service (OOP)**, tích hợp thanh toán tự động **VietQR SePay Webhook**, ví MoMo, phát hành hóa đơn điện tử qua Email, hệ thống Voucher thông minh kiểu Shopee và theo dõi hành vi người dùng (User Behavior Analytics).
+> Được xây dựng trên nền tảng **ASP.NET MVC 5 (.NET Framework 4.7.2)** theo kiến trúc **Thin Controller / Fat Service (OOP)**, tích hợp thanh toán tự động **VietQR SePay Webhook**, phát hành hóa đơn điện tử qua Email, hệ thống Voucher thông minh kiểu Shopee và theo dõi hành vi người dùng (User Behavior Analytics).
 
 ---
 
@@ -161,7 +161,8 @@ Do_An_E_Commerce_BHX/
 
 ## 👤 Liên hệ & Tác giả
 
-- **Họ và tên**: Nguyễn Tấn
+- **Họ và tên tác giả 1**: Nguyễn Minh Tân
+- **Họ và tên tác giả 2**: Từ Quyết Thắng
 - **GitHub**: [NguyenTan33](https://github.com/NguyenTan33)
 - **Dự án Repository**: [Do_An_E_Commerce_BHX_Web](https://github.com/NguyenTan33/Do_An_E_Commerce_BHX_Web)
 
