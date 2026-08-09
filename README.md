@@ -17,7 +17,6 @@
 
 ## 🌐 Trải nghiệm Live Demo
 - **Website chính thức**: [https://webcuatan.click](https://webcuatan.click)
-- **Trang Quản trị (Admin Area)**: [https://webcuatan.click/Admin](https://webcuatan.click/Admin)
 - *Hệ thống đang hoạt động trực tuyến 24/7 với đầy đủ các tính năng đặt hàng, quét mã VietQR tự động gạch nợ real-time và gửi hóa đơn điện tử.*
 
 ---
