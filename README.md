@@ -5,12 +5,20 @@
 
 ---
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-webcuatan.click-00C853?style=for-the-badge&logo=googlechrome&logoColor=white)](https://webcuatan.click)
 [![ASP.NET MVC](https://img.shields.io/badge/Framework-ASP.NET_MVC_5-blue.svg)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/Language-C%23_7.3-purple.svg)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![Entity Framework](https://img.shields.io/badge/ORM-Entity_Framework_6-red.svg)](https://docs.microsoft.com/en-us/ef/ef6/)
 [![SQL Server](https://img.shields.io/badge/Database-SQL_Server-blue.svg)](https://www.microsoft.com/sql-server)
 [![VietQR SePay](https://img.shields.io/badge/Payment-VietQR_SePay_Auto_Reconciliation-green.svg)](https://sepay.vn/)
 [![License](https://img.shields.io/badge/License-MIT-brightgreen.svg)](#)
+
+---
+
+## 🌐 Trải nghiệm Live Demo
+- **Website chính thức**: [https://webcuatan.click](https://webcuatan.click)
+- **Trang Quản trị (Admin Area)**: [https://webcuatan.click/Admin](https://webcuatan.click/Admin)
+- *Hệ thống đang hoạt động trực tuyến 24/7 với đầy đủ các tính năng đặt hàng, quét mã VietQR tự động gạch nợ real-time và gửi hóa đơn điện tử.*
 
 ---
 
