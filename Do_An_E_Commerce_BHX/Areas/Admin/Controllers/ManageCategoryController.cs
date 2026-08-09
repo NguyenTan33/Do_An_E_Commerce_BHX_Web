@@ -1,51 +1,32 @@
-using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Models.Entities;
-using Microsoft.AspNet.Identity;
-using System;
-using System.Data.Entity;
-using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Web.Mvc;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Interfaces;
+using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models.Entities;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class ManageCategoryController : Controller
+    public class ManageCategoryController : AdminBaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
+        private readonly IAdminCategoryService _categoryService;
+
+        public ManageCategoryController()
+        {
+            _categoryService = new AdminCategoryService(DbContext);
+        }
+
+        public ManageCategoryController(IAdminCategoryService categoryService, ApplicationDbContext dbContext) : base(dbContext)
+        {
+            _categoryService = categoryService ?? new AdminCategoryService(DbContext);
+        }
 
         // GET: Admin/ManageCategory
         public async Task<ActionResult> Index(string tuKhoa, string sortBy)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-            ViewBag.FullName = user?.FullName;
-
-            // Lấy danh sách Danh mục (Category)
-            var ds = _db.Category.AsNoTracking().AsQueryable();
-
-            // Lọc theo tên danh mục
-            if (!string.IsNullOrWhiteSpace(tuKhoa))
-            {
-                ds = ds.Where(x => x.Name.Contains(tuKhoa));
-            }
-
-            // Sắp xếp
-            switch (sortBy)
-            {
-                case "nameAsc":
-                    ds = ds.OrderBy(x => x.Name);
-                    break;
-                case "nameDesc":
-                    ds = ds.OrderByDescending(x => x.Name);
-                    break;
-                default:
-                    ds = ds.OrderBy(x => x.Id);
-                    break;
-            }
-
-            return View(await ds.ToListAsync());
+            await SetAdminFullNameViewBagAsync();
+            var ds = await _categoryService.GetFilteredCategoriesAsync(tuKhoa, sortBy);
+            return View(ds);
         }
 
         // GET: Admin/ManageCategory/ThemDanhMuc
@@ -62,9 +43,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.Category.Add(themDmMoi);
-                await _db.SaveChangesAsync();
-
+                await _categoryService.CreateCategoryAsync(themDmMoi);
                 return RedirectToAction("Index");
             }
 
@@ -75,8 +54,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> SuaDanhMuc(int id)
         {
-            var danhmuc = await _db.Category.FirstOrDefaultAsync(x => x.Id == id);
-
+            var danhmuc = await _categoryService.GetCategoryByIdAsync(id);
             if (danhmuc == null)
             {
                 return HttpNotFound();
@@ -92,13 +70,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var danhMuccu = await _db.Category.FirstOrDefaultAsync(x => x.Id == danhMucMoi.Id);
-                if (danhMuccu != null)
-                {
-                    danhMuccu.Name = danhMucMoi.Name;
-                }
-                await _db.SaveChangesAsync();
-
+                await _categoryService.UpdateCategoryAsync(danhMucMoi);
                 return RedirectToAction("Index");
             }
 
@@ -110,31 +82,19 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XoaDanhMuc(int id)
         {
-            var category = await _db.Category.FirstOrDefaultAsync(c => c.Id == id);
-
-            if (category == null)
+            var (success, errorMessage) = await _categoryService.DeleteCategoryAsync(id);
+            if (!success)
             {
-                return HttpNotFound();
-            }
-
-            var hasProducts = await _db.Product.AnyAsync(p => p.CategoryId == id);
-            if (hasProducts)
-            {
-                TempData["ErrorMessage"] = "Không thể xóa danh mục này vì đang chứa sản phẩm!";
+                if (errorMessage == "Không tìm thấy danh mục!")
+                {
+                    return HttpNotFound();
+                }
+                TempData["ErrorMessage"] = errorMessage;
                 return RedirectToAction("Index");
             }
 
-            _db.Category.Remove(category);
-            await _db.SaveChangesAsync();
-
             TempData["SuccessMessage"] = "Xóa danh mục thành công!";
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _db?.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

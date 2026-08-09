@@ -1,62 +1,46 @@
+using System;
+using System.Threading.Tasks;
+using System.Web.Mvc;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Interfaces;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
-using Microsoft.AspNet.Identity;
-using System;
-using System.Linq;
-using System.Net;
-using System.Web.Mvc;
-using System.Data.Entity;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class ManagePromotionController : Controller
+    public class ManagePromotionController : AdminBaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
+        private readonly IAdminPromotionService _promotionService;
 
-        // GET: Admin/ManagePromotion
-        public ActionResult Index(string tuKhoa, string trangThai)
+        public ManagePromotionController()
         {
-            var voucherService = new Do_An_E_Commerce_BHX.Services.Implementations.VoucherService(_db);
-            voucherService.SeedSampleVouchersIfEmpty();
-
-            var userId = User.Identity.GetUserId();
-            var user = _db.Users.Find(userId);
-            ViewBag.FullName = user?.FullName;
-
-            // Giả định DbSet trong DbContext của bạn tên là Promotions (hoặc Promotion)
-            var ds = _db.Promotion.AsQueryable();
-
-            // Tìm kiếm theo mã Code
-            if (!string.IsNullOrWhiteSpace(tuKhoa))
-            {
-                ds = ds.Where(x => x.Code.Contains(tuKhoa));
-            }
-
-            // Lọc theo trạng thái
-            if (!string.IsNullOrEmpty(trangThai))
-            {
-                bool isActive = trangThai == "true";
-                ds = ds.Where(x => x.IsActive == isActive);
-            }
-
-            // Sắp xếp mã mới tạo lên đầu
-            ds = ds.OrderByDescending(x => x.Id);
-
-            return View(ds.ToList());
+            _promotionService = new AdminPromotionService(DbContext);
         }
 
-        private void PopulateCategoriesDropdown(int? selectedCategoryId = null)
+        public ManagePromotionController(IAdminPromotionService promotionService, ApplicationDbContext dbContext) : base(dbContext)
         {
-            var categories = _db.Category.OrderBy(c => c.Name).ToList();
+            _promotionService = promotionService ?? new AdminPromotionService(DbContext);
+        }
+
+        // GET: Admin/ManagePromotion
+        public async Task<ActionResult> Index(string tuKhoa, string trangThai)
+        {
+            await SetAdminFullNameViewBagAsync();
+            var ds = await _promotionService.GetFilteredPromotionsAsync(tuKhoa, trangThai);
+            return View(ds);
+        }
+
+        private async Task PopulateCategoriesDropdownAsync(int? selectedCategoryId = null)
+        {
+            var categories = await _promotionService.GetCategoriesListAsync();
             ViewBag.Categories = new SelectList(categories, "Id", "Name", selectedCategoryId);
         }
 
         // GET: Admin/ManagePromotion/ThemPromotion
         [HttpGet]
-        public ActionResult ThemPromotion()
+        public async Task<ActionResult> ThemPromotion()
         {
-            PopulateCategoriesDropdown();
+            await PopulateCategoriesDropdownAsync();
             var model = new Promotion
             {
                 EffectiveDate = DateTime.Now,
@@ -70,123 +54,68 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManagePromotion/ThemPromotion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ThemPromotion(Promotion model, string DiscountType)
+        public async Task<ActionResult> ThemPromotion(Promotion model, string DiscountType)
         {
             if (ModelState.IsValid)
             {
-                // Kiểm tra trùng mã
-                var checkCode = _db.Promotion.FirstOrDefault(x => x.Code.ToUpper() == model.Code.ToUpper());
-                if (checkCode != null)
+                if (await _promotionService.IsCodeExistsAsync(model.Code))
                 {
                     ModelState.AddModelError("Code", "Mã khuyến mãi này đã tồn tại!");
-                    PopulateCategoriesDropdown(model.CategoryId);
+                    await PopulateCategoriesDropdownAsync(model.CategoryId);
                     return View(model);
                 }
 
-                model.Code = model.Code.ToUpper();
-
-                if (DiscountType == "PERCENT")
-                {
-                    model.percentDiscount = model.DiscountValue;
-                    model.DiscountValue = 0;
-                }
-                else
-                {
-                    model.percentDiscount = 0;
-                }
-
-                _db.Promotion.Add(model);
-                _db.SaveChanges();
-
+                await _promotionService.CreatePromotionAsync(model, DiscountType);
                 return RedirectToAction("Index");
             }
-            PopulateCategoriesDropdown(model.CategoryId);
+            await PopulateCategoriesDropdownAsync(model.CategoryId);
             return View(model);
         }
 
         // GET: Admin/ManagePromotion/SuaPromotion/5
         [HttpGet]
-        public ActionResult SuaPromotion(int? id)
+        public async Task<ActionResult> SuaPromotion(int? id)
         {
-            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
-            var promo = _db.Promotion.Find(id);
+            var promo = await _promotionService.GetPromotionByIdAsync(id.Value);
             if (promo == null) return HttpNotFound();
 
-            PopulateCategoriesDropdown(promo.CategoryId);
+            await PopulateCategoriesDropdownAsync(promo.CategoryId);
             return View(promo);
         }
 
         // POST: Admin/ManagePromotion/SuaPromotion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SuaPromotion(Promotion model, string DiscountType)
+        public async Task<ActionResult> SuaPromotion(Promotion model, string DiscountType)
         {
             if (ModelState.IsValid)
             {
-                var promo = _db.Promotion.Find(model.Id);
-                if (promo != null)
+                if (await _promotionService.IsCodeExistsAsync(model.Code, model.Id))
                 {
-                    // Kiểm tra trùng mã nếu đổi tên mã
-                    var checkCode = _db.Promotion.FirstOrDefault(x => x.Code.ToUpper() == model.Code.ToUpper() && x.Id != model.Id);
-                    if (checkCode != null)
-                    {
-                        ModelState.AddModelError("Code", "Mã khuyến mãi này đã tồn tại!");
-                        PopulateCategoriesDropdown(model.CategoryId);
-                        return View(model);
-                    }
+                    ModelState.AddModelError("Code", "Mã khuyến mãi này đã tồn tại!");
+                    await PopulateCategoriesDropdownAsync(model.CategoryId);
+                    return View(model);
+                }
 
-                    promo.Code = model.Code.ToUpper();
-
-                    if (DiscountType == "PERCENT")
-                    {
-                        promo.percentDiscount = model.DiscountValue;
-                        promo.DiscountValue = 0;
-                    }
-                    else
-                    {
-                        promo.DiscountValue = model.DiscountValue;
-                        promo.percentDiscount = 0;
-                    }
-
-                    promo.MinOrderAmount = model.MinOrderAmount;
-                    promo.CategoryId = model.CategoryId;
-                    promo.MaxDiscountAmount = model.MaxDiscountAmount;
-                    promo.Description = model.Description;
-                    promo.UsageLimit = model.UsageLimit > 0 ? model.UsageLimit : 100;
-                    promo.EffectiveDate = model.EffectiveDate;
-                    promo.ExpiryDate = model.ExpiryDate;
-                    promo.IsActive = model.IsActive;
-
-                    _db.SaveChanges();
+                bool success = await _promotionService.UpdatePromotionAsync(model, DiscountType);
+                if (success)
+                {
                     return RedirectToAction("Index");
                 }
             }
-            PopulateCategoriesDropdown(model.CategoryId);
+            await PopulateCategoriesDropdownAsync(model.CategoryId);
             return View(model);
         }
 
         // POST: Admin/ManagePromotion/XoaPromotion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult XoaPromotion(int id)
+        public async Task<ActionResult> XoaPromotion(int id)
         {
-            var promo = _db.Promotion.Find(id);
-            if (promo != null)
-            {
-                _db.Promotion.Remove(promo);
-                _db.SaveChanges();
-            }
+            await _promotionService.DeletePromotionAsync(id);
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

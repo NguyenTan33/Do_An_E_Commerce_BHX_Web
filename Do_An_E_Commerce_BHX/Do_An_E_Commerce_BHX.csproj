@@ -164,9 +164,26 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
+    <Compile Include="Areas\Admin\Controllers\AdminBaseController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageRoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageUserController.cs" />
     <Compile Include="Areas\Admin\Services\DashboardService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminOrderService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminOrderService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminProductService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminProductService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminCategoryService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminCategoryService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminPromotionService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminPromotionService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminQuestionService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminQuestionService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminReviewService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminReviewService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminRoleService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminRoleService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAdminUserManagementService.cs" />
+    <Compile Include="Areas\Admin\Services\Implementations\AdminUserManagementService.cs" />
     <Compile Include="Areas\Admin\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Areas\Admin\Controllers\ManageCategoryController.cs" />
@@ -240,11 +257,23 @@
     <Compile Include="Services\Implementations\PaymentService.cs" />
     <Compile Include="Services\Implementations\ProductService.cs" />
     <Compile Include="Services\Implementations\UserService.cs" />
+    <Compile Include="Services\Implementations\AccountAuthService.cs" />
+    <Compile Include="Services\Implementations\HomeService.cs" />
+    <Compile Include="Services\Implementations\OrderCheckoutService.cs" />
+    <Compile Include="Services\Implementations\SePayWebhookService.cs" />
+    <Compile Include="Services\Implementations\StoreProductService.cs" />
+    <Compile Include="Services\Implementations\UserAddressService.cs" />
     <Compile Include="Services\Interfaces\IAnalyticsService.cs" />
     <Compile Include="Services\Interfaces\ICartServices.cs" />
     <Compile Include="Services\Interfaces\IOrderServices.cs" />
     <Compile Include="Services\Interfaces\IPaymentService.cs" />
     <Compile Include="Services\Interfaces\IUserService.cs" />
+    <Compile Include="Services\Interfaces\IAccountAuthService.cs" />
+    <Compile Include="Services\Interfaces\IHomeService.cs" />
+    <Compile Include="Services\Interfaces\IOrderCheckoutService.cs" />
+    <Compile Include="Services\Interfaces\ISePayWebhookService.cs" />
+    <Compile Include="Services\Interfaces\IStoreProductService.cs" />
+    <Compile Include="Services\Interfaces\IUserAddressService.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -265,6 +294,8 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\CSS\Admin.css" />
+    <Content Include="Content\Image\icons8-development-32.ico" />
+    <Content Include="Content\Image\iconweb.ico" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
@@ -344,7 +375,6 @@
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Cart\Index.cshtml" />
-    <Content Include="Views\Product\Index.cshtml" />
     <Content Include="Views\Order\Index.cshtml" />
     <Content Include="Views\Order\Success.cshtml" />
     <Content Include="Views\Shared\_SidebarCategories.cshtml" />
@@ -352,7 +382,6 @@
     <Content Include="Views\UserAddress\Index.cshtml" />
     <Content Include="Views\UserAddress\Create.cshtml" />
     <Content Include="Views\UserAddress\Edit.cshtml" />
-    <Content Include="Views\Product\Detail.cshtml" />
     <Content Include="Views\Order\Payment.cshtml" />
     <Content Include="Areas\Admin\Views\ManageOrder\Index.cshtml" />
     <Content Include="Areas\Admin\Views\ManageOrder\PackingList.cshtml" />

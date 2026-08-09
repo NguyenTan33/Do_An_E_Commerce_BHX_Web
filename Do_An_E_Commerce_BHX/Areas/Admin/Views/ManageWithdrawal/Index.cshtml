@@ -115,7 +115,7 @@
                             <div class="fw-bold text-white">@customerName</div>
                             <div class="small text-secondary"><i class="fa-solid fa-phone me-1"></i>@customerPhone</div>
                         </td>
-                        <td class="fw-bold text-danger fs-6">@req.Amount.ToString("N0") VNĐ</td>
+                        <td class="fw-bold text-danger fs-6">@Do_An_E_Commerce_BHX.Helpers.CurrencyHelper.FormatVND(req.Amount)</td>
                         <td>
                             <div class="fw-bold text-info"><i class="fa-solid fa-building-columns me-1"></i>@req.BankName</div>
                             <div class="text-white">STK: <strong class="text-warning">@req.AccountNumber</strong></div>
@@ -126,18 +126,7 @@
                             <div class="small text-secondary">sau 17:00</div>
                         </td>
                         <td>
-                            @if (req.Status == 0)
-                            {
-                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-spinner fa-spin me-1"></i> Đang rút (Chờ chuyển)</span>
-                            }
-                            else if (req.Status == 1)
-                            {
-                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Đã chuyển tiền</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger px-3 py-2 rounded-pill" title="@req.AdminNote"><i class="fa-solid fa-circle-xmark me-1"></i> Đã từ chối (Hoàn ví)</span>
-                            }
+                            @Do_An_E_Commerce_BHX.Helpers.StatusHelper.GetWithdrawalStatusBadgeHtml(req.Status)
                         </td>
                         <td class="text-end pe-3">
                             <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-1 btn-show-detail"

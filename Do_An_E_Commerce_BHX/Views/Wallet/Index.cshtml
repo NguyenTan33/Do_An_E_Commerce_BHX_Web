@@ -397,7 +397,7 @@
                                     <tr>
                                         <td class="fw-bold text-secondary">#@req.Id</td>
                                         <td>@req.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td class="fw-bold text-danger">@req.Amount.ToString("N0") VNĐ</td>
+                                        <td class="fw-bold text-danger">@Do_An_E_Commerce_BHX.Helpers.CurrencyHelper.FormatVND(req.Amount)</td>
                                         <td>
                                             <div class="fw-bold text-dark">@req.BankName</div>
                                             <div class="text-muted">STK: @req.AccountNumber (@req.AccountHolderName)</div>
@@ -407,18 +407,7 @@
                                             <div class="small text-muted">sau 17:00</div>
                                         </td>
                                         <td>
-                                            @if (req.Status == 0)
-                                            {
-                                                <span class="badge-status-pending"><i class="fa-solid fa-spinner fa-spin me-1"></i> Đang rút</span>
-                                            }
-                                            else if (req.Status == 1)
-                                            {
-                                                <span class="badge-status-completed"><i class="fa-solid fa-circle-check me-1"></i> Thành công</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge-status-rejected" title="@req.AdminNote"><i class="fa-solid fa-circle-xmark me-1"></i> Thất bại (Đã hoàn lại ví)</span>
-                                            }
+                                            @Do_An_E_Commerce_BHX.Helpers.StatusHelper.GetWithdrawalStatusBadgeHtml(req.Status)
                                         </td>
                                     </tr>
                                 }
@@ -459,14 +448,7 @@
                                     <tr>
                                         <td>@tx.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
-                                            @if (tx.TransactionType == 0 || tx.TransactionType == 2)
-                                            {
-                                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">+ Cộng tiền</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1">- Trừ tiền rút</span>
-                                            }
+                                            @Do_An_E_Commerce_BHX.Helpers.StatusHelper.GetTransactionTypeBadgeHtml(tx.TransactionType)
                                         </td>
                                         <td class="fw-bold @(tx.TransactionType == 1 ? "text-danger" : "text-success")">
                                             @(tx.TransactionType == 1 ? "-" : "+")@tx.Amount.ToString("N0") VNĐ

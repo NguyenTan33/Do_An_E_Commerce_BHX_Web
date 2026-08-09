@@ -1,12 +1,12 @@
 using System;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
+using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
-using Do_An_E_Commerce_BHX.Services;
 using Do_An_E_Commerce_BHX.Services.Implementations;
-using Do_An_E_Commerce_BHX.Models; // Thêm namespace chứa các Service của ông
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
@@ -28,105 +28,37 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
     public class OrderController : BaseController
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly CartService _cartService;
-        private readonly OrderService _orderService;
+        private readonly IOrderCheckoutService _checkoutService;
 
         public OrderController()
         {
-            _dbContext = new ApplicationDbContext();
-            _cartService = new CartService(_dbContext);
-            _orderService = new OrderService(_dbContext, new Calculate(), _cartService);
+            _checkoutService = new OrderCheckoutService(DbContext);
+        }
+
+        public OrderController(IOrderCheckoutService checkoutService, ApplicationDbContext dbContext) : base(dbContext)
+        {
+            _checkoutService = checkoutService ?? new OrderCheckoutService(DbContext);
         }
 
         // GET: /Order/Index (Trang Thanh Toán)
         [HttpGet]
-        public ActionResult Index(string selectedIds = null, string coupon = null)
+        public async Task<ActionResult> Index(string selectedIds = null, string coupon = null)
         {
             string userId = GetCurrentUserId();
-            var cart = _cartService.GetCartByUserId(userId);
+            var (cart, userAddresses, userFullName, userPhone, loyaltyPoints, suggestedVouchers, discountAmount, appliedCode, couponMessage) =
+                await _checkoutService.GetCheckoutDataAsync(userId, selectedIds, coupon);
 
-            if (cart == null || cart.CartDetails == null || !cart.CartDetails.Any())
+            if (cart == null)
             {
                 return RedirectToAction("Index", "Cart");
             }
 
-            // Nếu truyền selectedIds thì lọc danh sách các món chọn
-            var selectedProductIds = new System.Collections.Generic.List<int>();
-            if (!string.IsNullOrEmpty(selectedIds))
-            {
-                selectedProductIds = selectedIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                                .Select(int.Parse)
-                                                .ToList();
-            }
-
-            if (selectedProductIds.Any())
-            {
-                cart.CartDetails = cart.CartDetails.Where(cd => selectedProductIds.Contains(cd.ProductId)).ToList();
-            }
-
-            // Lấy thông tin User đã đăng nhập & Danh sách địa chỉ đã lưu
-            bool isAuthenticated = User.Identity.IsAuthenticated;
-            ViewBag.IsAuthenticated = isAuthenticated;
-
-            if (isAuthenticated)
-            {
-                var userAddresses = _dbContext.UserAddresses
-                    .Where(a => a.UserId == userId)
-                    .OrderByDescending(a => a.IsDefault)
-                    .ToList();
-                ViewBag.UserAddresses = userAddresses;
-
-                var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId);
-                if (user != null)
-                {
-                    ViewBag.UserFullName = user.FullName;
-                    ViewBag.UserPhone = user.PhoneNumber;
-                    ViewBag.LoyaltyPoints = user.LoyaltyPoints;
-                }
-                else
-                {
-                    ViewBag.LoyaltyPoints = 0;
-                }
-            }
-            else
-            {
-                ViewBag.LoyaltyPoints = 0;
-            }
-
-            // Xử lý mã giảm giá Coupon qua VoucherService Shopee-style
-            var voucherService = new VoucherService(_dbContext);
-            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<CartDetail>();
-            var suggestedVouchers = voucherService.GetSuggestedVouchersForCart(cartItems, userId);
+            ViewBag.IsAuthenticated = User.Identity.IsAuthenticated;
+            ViewBag.UserAddresses = userAddresses;
+            ViewBag.UserFullName = userFullName;
+            ViewBag.UserPhone = userPhone;
+            ViewBag.LoyaltyPoints = loyaltyPoints;
             ViewBag.SuggestedVouchers = suggestedVouchers;
-
-            decimal discountAmount = 0;
-            string appliedCode = "";
-            string couponMessage = "";
-
-            if (!string.IsNullOrWhiteSpace(coupon))
-            {
-                var codeUpper = coupon.Trim().ToUpper();
-                var promo = _dbContext.Promotion.Include("Category").FirstOrDefault(p => p.Code.ToUpper() == codeUpper);
-                if (promo != null)
-                {
-                    var eval = voucherService.EvaluateVoucher(promo, cartItems, userId);
-                    if (eval.IsEligible)
-                    {
-                        discountAmount = (decimal)eval.CalculatedDiscount;
-                        appliedCode = promo.Code;
-                    }
-                    else
-                    {
-                        couponMessage = eval.ReasonIfNotEligible;
-                    }
-                }
-                else
-                {
-                    couponMessage = $"Mã giảm giá '{coupon}' không tồn tại trên hệ thống!";
-                }
-            }
-
             ViewBag.CouponCode = appliedCode;
             ViewBag.DiscountAmount = discountAmount;
             ViewBag.CouponMessage = couponMessage;
@@ -143,75 +75,27 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             try
             {
-                var selectedProductIds = new System.Collections.Generic.List<int>();
-                if (!string.IsNullOrEmpty(selectedIds))
-                {
-                    selectedProductIds = selectedIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                                    .Select(int.Parse)
-                                                    .ToList();
-                }
+                var (success, message, orderId, isPendingSession, pendingSession) = _checkoutService.CreatePendingCheckoutSession(
+                    userId, receiverName, receiverPhone, shippingAddress, paymentMethod, shippingFee, discountAmount, usedPoints, note, selectedIds, couponCode);
 
-                // Kiểm tra giỏ hàng có đủ sản phẩm
-                var cart = _cartService.GetCartByUserId(userId);
-                if (cart == null || cart.CartDetails == null || !cart.CartDetails.Any())
+                if (!success)
                 {
-                    return Json(new { success = false, message = "Giỏ hàng trống hoặc phiên làm việc đã hết hạn!" });
+                    return Json(new { success = false, message = message });
                 }
-
-                Promotion couponObj = null;
-                if (!string.IsNullOrWhiteSpace(couponCode))
-                {
-                    var codeUpper = couponCode.Trim().ToUpper();
-                    couponObj = _dbContext.Promotion.FirstOrDefault(p => p.Code.ToUpper() == codeUpper && p.IsActive);
-                }
-
-                // LƯU PHIÊN THANH TOÁN TẠM THỜI VÀO SESSION -> CHƯA TẠO ORDER DB, TUYỆT ĐỐI KHÔNG TRỪ TỒN KHO!
-                string pendingCode = "P" + DateTime.Now.ToString("yyMMddHHmmss");
-                var pendingSession = new PendingCheckoutSession
-                {
-                    PendingCode = pendingCode,
-                    ReceiverName = receiverName,
-                    ReceiverPhone = receiverPhone,
-                    ShippingAddress = shippingAddress,
-                    PaymentMethod = paymentMethod,
-                    ShippingFee = shippingFee,
-                    DiscountAmount = discountAmount,
-                    UsedPoints = usedPoints,
-                    Note = note,
-                    SelectedIds = selectedIds,
-                    CouponCode = couponCode,
-                    CreatedAt = DateTime.Now
-                };
 
                 Session["PendingCheckoutSession"] = pendingSession;
 
                 return Json(new {
                     success = true,
-                    message = "Chuyển sang bước chọn phương thức thanh toán!",
+                    message = message,
                     orderId = 0,
                     isPendingSession = true,
                     redirectUrl = Url.Action("Payment", "Order", new { isPending = 1 })
                 });
             }
-            catch (System.Data.Entity.Validation.DbEntityValidationException dbEx)
-            {
-                var errorMessages = dbEx.EntityValidationErrors
-                    .SelectMany(x => x.ValidationErrors)
-                    .Select(x => $"{x.PropertyName}: {x.ErrorMessage}");
-                var fullErrorMessage = string.Join(" | ", errorMessages);
-
-                return Json(new { success = false, message = "LỖI TẠI CỘT: " + fullErrorMessage });
-            }
             catch (Exception ex)
             {
-                var msg = ex.Message;
-                var current = ex.InnerException;
-                while (current != null)
-                {
-                    msg += " -> " + current.Message;
-                    current = current.InnerException;
-                }
-                return Json(new { success = false, message = "LỖI ĐẶT HÀNG: " + msg });
+                return Json(new { success = false, message = "LỖI ĐẶT HÀNG: " + ex.Message });
             }
         }
 
@@ -221,7 +105,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             if (orderId > 0)
             {
-                var order = _dbContext.Order
+                var order = DbContext.Order
                     .Include("OrderDetails.Product")
                     .FirstOrDefault(o => o.Id == orderId);
 
@@ -231,89 +115,18 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 }
             }
 
-            // Dựng giao diện VietQR tạm thời từ Session đối với đơn chưa chốt (Chưa tạo DB, Chưa trừ kho)
             var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
             if (pending != null)
             {
                 string userId = GetCurrentUserId();
-                var cart = _cartService.GetCartByUserId(userId);
-                if (cart != null && cart.CartDetails != null && cart.CartDetails.Any())
+                var pendingOrderModel = _checkoutService.GetPendingOrderForPaymentView(pending, userId);
+                if (pendingOrderModel != null)
                 {
-                    var selectedProductIds = new System.Collections.Generic.List<int>();
-                    if (!string.IsNullOrEmpty(pending.SelectedIds))
-                    {
-                        selectedProductIds = pending.SelectedIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                                        .Select(int.Parse)
-                                                        .ToList();
-                    }
-
-                    var itemsToOrder = cart.CartDetails.ToList();
-                    if (selectedProductIds.Any())
-                    {
-                        itemsToOrder = itemsToOrder.Where(cd => selectedProductIds.Contains(cd.ProductId)).ToList();
-                    }
-
-                    decimal rawTotal = _orderService.calculate.CalculatePrice(itemsToOrder);
-                    decimal finalTotal = rawTotal - pending.DiscountAmount + pending.ShippingFee - (decimal)(pending.UsedPoints * 10);
-                    if (finalTotal < 0) finalTotal = 0;
-
-                    var pendingOrderModel = new Order
-                    {
-                        Id = 0, // Id = 0 đại diện cho phiên chờ thanh toán chưa tạo DB
-                        OrderDate = pending.CreatedAt,
-                        TotalAmount = Convert.ToDouble(finalTotal),
-                        DiscountAmount = Convert.ToDouble(pending.DiscountAmount),
-                        ShippingFee = Convert.ToDouble(pending.ShippingFee),
-                        OrderStatus = 0,
-                        PaymentMethod = pending.PaymentMethod,
-                        PaymentStatus = 0,
-                        ReceiverName = pending.ReceiverName,
-                        ReceiverPhone = pending.ReceiverPhone,
-                        ShippingAddress = pending.ShippingAddress,
-                        UsedPoints = pending.UsedPoints,
-                        Note = pending.PendingCode,
-                        OrderDetails = itemsToOrder.Select(item => new OrderDetail
-                        {
-                            ProductId = item.ProductId,
-                            Quantity = item.Quantity,
-                            Price = Convert.ToDouble(item.Product != null ? item.Product.Price : 0),
-                            Product = item.Product
-                        }).ToList()
-                    };
-
                     return View(pendingOrderModel);
                 }
             }
 
             return RedirectToAction("Index", "Home");
-        }
-
-        private string GetLoggedUserEmail(Order order)
-        {
-            if (order != null && order.User != null)
-            {
-                if (!string.IsNullOrWhiteSpace(order.User.Email) && order.User.Email.Contains("@")) return order.User.Email;
-                if (!string.IsNullOrWhiteSpace(order.User.UserName) && order.User.UserName.Contains("@")) return order.User.UserName;
-            }
-
-            if (User.Identity.IsAuthenticated)
-            {
-                string currentName = User.Identity.Name;
-                if (!string.IsNullOrWhiteSpace(currentName) && currentName.Contains("@")) return currentName;
-
-                string currentId = User.Identity.GetUserId();
-                if (!string.IsNullOrWhiteSpace(currentId))
-                {
-                    var u = _dbContext.Users.FirstOrDefault(x => x.Id == currentId);
-                    if (u != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(u.Email) && u.Email.Contains("@")) return u.Email;
-                        if (!string.IsNullOrWhiteSpace(u.UserName) && u.UserName.Contains("@")) return u.UserName;
-                    }
-                }
-            }
-
-            return null;
         }
 
         // POST: /Order/ProcessCOD (Xử lý hoàn tất đặt hàng COD)
@@ -322,89 +135,21 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                if (orderId > 0)
-                {
-                    var order = _dbContext.Order.FirstOrDefault(o => o.Id == orderId);
-                    if (order != null)
-                    {
-                        order.PaymentMethod = 0;
-                        order.PaymentStatus = 0;
-                        order.OrderStatus = 0;
-                        _dbContext.SaveChanges();
-
-                        var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
-                        string userEmail = GetLoggedUserEmail(fullOrder ?? order);
-                        string msgText = "Đặt hàng thành công với phương thức COD!";
-
-                        if (!string.IsNullOrWhiteSpace(userEmail))
-                        {
-                            OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail);
-                            msgText = "Đặt hàng thành công! Hóa đơn điện tử đã được phát hành và gửi tới email " + userEmail;
-                        }
-
-                        return Json(new { 
-                            success = true, 
-                            message = msgText, 
-                            redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = 0 }) 
-                        });
-                    }
-                }
-
-                // Nếu chốt COD từ phiên chờ Session
+                string userId = GetCurrentUserId();
                 var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-                if (pending != null)
+
+                var (success, message, createdOrderId) = _checkoutService.ProcessCODCheckout(userId, orderId, pending);
+                if (success)
                 {
-                    string userId = GetCurrentUserId();
-                    Promotion couponObj = null;
-                    if (!string.IsNullOrWhiteSpace(pending.CouponCode))
-                    {
-                        var codeUpper = pending.CouponCode.Trim().ToUpper();
-                        couponObj = _dbContext.Promotion.FirstOrDefault(p => p.Code.ToUpper() == codeUpper && p.IsActive);
-                    }
-
-                    var selectedProductIds = new System.Collections.Generic.List<int>();
-                    if (!string.IsNullOrEmpty(pending.SelectedIds))
-                    {
-                        selectedProductIds = pending.SelectedIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                                        .Select(int.Parse)
-                                                        .ToList();
-                    }
-
-                    // TẠO ORDER DB + MỚI TRỪ TỒN KHO + XÓA GIỎ HÀNG THỰC TẾ
-                    var createdOrder = _orderService.CreateOrder(
-                        userId: userId,
-                        receiverName: pending.ReceiverName,
-                        receiverPhone: pending.ReceiverPhone,
-                        shippingAddress: pending.ShippingAddress,
-                        coupon: couponObj,
-                        paymentMethod: 0,
-                        shippingFee: pending.ShippingFee,
-                        discountAmount: pending.DiscountAmount,
-                        usedPoints: pending.UsedPoints,
-                        note: pending.Note,
-                        selectedProductIds: selectedProductIds
-                    );
-
-                    Session.Remove("PendingCheckoutSession");
-
-                    var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == createdOrder.Id);
-                    string userEmail = GetLoggedUserEmail(fullOrder ?? createdOrder);
-                    string msgText = "Đặt hàng COD thành công!";
-
-                    if (!string.IsNullOrWhiteSpace(userEmail))
-                    {
-                        OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? createdOrder, userEmail);
-                        msgText = "Đặt hàng COD thành công! Hóa đơn điện tử đã được gửi tới email " + userEmail;
-                    }
-
+                    if (pending != null) Session.Remove("PendingCheckoutSession");
                     return Json(new {
                         success = true,
-                        message = msgText,
-                        redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrder.Id, paymentMethod = 0 })
+                        message = message,
+                        redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrderId, paymentMethod = 0 })
                     });
                 }
 
-                return Json(new { success = false, message = "Không tìm thấy phiên thông tin đặt hàng!" });
+                return Json(new { success = false, message = message });
             }
             catch (Exception ex)
             {
@@ -418,112 +163,34 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                if (orderId > 0)
+                string userId = GetCurrentUserId();
+                var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
+
+                var (success, isPaid, message, createdOrderId) = _checkoutService.ConfirmBankPayment(userId, orderId, paymentMethod, pending);
+                if (success)
                 {
-                    var order = _dbContext.Order.FirstOrDefault(o => o.Id == orderId);
-                    if (order != null)
+                    if (pending != null)
                     {
-                        order.PaymentMethod = paymentMethod;
-                        order.PaymentStatus = 1;
-                        order.OrderStatus = 0;
-                        _dbContext.SaveChanges();
+                        Session.Remove("PendingCheckoutSession");
+                        Session["LastCreatedOrderId"] = createdOrderId;
+                    }
 
-                        var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
-                        string userEmail = GetLoggedUserEmail(fullOrder ?? order);
-                        string methodText = paymentMethod == 2 ? "Ví MoMo" : "Chuyển khoản Ngân hàng";
-                        string msgText = $"Thanh toán qua {methodText} thành công!";
-
-                        if (!string.IsNullOrWhiteSpace(userEmail))
-                        {
-                            OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail);
-                            msgText = $"Thanh toán qua {methodText} thành công! Hóa đơn điện tử đã được phát hành và gửi tới email " + userEmail;
-                        }
-
-                    return Json(new { 
+                    return Json(new {
                         isPaid = true,
-                        success = true, 
-                        message = msgText, 
-                        redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = paymentMethod }) 
+                        success = true,
+                        message = message,
+                        orderId = createdOrderId,
+                        redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrderId, paymentMethod = paymentMethod })
                     }, JsonRequestBehavior.AllowGet);
                 }
-            }
 
-            // Nếu xác nhận chuyển khoản thành công cho phiên chờ Session
-            var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-            if (pending != null)
+                return Json(new { success = false, message = message }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
             {
-                string userId = GetCurrentUserId();
-                Promotion couponObj = null;
-                if (!string.IsNullOrWhiteSpace(pending.CouponCode))
-                {
-                    var codeUpper = pending.CouponCode.Trim().ToUpper();
-                    couponObj = _dbContext.Promotion.FirstOrDefault(p => p.Code.ToUpper() == codeUpper && p.IsActive);
-                }
-
-                var selectedProductIds = new System.Collections.Generic.List<int>();
-                if (!string.IsNullOrEmpty(pending.SelectedIds))
-                {
-                    selectedProductIds = pending.SelectedIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                                    .Select(int.Parse)
-                                                    .ToList();
-                }
-
-                // TẠO ORDER DB + TỰ ĐỘNG ĐÁNH DẤU ĐÃ THANH TOÁN + MỚI TRỪ TỒN KHO + XÓA GIỎ
-                var createdOrder = _orderService.CreateOrder(
-                    userId: userId,
-                    receiverName: pending.ReceiverName,
-                    receiverPhone: pending.ReceiverPhone,
-                    shippingAddress: pending.ShippingAddress,
-                    coupon: couponObj,
-                    paymentMethod: paymentMethod,
-                    shippingFee: pending.ShippingFee,
-                    discountAmount: pending.DiscountAmount,
-                    usedPoints: pending.UsedPoints,
-                    note: pending.Note,
-                    selectedProductIds: selectedProductIds
-                );
-
-                createdOrder.PaymentStatus = 1; // Đã thanh toán thành công
-                createdOrder.OrderStatus = 0;   // Chờ duyệt
-                _dbContext.SaveChanges();
-
-                Session.Remove("PendingCheckoutSession");
-                Session["LastCreatedOrderId"] = createdOrder.Id;
-
-                var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == createdOrder.Id);
-                string userEmail = GetLoggedUserEmail(fullOrder ?? createdOrder);
-                string methodText = paymentMethod == 2 ? "Ví MoMo" : "Chuyển khoản VietQR";
-                string msgText = $"Thanh toán {methodText} thành công!";
-
-                if (!string.IsNullOrWhiteSpace(userEmail))
-                {
-                    try
-                    {
-                        OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? createdOrder, userEmail);
-                        msgText = $"Thanh toán {methodText} thành công! Hóa đơn điện tử đã được phát hành và gửi tới email " + userEmail;
-                    }
-                    catch (Exception emailEx)
-                    {
-                        LogSePay("[LỖI GỬI EMAIL HÓA ĐƠN - KHÔNG ẢNH HƯỞNG ĐẾN ĐƠN HÀNG] " + emailEx.Message);
-                    }
-                }
-
-                return Json(new {
-                    isPaid = true,
-                    success = true,
-                    message = msgText,
-                    orderId = createdOrder.Id,
-                    redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrder.Id, paymentMethod = paymentMethod })
-                }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi xác nhận thanh toán: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
-
-            return Json(new { success = false, message = "Không tìm thấy phiên thông tin thanh toán!" }, JsonRequestBehavior.AllowGet);
         }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = "Lỗi xác nhận thanh toán: " + ex.Message }, JsonRequestBehavior.AllowGet);
-        }
-    }
 
         // GET: /Order/Success (Trang thông báo hoàn tất)
         [HttpGet]
@@ -534,7 +201,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             if (orderId > 0)
             {
-                var order = _dbContext.Order
+                var order = DbContext.Order
                     .Include("OrderDetails.Product")
                     .FirstOrDefault(o => o.Id == orderId);
                 ViewBag.Order = order;
@@ -549,285 +216,50 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             Response.Cache.SetCacheability(System.Web.HttpCacheability.NoCache);
             Response.Cache.SetNoStore();
-            if (orderId > 0)
+
+            string userId = GetCurrentUserId();
+            var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
+            int? lastCreatedId = Session["LastCreatedOrderId"] != null ? (int?)Session["LastCreatedOrderId"] : null;
+
+            var (isPaid, isExpired, paymentStatus, paymentMethod, message) =
+                _checkoutService.CheckPaymentStatus(userId, orderId, pending, lastCreatedId);
+
+            if (isExpired)
             {
-                var order = _dbContext.Order.FirstOrDefault(o => o.Id == orderId);
-                if (order == null)
-                {
-                    return Json(new { isPaid = false, message = "Không tìm thấy đơn" }, JsonRequestBehavior.AllowGet);
-                }
-
-                // 0. Kiểm tra nếu đơn hàng chuyển khoản đã quá hạn 10 phút mà chưa thanh toán
-                if (order.PaymentStatus == 0 && order.PaymentMethod == 1 && (DateTime.Now - order.OrderDate).TotalMinutes >= 10)
-                {
-                    AutoCancelExpiredOrders();
-                    return Json(new { 
-                        isPaid = false, 
-                        isExpired = true, 
-                        message = "Đơn hàng đã hết hạn thanh toán (quá 10 phút)!",
-                        orderId = orderId
-                    }, JsonRequestBehavior.AllowGet);
-                }
-
-                // 1. Nếu đơn đã ở trạng thái ĐÃ THANH TOÁN (1)
-                if (order.PaymentStatus == 1)
-                {
-                    return Json(new { 
-                        isPaid = true, 
-                        paymentStatus = 1, 
-                        paymentMethod = order.PaymentMethod,
-                        orderId = orderId,
-                        redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = order.PaymentMethod })
-                    }, JsonRequestBehavior.AllowGet);
-                }
-
-                // 2. TỰ ĐỘNG CHỦ ĐỘNG GỌI SEPAY REST API TỪ LOCALHOST
-                bool isPaidFromSePay = CheckSePayApiForOrder(order);
-                if (isPaidFromSePay)
-                {
-                    order.PaymentMethod = 1; // VietinBank / SePay
-                    order.PaymentStatus = 1; // Đã thanh toán thành công
-                    order.OrderStatus = 0;   // Chờ duyệt / chuẩn bị hàng
-                    _dbContext.SaveChanges();
-
-                    // Lấy thông tin order đầy đủ để gửi Email Hóa đơn
-                    var fullOrder = _dbContext.Order.Include("OrderDetails.Product").Include("User").FirstOrDefault(o => o.Id == orderId);
-                    string userEmail = GetLoggedUserEmail(fullOrder ?? order);
-                    if (!string.IsNullOrWhiteSpace(userEmail))
-                    {
-                        try { OrderInvoiceEmailService.SendOrderConfirmationEmail(fullOrder ?? order, userEmail); } catch { }
-                    }
-
-                    return Json(new { 
-                        isPaid = true, 
-                        paymentStatus = 1, 
-                        paymentMethod = 1,
-                        orderId = orderId,
-                        redirectUrl = Url.Action("Success", "Order", new { orderId = orderId, paymentMethod = 1 }),
-                        message = "Thanh toán thành công (Xác thực tự động từ SePay REST API)!"
-                    }, JsonRequestBehavior.AllowGet);
-                }
-
-                return Json(new { 
-                    isPaid = false, 
-                    paymentStatus = order.PaymentStatus, 
-                    paymentMethod = order.PaymentMethod,
+                if (pending != null) Session.Remove("PendingCheckoutSession");
+                return Json(new {
+                    isPaid = false,
+                    isExpired = true,
+                    message = message,
                     orderId = orderId
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            // Nếu orderId == 0: Kiểm tra VietQR tự động cho phiên chờ Session chưa tạo DB
-            var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-            if (pending != null)
+            if (isPaid)
             {
-                if ((DateTime.Now - pending.CreatedAt).TotalMinutes >= 10)
+                int targetOrderId = orderId > 0 ? orderId : (lastCreatedId ?? 0);
+                if (pending != null && targetOrderId == 0)
                 {
-                    Session.Remove("PendingCheckoutSession");
-                    return Json(new { isPaid = false, isExpired = true, message = "Phiên thanh toán đã hết hạn 10 phút!" }, JsonRequestBehavior.AllowGet);
-                }
-
-                bool isPaidFromSePay = CheckSePayApiForPending(pending);
-                if (isPaidFromSePay)
-                {
-                    // TẠO ORDER DB + TỰ ĐỘNG ĐÁNH DẤU ĐÃ THANH TOÁN + MỚI TRỪ TỒN KHO + XÓA GIỎ
                     return ConfirmBankPaymentApi(0, 1);
                 }
-            }
-            else if (Session["LastCreatedOrderId"] != null)
-            {
-                int lastCreatedId = (int)Session["LastCreatedOrderId"];
+
                 return Json(new {
                     isPaid = true,
                     paymentStatus = 1,
-                    orderId = lastCreatedId,
-                    redirectUrl = Url.Action("Success", "Order", new { orderId = lastCreatedId, paymentMethod = 1 }),
-                    message = "Thanh toán thành công!"
+                    paymentMethod = paymentMethod,
+                    orderId = targetOrderId,
+                    redirectUrl = Url.Action("Success", "Order", new { orderId = targetOrderId, paymentMethod = paymentMethod }),
+                    message = message
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            return Json(new { isPaid = false }, JsonRequestBehavior.AllowGet);
+            return Json(new {
+                isPaid = false,
+                paymentStatus = paymentStatus,
+                paymentMethod = paymentMethod,
+                orderId = orderId
+            }, JsonRequestBehavior.AllowGet);
         }
-
-        private bool CheckSePayApiForPending(PendingCheckoutSession pending)
-        {
-            if (pending == null) return false;
-            try
-            {
-                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls;
-
-                string apiKey = System.Configuration.ConfigurationManager.AppSettings["SePay_ApiKey"] ?? "";
-                if (string.IsNullOrWhiteSpace(apiKey)) return false;
-
-                string url = "https://my.sepay.vn/userapi/transactions/list";
-                var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-                request.Method = "GET";
-                request.Headers["Authorization"] = "Bearer " + apiKey;
-                request.ContentType = "application/json";
-                request.Timeout = 6000;
-
-                using (var response = (System.Net.HttpWebResponse)request.GetResponse())
-                using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
-                {
-                    string json = reader.ReadToEnd();
-                    if (string.IsNullOrWhiteSpace(json)) return false;
-
-                    var jObj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                    var txs = jObj["transactions"] as Newtonsoft.Json.Linq.JArray;
-
-                    if (txs != null && txs.Count > 0)
-                    {
-                        string pCode = (pending.PendingCode ?? "").ToUpper();
-                        string pCodeNoP = pCode.Replace("P", "");
-                        string phone = (pending.ReceiverPhone ?? "").Trim();
-
-                        foreach (var item in txs)
-                        {
-                            string content = (
-                                (item["transaction_content"]?.ToString() ?? "") + " " +
-                                (item["content"]?.ToString() ?? "") + " " +
-                                (item["description"]?.ToString() ?? "") + " " +
-                                (item["code"]?.ToString() ?? "") + " " +
-                                (item["reference_number"]?.ToString() ?? "")
-                            ).ToUpper();
-
-                            string strAmount = item["amount_in"]?.ToString() ?? item["amountIn"]?.ToString() ?? "0";
-                            double amountIn = 0;
-                            double.TryParse(strAmount, out amountIn);
-
-                            if (!string.IsNullOrEmpty(content) || amountIn > 0)
-                            {
-                                // 1. Khớp theo mã phiên (VD: P260802021803 hoặc 260802021803)
-                                if (!string.IsNullOrEmpty(pCode) && (content.Contains(pCode) || content.Contains(pCodeNoP)))
-                                {
-                                    LogSePay($"[SEPAY API HIT PENDING THÀNH CÔNG] Khớp mã phiên {pCode}: Content='{content}', Amount={amountIn}");
-                                    return true;
-                                }
-
-                                // 2. Khớp theo SĐT người nhận
-                                if (!string.IsNullOrEmpty(phone) && phone.Length >= 8 && content.Contains(phone))
-                                {
-                                    LogSePay($"[SEPAY API HIT PENDING THÀNH CÔNG] Khớp SĐT người nhận {phone}: Content='{content}', Amount={amountIn}");
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogSePay("[LỖI GỌI SEPAY REST API FOR PENDING] " + ex.Message);
-            }
-            return false;
-        }
-
-        private bool CheckSePayApiForOrder(Order order)
-        {
-            if (order == null) return false;
-            try
-            {
-                // 1. Kích hoạt TLS 1.2 cho .NET Framework 4.7.2 WebRequest
-                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls;
-
-                string apiKey = System.Configuration.ConfigurationManager.AppSettings["SePay_ApiKey"] ?? "";
-                if (string.IsNullOrWhiteSpace(apiKey))
-                {
-                    LogSePay("[SEPAY API CHECK] SePay_ApiKey trong Web.config bị rỗng.");
-                    return false;
-                }
-
-                string url = "https://my.sepay.vn/userapi/transactions/list";
-                var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-                request.Method = "GET";
-                request.Headers["Authorization"] = "Bearer " + apiKey;
-                request.ContentType = "application/json";
-                request.Timeout = 5000; // 5 giây timeout
-
-                using (var response = (System.Net.HttpWebResponse)request.GetResponse())
-                using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
-                {
-                    string json = reader.ReadToEnd();
-                    if (string.IsNullOrWhiteSpace(json)) return false;
-
-                    var jObj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                    var txs = jObj["transactions"] as Newtonsoft.Json.Linq.JArray;
-
-                    if (txs != null && txs.Count > 0)
-                    {
-                        string orderIdStr = order.Id.ToString();
-                        string pattern1 = "BHX" + orderIdStr;
-                        string pattern2 = "BHX " + orderIdStr;
-                        string pattern3 = "BHX_" + orderIdStr;
-                        string pattern4 = "BHX-" + orderIdStr;
-
-                        foreach (var item in txs)
-                        {
-                            string strAmount = item["amount_in"]?.ToString() ?? item["amountIn"]?.ToString() ?? "0";
-                            double amountIn = 0;
-                            double.TryParse(strAmount, out amountIn);
-
-                            string content = (item["transaction_content"]?.ToString() ?? item["content"]?.ToString() ?? item["description"]?.ToString() ?? "").ToUpper();
-
-                            if (amountIn > 0 || !string.IsNullOrEmpty(content))
-                            {
-                                if (content.Contains(pattern1) || 
-                                    content.Contains(pattern2) || 
-                                    content.Contains(pattern3) || 
-                                    content.Contains(pattern4) ||
-                                    (content.Contains("BHX") && content.Contains(orderIdStr)) ||
-                                    (content.Contains("SEVQR") && content.Contains(orderIdStr)) ||
-                                    content.Contains(orderIdStr))
-                                {
-                                    LogSePay($"[SEPAY API HIT THÀNH CÔNG] Tìm thấy giao dịch SePay khớp Đơn #{order.Id}: Content='{content}', Amount={amountIn}");
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogSePay("[LỖI GỌI SEPAY REST API] " + ex.Message + (ex.InnerException != null ? " -> " + ex.InnerException.Message : ""));
-            }
-            return false;
-        }
-
-        private void LogSePay(string message)
-        {
-            try
-            {
-                string logPath = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/sepay_transactions.log");
-                if (string.IsNullOrEmpty(logPath))
-                {
-                    logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "sepay_transactions.log");
-                }
-                string dir = System.IO.Path.GetDirectoryName(logPath);
-                if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
-
-                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", System.Text.Encoding.UTF8);
-            }
-            catch { }
-        }
-
-    public class SePayRestApiTransaction
-    {
-        public int id { get; set; }
-        public string bank_brand_name { get; set; }
-        public string account_number { get; set; }
-        public string transaction_date { get; set; }
-        public double amount_in { get; set; }
-        public double amount_out { get; set; }
-        public string transaction_content { get; set; }
-        public string reference_number { get; set; }
-    }
-
-    public class SePayRestApiResponse
-    {
-        public int status { get; set; }
-        public string[] messages { get; set; }
-        public System.Collections.Generic.List<SePayRestApiTransaction> transactions { get; set; }
-    }
 
         // GET: /Order/Track (Trang Tra cứu đơn hàng bằng SĐT hoặc Mã đơn)
         [AllowAnonymous]
@@ -849,7 +281,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
 
             string cleanQuery = query.Trim().Replace("#", "");
-            var qOrders = _dbContext.Order.AsQueryable();
+            var qOrders = DbContext.Order.AsQueryable();
 
             int parsedOrderId = 0;
             bool isNumericId = int.TryParse(cleanQuery, out parsedOrderId);
@@ -872,9 +304,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 return Json(new { success = false, message = $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!" });
             }
-
-            // Tự động kiểm tra & hủy các đơn hàng VietQR chưa thanh toán quá 10 phút
-            AutoCancelExpiredOrders();
 
             var orderList = orders.Select(o => new
             {
@@ -920,13 +349,12 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                var order = _dbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
+                var order = DbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
                 }
 
-                // Không cho phép hủy đơn nếu đã giao thành công (4), đang giao hàng (3), hoặc đã hủy trước đó (5)
                 if (order.OrderStatus == 3 || order.OrderStatus == 4 || order.OrderStatus == 5)
                 {
                     return Json(new { success = false, message = "Đơn hàng đang giao, đã giao thành công hoặc đã hủy trước đó, không thể hủy!" });
@@ -937,10 +365,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return Json(new { success = false, message = "Đơn hàng đã được thanh toán thành công, vui lòng liên hệ bộ phận hỗ trợ để hoàn tiền!" });
                 }
 
-                // Cập nhật trạng thái sang 5 = Đã hủy
                 order.OrderStatus = 5;
 
-                // Hoàn lại số lượng sản phẩm vào kho
                 if (order.OrderDetails != null)
                 {
                     foreach (var detail in order.OrderDetails)
@@ -952,7 +378,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     }
                 }
 
-                _dbContext.SaveChanges();
+                DbContext.SaveChanges();
 
                 return Json(new { success = true, message = $"Đã hủy thành công đơn hàng #{orderId}!" });
             }
@@ -960,50 +386,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 return Json(new { success = false, message = "Lỗi khi hủy đơn hàng: " + ex.Message });
             }
-        }
-
-        private void AutoCancelExpiredOrders()
-        {
-            try
-            {
-                var now = DateTime.Now;
-                var expiredOrders = _dbContext.Order
-                    .Include("OrderDetails.Product")
-                    .Where(o => o.PaymentStatus == 0 && o.PaymentMethod == 1 && o.OrderStatus != 5 && o.OrderStatus != 4)
-                    .ToList();
-
-                bool hasChanges = false;
-                foreach (var order in expiredOrders)
-                {
-                    if ((now - order.OrderDate).TotalMinutes >= 10)
-                    {
-                        order.OrderStatus = 5; // Đã hủy tự động do quá 10 phút chưa thanh toán
-                        if (order.OrderDetails != null)
-                        {
-                            foreach (var detail in order.OrderDetails)
-                            {
-                                if (detail.Product != null)
-                                {
-                                    detail.Product.Quantity += detail.Quantity;
-                                }
-                            }
-                        }
-                        hasChanges = true;
-                    }
-                }
-
-                if (hasChanges)
-                {
-                    _dbContext.SaveChanges();
-                }
-            }
-            catch { }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _dbContext.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

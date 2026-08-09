@@ -49,11 +49,18 @@ namespace Do_An_E_Commerce_BHX.Models
         public DbSet<Entities.WithdrawalRequest> WithdrawalRequest { get; set; }
         public DbSet<Entities.WalletTransaction> WalletTransaction { get; set; }
 
+        private static bool _isColumnsChecked = false;
+        private static readonly object _lockObj = new object();
+
         public static void EnsureProductColumnsExist(ApplicationDbContext db)
         {
-            try
+            if (_isColumnsChecked) return;
+            lock (_lockObj)
             {
-                string sql = @"
+                if (_isColumnsChecked) return;
+                try
+                {
+                    string sql = @"
                     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserBehaviorLog')
                     BEGIN
                         CREATE TABLE [dbo].[UserBehaviorLog] (
@@ -165,9 +172,11 @@ namespace Do_An_E_Commerce_BHX.Models
                             ALTER TABLE [dbo].[AspNetUsers] ADD [LastActivityDate] DATETIME NULL;
                     END
                 ";
-                db.Database.ExecuteSqlCommand(sql);
+                    db.Database.ExecuteSqlCommand(sql);
+                    _isColumnsChecked = true;
+                }
+                catch { }
             }
-            catch { }
         }
 
         public static ApplicationDbContext Create()

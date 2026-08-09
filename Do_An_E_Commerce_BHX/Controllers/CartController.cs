@@ -1,24 +1,29 @@
-using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Do_An_E_Commerce_BHX.Services.Implementations;
-using Do_An_E_Commerce_BHX.Models;
+using System.Collections.Generic;
 using System.Linq;
+using System.Web.Mvc;
+using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
+
 namespace Do_An_E_Commerce_BHX.Controllers
-{using System.Linq;
+{
     [AllowAnonymous]
     public class CartController : BaseController
     {
-        private readonly ApplicationDbContext _dbContext; // 1. Khai báo biến _dbContext ở đây
         private readonly CartService _cartService;
         private readonly OrderService _orderService;
 
-        // DI hoặc khởi tạo trong Constructor
         public CartController()
         {
-            // 2. Gán vào biến _dbContext của Class
-            _dbContext = new ApplicationDbContext();
-            _cartService = new CartService(_dbContext);
-            _orderService = new OrderService(_dbContext, new Calculate(), _cartService);
+            _cartService = new CartService(DbContext);
+            _orderService = new OrderService(DbContext, new Calculate(), _cartService);
+        }
+
+        public CartController(ApplicationDbContext dbContext) : base(dbContext)
+        {
+            _cartService = new CartService(DbContext);
+            _orderService = new OrderService(DbContext, new Calculate(), _cartService);
         }
 
         // 1. Render Trang Giỏ Hàng
@@ -27,12 +32,10 @@ namespace Do_An_E_Commerce_BHX.Controllers
             string userId = GetCurrentUserId();
             var cart = _cartService.GetCartByUserId(userId);
 
-            // Lấy tổng tiền chưa discount
             ViewBag.TotalPrice = _orderService.CalculatePrice(userId);
 
-            // Gợi ý danh sách mã giảm giá khả dụng theo Shopee
-            var voucherService = new VoucherService(_dbContext);
-            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<Do_An_E_Commerce_BHX.Models.Entities.CartDetail>();
+            var voucherService = new VoucherService(DbContext);
+            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new List<CartDetail>();
             var suggestedVouchers = voucherService.GetSuggestedVouchersForCart(cartItems, userId);
 
             ViewBag.SuggestedVouchers = suggestedVouchers;
@@ -97,14 +100,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             string userId = GetCurrentUserId();
             _cartService.RemoveItemFromCart(productId, userId);
-
             decimal newTotal = _orderService.CalculatePrice(userId);
             return Json(new { success = true, newTotal = newTotal });
         }
 
         // 5. Xóa các mục đã chọn (Gọi qua AJAX)
         [HttpPost]
-        public JsonResult RemoveSelected(System.Collections.Generic.List<int> productIds)
+        public JsonResult RemoveSelected(List<int> productIds)
         {
             string userId = GetCurrentUserId();
             _cartService.RemoveSelectedItemsFromCart(productIds, userId);
@@ -134,17 +136,17 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             string userId = GetCurrentUserId();
             var cart = _cartService.GetCartByUserId(userId);
-            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new System.Collections.Generic.List<Do_An_E_Commerce_BHX.Models.Entities.CartDetail>();
+            var cartItems = cart != null && cart.CartDetails != null ? cart.CartDetails.ToList() : new List<CartDetail>();
 
             var codeUpper = couponCode.Trim().ToUpper();
-            var promotion = _dbContext.Promotion.Include("Category").FirstOrDefault(p => p.Code.ToUpper() == codeUpper);
+            var promotion = DbContext.Promotion.Include("Category").FirstOrDefault(p => p.Code.ToUpper() == codeUpper);
 
             if (promotion == null)
             {
                 return Json(new { success = false, message = $"Mã giảm giá '{couponCode}' không tồn tại trên hệ thống!" });
             }
 
-            var voucherService = new VoucherService(_dbContext);
+            var voucherService = new VoucherService(DbContext);
             var eval = voucherService.EvaluateVoucher(promotion, cartItems, userId);
 
             if (!eval.IsEligible)
@@ -161,6 +163,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             });
         }
 
+        // 8. Header Cart Summary Child Action
         [ChildActionOnly]
         public ActionResult CartSummary()
         {
@@ -173,17 +176,12 @@ namespace Do_An_E_Commerce_BHX.Controllers
             if (cart != null && cart.CartDetails != null)
             {
                 totalQuantity = cart.CartDetails.Sum(i => i.Quantity);
-                cartTotal = cart.CartDetails.Sum(i => (i.Product != null ? i.Product.Price : 0) * i.Quantity);
+                cartTotal = cart.CartDetails.Sum(i => (decimal)(i.Product != null ? i.Product.Price : 0) * i.Quantity);
             }
 
             ViewBag.CartCount = totalQuantity;
             ViewBag.CartTotal = cartTotal;
             return PartialView("_CartSummary", cart);
-        }
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _dbContext.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

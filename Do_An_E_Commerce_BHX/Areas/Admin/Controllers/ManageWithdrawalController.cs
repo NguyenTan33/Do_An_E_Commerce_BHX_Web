@@ -10,30 +10,29 @@ using Do_An_E_Commerce_BHX.Services.Interfaces;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class ManageWithdrawalController : Controller
+    public class ManageWithdrawalController : AdminBaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
         private readonly IWalletService _walletService;
 
         public ManageWithdrawalController()
         {
-            _walletService = new WalletService(_db);
+            _walletService = new WalletService(DbContext);
         }
 
-        public ManageWithdrawalController(IWalletService walletService)
+        public ManageWithdrawalController(IWalletService walletService, ApplicationDbContext dbContext) : base(dbContext)
         {
-            _walletService = walletService;
+            _walletService = walletService ?? new WalletService(DbContext);
         }
 
         // GET: /Admin/ManageWithdrawal
         public async Task<ActionResult> Index(string searchKeyword = "", int? statusFilter = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var query = _db.WithdrawalRequest
+            await SetAdminFullNameViewBagAsync();
+
+            var query = DbContext.WithdrawalRequest
                 .Include(r => r.User)
                 .AsQueryable();
 
-            // Lọc nâng cao theo từ khóa (Tên khách hàng, SĐT, Email, Tên chủ TK, Số tài khoản, Ngân hàng)
             if (!string.IsNullOrWhiteSpace(searchKeyword))
             {
                 string kw = searchKeyword.Trim().ToLower();
@@ -47,13 +46,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                                          r.AccountHolderName.ToLower().Contains(kw));
             }
 
-            // Lọc theo Trạng thái
             if (statusFilter.HasValue && statusFilter.Value >= 0)
             {
                 query = query.Where(r => r.Status == statusFilter.Value);
             }
 
-            // Lọc theo Khoảng ngày
             if (fromDate.HasValue)
             {
                 var startDate = fromDate.Value.Date;
@@ -68,12 +65,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             var requestsList = await query.OrderByDescending(r => r.CreatedDate).ToListAsync();
 
-            // THỐNG KÊ TỔNG QUAN
-            ViewBag.CountPending = await _db.WithdrawalRequest.CountAsync(r => r.Status == 0);
-            ViewBag.CountCompleted = await _db.WithdrawalRequest.CountAsync(r => r.Status == 1);
-            ViewBag.CountRejected = await _db.WithdrawalRequest.CountAsync(r => r.Status == 2);
-            ViewBag.TotalPendingAmount = (await _db.WithdrawalRequest.Where(r => r.Status == 0).SumAsync(r => (decimal?)r.Amount)) ?? 0;
-            ViewBag.TotalCompletedAmount = (await _db.WithdrawalRequest.Where(r => r.Status == 1).SumAsync(r => (decimal?)r.Amount)) ?? 0;
+            ViewBag.CountPending = await DbContext.WithdrawalRequest.CountAsync(r => r.Status == 0);
+            ViewBag.CountCompleted = await DbContext.WithdrawalRequest.CountAsync(r => r.Status == 1);
+            ViewBag.CountRejected = await DbContext.WithdrawalRequest.CountAsync(r => r.Status == 2);
+            ViewBag.TotalPendingAmount = (await DbContext.WithdrawalRequest.Where(r => r.Status == 0).SumAsync(r => (decimal?)r.Amount)) ?? 0;
+            ViewBag.TotalCompletedAmount = (await DbContext.WithdrawalRequest.Where(r => r.Status == 1).SumAsync(r => (decimal?)r.Amount)) ?? 0;
 
             ViewBag.SearchKeyword = searchKeyword;
             ViewBag.StatusFilter = statusFilter;
@@ -97,12 +93,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             var result = await _walletService.ProcessWithdrawalRequestAsync(id, isApproved: false, adminNote: adminNote);
             return Json(new { success = result.Success, message = result.Message });
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _db.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

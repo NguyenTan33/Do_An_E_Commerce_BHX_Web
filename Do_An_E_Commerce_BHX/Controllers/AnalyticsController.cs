@@ -1,10 +1,8 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Models.Entities;
 using Do_An_E_Commerce_BHX.Services.Implementations;
 using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
@@ -13,23 +11,21 @@ using Newtonsoft.Json;
 namespace Do_An_E_Commerce_BHX.Controllers
 {
     [AllowAnonymous]
-    public class AnalyticsController : Controller
+    public class AnalyticsController : BaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
         private readonly IAnalyticsService _analyticsService;
 
         public AnalyticsController()
         {
-            ApplicationDbContext.EnsureProductColumnsExist(_db);
-            _analyticsService = new AnalyticsService(_db);
+            ApplicationDbContext.EnsureProductColumnsExist(DbContext);
+            _analyticsService = new AnalyticsService(DbContext);
         }
 
-        public AnalyticsController(IAnalyticsService analyticsService)
+        public AnalyticsController(IAnalyticsService analyticsService, ApplicationDbContext dbContext) : base(dbContext)
         {
-            _analyticsService = analyticsService;
+            _analyticsService = analyticsService ?? new AnalyticsService(DbContext);
         }
 
-        // DTO đại diện dữ liệu từ client
         public class BehaviorEventDto
         {
             public string SessionId { get; set; }
@@ -50,7 +46,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
         {
             try
             {
-                // 1. Nếu Model Binder trả về null, đọc từ Form
                 if (data == null || string.IsNullOrEmpty(data.EventType))
                 {
                     data = new BehaviorEventDto();
@@ -65,7 +60,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     data.DeviceType = Request.Form["DeviceType"];
                 }
 
-                // 2. Nếu vẫn null, đọc InputStream JSON Body
                 if (string.IsNullOrEmpty(data.EventType) && Request.InputStream != null && Request.InputStream.Length > 0)
                 {
                     try
@@ -96,7 +90,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    var userSvc = new UserService(_db, null, null);
+                    var userSvc = new UserService(DbContext, null, null);
                     await userSvc.UpdateLastActivityAsync(userId);
                 }
 
@@ -115,15 +109,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

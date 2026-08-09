@@ -10,11 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-
+    <link rel="icon" type="image/x-icon" href="~/Content/Image/iconweb.ico" />
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
-<style>
+    <style>
         /* BẮT BUỘC ẨN OVERLAY MODAL KHI CHƯA ĐƯỢC KÍCH HOẠT (FIX LỖI BỂ LAYOUT TRÊN HOSTING) */
         .modal:not(.show) {
             display: none !important;
@@ -691,35 +691,80 @@
         @@media (max-width: 767px) {
             /* --- KHUNG TỔNG HEADER --- */
             .header-inner {
-                display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;
-                padding: 10px; gap: 8px;
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px;
+                gap: 8px;
             }
-            .header-spacer { display: none !important; }
 
+            .header-spacer {
+                display: none !important;
+            }
             /* 1. MENU DANH MỤC */
-            .sidebar-toggle { font-size: 0 !important; padding: 4px; background: transparent !important; color: var(--forest-deep) !important; min-width: unset; }
-            .sidebar-toggle i { font-size: 1.6rem; margin: 0; }
+            .sidebar-toggle {
+                font-size: 0 !important;
+                padding: 4px;
+                background: transparent !important;
+                color: var(--forest-deep) !important;
+                min-width: unset;
+            }
 
+                .sidebar-toggle i {
+                    font-size: 1.6rem;
+                    margin: 0;
+                }
             /* 2. LOGO */
-            .brand { font-size: 0 !important; gap: 0; }
-            .brand i { font-size: 1.8rem; color: var(--leaf-dark); }
+            .brand {
+                font-size: 0 !important;
+                gap: 0;
+            }
 
+                .brand i {
+                    font-size: 1.8rem;
+                    color: var(--leaf-dark);
+                }
             /* 3. GIỎ HÀNG (Ẩn toàn bộ chữ và giá tiền, CHỈ GIỮ ICON và số lượng) */
-            .header-cart-text { display: none !important; }
-            .header-cart-link { padding-left: 0; border-left: none; }
+            .header-cart-text {
+                display: none !important;
+            }
 
+            .header-cart-link {
+                padding-left: 0;
+                border-left: none;
+            }
             /* 4. TRA CỨU ĐƠN */
-            .header-inner > a[href*="Track"] { font-size: 0 !important; padding: 4px !important; border: none !important; background: transparent !important; }
-            .header-inner > a[href*="Track"] i { font-size: 1.4rem !important; margin: 0 !important; color: var(--amber-dark); }
+            .header-inner > a[href*="Track"] {
+                font-size: 0 !important;
+                padding: 4px !important;
+                border: none !important;
+                background: transparent !important;
+            }
 
+                .header-inner > a[href*="Track"] i {
+                    font-size: 1.4rem !important;
+                    margin: 0 !important;
+                    color: var(--amber-dark);
+                }
             /* --- VÙNG TÀI KHOẢN (ACCOUNT) --- */
-            .header-account form { margin: 0 !important; padding: 0 !important; }
-            .header-account ul { display: flex !important; align-items: center !important; gap: 15px !important; margin: 0 !important; padding: 0 !important; }
+            .header-account form {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
+            .header-account ul {
+                display: flex !important;
+                align-items: center !important;
+                gap: 15px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
             /* Ẩn nút Đăng ký */
             .header-account a[href*="Register"],
-            .header-account li:has(a[href*="Register"]) { display: none !important; }
-
+            .header-account li:has(a[href*="Register"]) {
+                display: none !important;
+            }
             /* Thiết lập chung cho TẤT CẢ các nút (Login, Profile, Logout) */
             .header-account a,
             .header-account button {
@@ -731,32 +776,31 @@
                 background: transparent !important;
                 border: none !important;
             }
-
-            /* GIẤU MỌI THỨ CŨ BÊN TRONG NÚT (Icon cũ, Badge Hạng...) để không bị đúp */
-            .header-account a *,
-            .header-account button * { display: none !important; }
-
-            /* VẼ LẠI ICON NGƯỜI (Mặc định cho Login / Profile) */
-            .header-account a::before {
-                content: "\f007"; /* Icon Người */
-                font-family: "Font Awesome 6 Free";
-                font-weight: 900;
-                font-size: 1.5rem !important;
-                color: var(--forest-deep);
-                display: block;
-            }
-
-            /* ĐỔI THÀNH ICON CÁI CỬA CHO RIÊNG NÚT ĐĂNG XUẤT */
-            /* Quét các trường hợp nút đăng xuất của ASP.NET MVC */
-            .header-account a[href*="javascript"]::before,
-            .header-account a[href*="LogOff"]::before,
-            .header-account a[href*="Logout"]::before,
-            .header-account form button[type="submit"]::before {
-                content: "\f2f5" !important; /* Icon cái cửa đi ra */
-                color: var(--tomato) !important;
-            }
+                /* GIẤU MỌI THỨ CŨ BÊN TRONG NÚT (Icon cũ, Badge Hạng...) để không bị đúp */
+                .header-account a *,
+                .header-account button * {
+                    display: none !important;
+                }
+                /* VẼ LẠI ICON NGƯỜI (Mặc định cho Login / Profile) */
+                .header-account a::before {
+                    content: "\f007"; /* Icon Người */
+                    font-family: "Font Awesome 6 Free";
+                    font-weight: 900;
+                    font-size: 1.5rem !important;
+                    color: var(--forest-deep);
+                    display: block;
+                }
+                /* ĐỔI THÀNH ICON CÁI CỬA CHO RIÊNG NÚT ĐĂNG XUẤT */
+                /* Quét các trường hợp nút đăng xuất của ASP.NET MVC */
+                .header-account a[href*="javascript"]::before,
+                .header-account a[href*="LogOff"]::before,
+                .header-account a[href*="Logout"]::before,
+                .header-account form button[type="submit"]::before {
+                    content: "\f2f5" !important; /* Icon cái cửa đi ra */
+                    color: var(--tomato) !important;
+                }
         }
-</style>
+    </style>
 
     @RenderSection("styles", required: false)
 </head>

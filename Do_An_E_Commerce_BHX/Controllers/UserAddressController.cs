@@ -1,27 +1,33 @@
-﻿using System.Data.Entity;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
+using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
     [Authorize]
-    public class UserAddressController : Controller
+    public class UserAddressController : BaseController
     {
-        private readonly ApplicationDbContext db = new ApplicationDbContext();
+        private readonly IUserAddressService _userAddressService;
+
+        public UserAddressController()
+        {
+            _userAddressService = new UserAddressService(DbContext);
+        }
+
+        public UserAddressController(IUserAddressService userAddressService, ApplicationDbContext dbContext) : base(dbContext)
+        {
+            _userAddressService = userAddressService ?? new UserAddressService(DbContext);
+        }
 
         // GET: UserAddress
         public async Task<ActionResult> Index()
         {
             var userId = User.Identity.GetUserId();
-            var addresses = await db.UserAddresses
-                .Where(a => a.UserId == userId)
-                .OrderByDescending(a => a.IsDefault)
-                .ToListAsync();
-
+            var addresses = await _userAddressService.GetUserAddressesAsync(userId);
             return View(addresses);
         }
 
@@ -37,30 +43,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
         public async Task<ActionResult> Create(UserAddress model)
         {
             var userId = User.Identity.GetUserId();
-
-            // QUAN TRỌNG: Gán UserId trực tiếp từ User đăng nhập
-            model.UserId = userId;
-
-            // Xóa lỗi validation của UserId ra khỏi ModelState vì Client không gửi trường này
             ModelState.Remove("UserId");
 
             if (ModelState.IsValid)
             {
-                // Nếu là địa chỉ đầu tiên hoặc người dùng tick chọn mặc định
-                var hasAddress = db.UserAddresses.Any(a => a.UserId == userId);
-                if (!hasAddress || model.IsDefault)
-                {
-                    // Bỏ mặc định các địa chỉ cũ
-                    var oldDefaults = db.UserAddresses.Where(a => a.UserId == userId && a.IsDefault);
-                    foreach (var item in oldDefaults)
-                    {
-                        item.IsDefault = false;
-                    }
-                    model.IsDefault = true;
-                }
-
-                db.UserAddresses.Add(model);
-                await db.SaveChangesAsync();
+                await _userAddressService.CreateAddressAsync(model, userId);
                 return RedirectToAction("Index");
             }
 
@@ -73,7 +60,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
             var userId = User.Identity.GetUserId();
-            var address = await db.UserAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+            var address = await _userAddressService.GetUserAddressByIdAsync(id.Value, userId);
 
             if (address == null) return HttpNotFound();
 
@@ -90,25 +77,9 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             if (ModelState.IsValid)
             {
-                var addressInDb = await db.UserAddresses.FirstOrDefaultAsync(a => a.Id == model.Id && a.UserId == userId);
-                if (addressInDb == null) return HttpNotFound();
+                bool success = await _userAddressService.UpdateAddressAsync(model, userId);
+                if (!success) return HttpNotFound();
 
-                addressInDb.AddressName = model.AddressName;
-                addressInDb.ReceiverName = model.ReceiverName;
-                addressInDb.ReceiverPhone = model.ReceiverPhone;
-                addressInDb.DetailedAddress = model.DetailedAddress;
-
-                if (model.IsDefault && !addressInDb.IsDefault)
-                {
-                    var oldDefaults = db.UserAddresses.Where(a => a.UserId == userId && a.IsDefault);
-                    foreach (var item in oldDefaults)
-                    {
-                        item.IsDefault = false;
-                    }
-                    addressInDb.IsDefault = true;
-                }
-
-                await db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
@@ -121,18 +92,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
         public async Task<ActionResult> SetDefault(int id)
         {
             var userId = User.Identity.GetUserId();
-            var address = await db.UserAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-
-            if (address != null)
-            {
-                var allAddresses = db.UserAddresses.Where(a => a.UserId == userId);
-                foreach (var item in allAddresses)
-                {
-                    item.IsDefault = (item.Id == id);
-                }
-                await db.SaveChangesAsync();
-            }
-
+            await _userAddressService.SetDefaultAddressAsync(id, userId);
             return RedirectToAction("Index");
         }
 
@@ -142,32 +102,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             var userId = User.Identity.GetUserId();
-            var address = await db.UserAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-
-            if (address != null)
-            {
-                bool wasDefault = address.IsDefault;
-                db.UserAddresses.Remove(address);
-                await db.SaveChangesAsync();
-
-                if (wasDefault)
-                {
-                    var firstAddress = db.UserAddresses.FirstOrDefault(a => a.UserId == userId);
-                    if (firstAddress != null)
-                    {
-                        firstAddress.IsDefault = true;
-                        await db.SaveChangesAsync();
-                    }
-                }
-            }
-
+            await _userAddressService.DeleteAddressAsync(id, userId);
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) db.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

@@ -1,19 +1,20 @@
 -- ===================================================================================
--- BẢN KỊCH BẢN TẠO VÀ CẬP NHẬT CƠ SỞ DỮ LIỆU SQL SERVER HỆ THỐNG BÁCH HÓA XANH (BHX)
--- Tự động kiểm tra và thêm các Bảng (Tables) & Cột (Columns) mới đồng bộ 100% với Code C#
+-- BẢN KỊCH BẢN TẠO VÀ ĐỒNG BỘ CƠ SỞ DỮ LIỆU SQL SERVER HỆ THỐNG BÁCH HÓA XANH (BHX)
+-- Tương thích 100% cho cả Localhost và Hosting SmarterASP.NET (db_acca82_sqlbhx)
 -- ===================================================================================
 
-USE [Do_An_E_Commerce_BHX]
-GO
+-- Đổi tên database bên dưới nếu chạy ở localhost (VD: USE [Do_An_E_Commerce_BHX]) hoặc SmarterASP (USE [db_acca82_sqlbhx])
+-- USE [db_acca82_sqlbhx]
+-- GO
 
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 PRINT N'1. KHỞI TẠO CÁC BẢNG NGHỆ NGHIỆP: VÍ TIỀN, YÊU CẦU RÚT TIỀN, NHẬT KÝ VÍ'
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 
 -- 1.1 Bảng UserWallet (Ví tiền cá nhân của khách hàng)
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserWallet')
@@ -82,9 +83,9 @@ BEGIN
 END
 GO
 
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 PRINT N'2. KHỞI TẠO BẢNG SỔ ĐỊA CHỈ & NHẬT KÝ HÀNH VI NGƯỜI DÙNG'
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 
 -- 2.1 Bảng UserAddress (Sổ địa chỉ nhận hàng của khách)
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'UserAddress')
@@ -130,11 +131,11 @@ BEGIN
 END
 GO
 
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 PRINT N'3. CẬP NHẬT CÁC CỘT Bổ SUNG CHO BẢNG SẢN PHẨM, ĐƠN HÀNG, KHÁCH HÀNG'
-PRINT N'----------------------------------------------------------------------'
+PRINT N'======================================================================'
 
--- 3.1 Bổ sung cột cho bảng [Products] / [Product]
+-- 3.1 Bổ sung cột cho bảng [Products]
 IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Products')
 BEGIN
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = N'OriginalPrice')
@@ -149,7 +150,7 @@ BEGIN
 END
 GO
 
--- 3.2 Bổ sung cột cho bảng [Orders] / [Order] (Tích điểm & Giảm giá điểm)
+-- 3.2 Bổ sung cột cho bảng [Orders]
 IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Orders')
 BEGIN
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Orders]') AND name = N'EarnedPoints')
@@ -164,7 +165,7 @@ BEGIN
 END
 GO
 
--- 3.3 Bổ sung cột cho bảng [AspNetUsers] (Điểm thưởng & Hạng thành viên)
+-- 3.3 Bổ sung cột cho bảng [AspNetUsers]
 IF EXISTS (SELECT * FROM sys.tables WHERE name = N'AspNetUsers')
 BEGIN
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[AspNetUsers]') AND name = N'RewardPoints')
@@ -177,5 +178,5 @@ END
 GO
 
 PRINT N'======================================================================'
-PRINT N'🎉 HOÀN TẤT ĐỒNG BỘ CƠ SỞ DỮ LIỆU SQL SERVER CHO HỆ THỐNG BHX!'
+PRINT N'🎉 HOÀN TẤT ĐỒNG BỘ CẤU TRÚC BẢNG CƠ SỞ DỮ LIỆU SQL SERVER!'
 PRINT N'======================================================================'

@@ -61,8 +61,11 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
                 CreatedDate = DateTime.Now
             };
 
-            _db.UserBehaviorLog.Add(log);
-            await _db.SaveChangesAsync();
+            using (var db = new ApplicationDbContext())
+            {
+                db.UserBehaviorLog.Add(log);
+                await db.SaveChangesAsync();
+            }
         }
 
         public async Task<BehaviorAnalyticsController.BehaviorAnalyticsViewModel> GetBehaviorAnalyticsAsync(int? days, DateTime? startDate, DateTime? endDate)

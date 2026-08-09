@@ -1,29 +1,31 @@
-using Do_An_E_Commerce_BHX.Areas.Admin.Services;
-using Do_An_E_Commerce_BHX.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services;
+using Do_An_E_Commerce_BHX.Models;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class AdminDashboardController : Controller
+    public class AdminDashboardController : AdminBaseController
     {
-        private readonly ApplicationDbContext db = new ApplicationDbContext();
+        public AdminDashboardController()
+        {
+        }
+
+        public AdminDashboardController(ApplicationDbContext dbContext) : base(dbContext)
+        {
+        }
 
         // GET: /Admin/AdminDashboard
-        public ActionResult Index(string period, DateTime? startDate, DateTime? endDate, int? categoryId, int? status, int? paymentMethod)
+        public async Task<ActionResult> Index(string period, DateTime? startDate, DateTime? endDate, int? categoryId, int? status, int? paymentMethod)
         {
-            var userId = User.Identity.GetUserId();
-            var user = db.Users.Find(userId);
-            ViewBag.FullName = user?.FullName;
+            await SetAdminFullNameViewBagAsync();
 
-            // SelectList Danh mục
-            ViewBag.CategoryId = new SelectList(db.Category.ToList(), "Id", "Name", categoryId);
+            var categories = DbContext.Category.ToList();
+            ViewBag.CategoryId = new SelectList(categories, "Id", "Name", categoryId);
 
-            // SelectList Trạng thái đơn hàng
             var statusItems = new List<SelectListItem>
             {
                 new SelectListItem { Value = "", Text = "-- Tất cả trạng thái --" },
@@ -36,7 +38,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             };
             ViewBag.StatusList = statusItems;
 
-            // SelectList Hình thức thanh toán
             var paymentItems = new List<SelectListItem>
             {
                 new SelectListItem { Value = "", Text = "-- Tất cả hình thức thanh toán --" },
@@ -52,20 +53,10 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             ViewBag.SelectedStatus = status;
             ViewBag.SelectedPaymentMethod = paymentMethod;
 
-            // Khởi tạo DashboardService và nạp dữ liệu
-            DashboardService service = new DashboardService(db);
+            DashboardService service = new DashboardService(DbContext);
             var model = service.GetDashboard(period, startDate, endDate, categoryId, status, paymentMethod);
 
             return View(model);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

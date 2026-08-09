@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
@@ -10,21 +9,19 @@ using Do_An_E_Commerce_BHX.Services.Interfaces;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class BehaviorAnalyticsController : Controller
+    public class BehaviorAnalyticsController : AdminBaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
         private readonly IAnalyticsService _analyticsService;
 
         public BehaviorAnalyticsController()
         {
-            ApplicationDbContext.EnsureProductColumnsExist(_db);
-            _analyticsService = new AnalyticsService(_db);
+            ApplicationDbContext.EnsureProductColumnsExist(DbContext);
+            _analyticsService = new AnalyticsService(DbContext);
         }
 
-        public BehaviorAnalyticsController(IAnalyticsService analyticsService)
+        public BehaviorAnalyticsController(IAnalyticsService analyticsService, ApplicationDbContext dbContext) : base(dbContext)
         {
-            _analyticsService = analyticsService;
+            _analyticsService = analyticsService ?? new AnalyticsService(DbContext);
         }
 
         // ViewModels cho Báo cáo Thống kê Hành vi
@@ -32,9 +29,9 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             public int TotalEvents { get; set; }
             public int TotalSessions { get; set; }
-            public int TotalPageViews { get; set; }        // Lượt xem trang theo kỳ lọc
-            public int TotalUniqueVisitors { get; set; }   // Khách độc lập theo kỳ lọc
-            public int TodayPageViews { get; set; }        // Lượt xem hôm nay
+            public int TotalPageViews { get; set; }
+            public int TotalUniqueVisitors { get; set; }
+            public int TodayPageViews { get; set; }
             public double AvgDwellSeconds { get; set; }
             public int TotalRageClicks { get; set; }
 
@@ -100,6 +97,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // GET: /Admin/BehaviorAnalytics
         public async Task<ActionResult> Index(int? days, DateTime? startDate, DateTime? endDate)
         {
+            await SetAdminFullNameViewBagAsync();
+
             if (startDate.HasValue && endDate.HasValue)
             {
                 ViewBag.StartDate = startDate.Value.ToString("yyyy-MM-dd");
@@ -116,12 +115,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             var vm = await _analyticsService.GetBehaviorAnalyticsAsync(days, startDate, endDate);
             return View(vm);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _db?.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

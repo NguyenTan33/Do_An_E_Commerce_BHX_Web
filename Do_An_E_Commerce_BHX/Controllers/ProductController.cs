@@ -6,26 +6,27 @@ using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
     public class ProductController : BaseController
     {
-        private readonly ProductService _productService;
-        private readonly CustomerSupportService customerSupportService;
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IStoreProductService _storeProductService;
+        private readonly CustomerSupportService _customerSupportService;
 
         public ProductController()
         {
-            // 1. Khởi tạo DbContext ĐẦU TIÊN
-            _dbContext = new ApplicationDbContext();
+            _storeProductService = new StoreProductService(DbContext);
+            _customerSupportService = new CustomerSupportService(DbContext);
+        }
 
-            // 2. Sau đó mới truyền _dbContext đã có giá trị vào các Service
-            customerSupportService = new CustomerSupportService(_dbContext);
-
-            var searchHandler = new SearchHandler(_dbContext);
-            _productService = new ProductService(_dbContext, searchHandler);
+        public ProductController(IStoreProductService storeProductService, CustomerSupportService customerSupportService, ApplicationDbContext dbContext)
+            : base(dbContext)
+        {
+            _storeProductService = storeProductService ?? new StoreProductService(DbContext);
+            _customerSupportService = customerSupportService ?? new CustomerSupportService(DbContext);
         }
 
         // Trang hiển thị danh sách sản phẩm + tìm kiếm
@@ -35,7 +36,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 try
                 {
-                    var analyticsService = new AnalyticsService(_dbContext);
+                    var analyticsService = new AnalyticsService(DbContext);
                     string currentUserId = User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
                     string userIp = Request.UserHostAddress;
                     string userAgent = Request.UserAgent;
@@ -52,33 +53,24 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 catch { }
             }
 
-            // 1. Chuẩn bị đối tượng ProductType đúng theo class backend bạn định nghĩa
-            var filter = new ProductType
-            {
-                name = string.IsNullOrWhiteSpace(searchName) ? null : searchName,
-                category = categoryId.HasValue ? _dbContext.Category.Find(categoryId.Value) : null
-            };
+            var productList = _storeProductService.SearchProducts(searchName, categoryId, out var categories);
 
-            // 2. Gọi hàm Search duy nhất từ ProductService
-            var productList = _productService.Search(filter);
-
-            // 3. Đưa danh mục ra ViewBag để render DropdownList ở View
-            ViewBag.Categories = _dbContext.Category.ToList();
+            ViewBag.Categories = categories;
             ViewBag.CurrentName = searchName;
             ViewBag.CurrentCategory = categoryId;
 
             return View(productList);
         }
+
         [HttpGet]
-        public ActionResult Detail(int productId)
+        public async Task<ActionResult> Detail(int productId)
         {
-            Product product = _dbContext.Product.Include(p => p.ParentProduct).FirstOrDefault(p => p.Id == productId);
+            Product product = await _storeProductService.GetProductDetailAsync(productId);
             if (product == null) return HttpNotFound();
 
-            // Tự động ghi nhận lượt xem sản phẩm ViewProduct trực tiếp từ C# backend
             try
             {
-                var analyticsService = new AnalyticsService(_dbContext);
+                var analyticsService = new AnalyticsService(DbContext);
                 string currentUserId = User.Identity.IsAuthenticated ? User.Identity.GetUserId() : null;
                 string userIp = Request.UserHostAddress;
                 string userAgent = Request.UserAgent;
@@ -91,15 +83,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     TargetName = product.Name
                 };
 
-                Task.Run(() => analyticsService.LogBehaviorEventAsync(dto, currentUserId, userIp, userAgent, sessionId, Request.UrlReferrer));
+                _ = Task.Run(() => analyticsService.LogBehaviorEventAsync(dto, currentUserId, userIp, userAgent, sessionId, Request.UrlReferrer));
             }
             catch { }
 
-            // Nhét reviews và questions vào ViewBag để View xài
-            ViewBag.Reviews = customerSupportService.GetAllReviewsByProductID(productId);
-            ViewBag.Questions = customerSupportService.GetAllQuestionsByProductId(productId);
+            ViewBag.Reviews = _storeProductService.GetProductReviews(productId);
+            ViewBag.Questions = _storeProductService.GetProductQuestions(productId);
 
-            // Trả thẳng nguyên object product ra file View
             return View(product);
         }
 
@@ -110,7 +100,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             try
             {
                 string userId = GetCurrentUserId();
-                customerSupportService.AddReview(productId, userId, rating, comment);
+                _customerSupportService.AddReview(productId, userId, rating, comment);
 
                 return Json(new { success = true, message = "Cảm ơn bạn đã đánh giá sản phẩm!" });
             }
@@ -133,7 +123,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 }
 
                 string userId = GetCurrentUserId();
-                customerSupportService.AddQuestion(productId, userId, content.Trim());
+                _customerSupportService.AddQuestion(productId, userId, content.Trim());
 
                 return Json(new { success = true, message = "Đã gửi bình luận/câu hỏi thành công! QTV sẽ phản hồi sớm nhất." });
             }
@@ -144,18 +134,18 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
-        // 3. GET: /Product/GetProductDetailJson?productId=123 (Lấy JSON chi tiết sản phẩm + lượt đánh giá + hỏi đáp QTV)
+        // 3. GET: /Product/GetProductDetailJson?productId=123
         [HttpGet]
         public ActionResult GetProductDetailJson(int productId)
         {
-            var product = _dbContext.Product.Find(productId);
+            var product = DbContext.Product.Find(productId);
             if (product == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy sản phẩm!" }, JsonRequestBehavior.AllowGet);
             }
 
-            var category = _dbContext.Category.Find(product.CategoryId);
-            var reviews = _dbContext.Review.Where(r => r.ProductId == productId).ToList();
+            var category = DbContext.Category.Find(product.CategoryId);
+            var reviews = DbContext.Review.Where(r => r.ProductId == productId).ToList();
             double avgRating = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating), 1) : 5.0;
             int reviewCount = reviews.Count;
 
@@ -163,7 +153,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 string rName = "Khách hàng";
                 if (!string.IsNullOrEmpty(r.UserId) && r.UserId != "GUEST")
                 {
-                    var user = _dbContext.Users.FirstOrDefault(u => u.Id == r.UserId);
+                    var user = DbContext.Users.FirstOrDefault(u => u.Id == r.UserId);
                     if (user != null)
                     {
                         rName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.UserName;
@@ -180,7 +170,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 };
             }).ToList();
 
-            var questions = _dbContext.Question
+            var questions = DbContext.Question
                 .Where(q => q.ProductId == productId)
                 .OrderByDescending(q => q.CreatedDate)
                 .ToList();
@@ -190,7 +180,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 if (q.UserId > 0)
                 {
                     string uidStr = q.UserId.ToString();
-                    var user = _dbContext.Users.FirstOrDefault(u => u.Id == uidStr);
+                    var user = DbContext.Users.FirstOrDefault(u => u.Id == uidStr);
                     if (user != null)
                     {
                         senderName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.UserName;
@@ -232,7 +222,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
-        // 4. POST: /Product/PostAnswerAdmin (Admin trả lời bình luận / câu hỏi)
+        // 4. POST: /Product/PostAnswerAdmin
         [HttpPost]
         public ActionResult PostAnswerAdmin(int questionId, string answer)
         {
@@ -248,7 +238,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập nội dung câu trả lời!" });
                 }
 
-                customerSupportService.AddAnswer(questionId, answer.Trim());
+                _customerSupportService.AddAnswer(questionId, answer.Trim());
                 return Json(new { success = true, message = "Đã đăng phản hồi QTV thành công!" });
             }
             catch (Exception ex)
@@ -262,15 +252,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpGet]
         public ActionResult GetProductUnitsJson(int productId)
         {
-            var product = _dbContext.Product
-                .FirstOrDefault(p => p.Id == productId);
-
+            var product = DbContext.Product.FirstOrDefault(p => p.Id == productId);
             if (product == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy sản phẩm" }, JsonRequestBehavior.AllowGet);
             }
 
-            var units = _dbContext.ProductUnit
+            var units = DbContext.ProductUnit
                 .Where(u => u.ProductId == productId)
                 .OrderByDescending(u => u.IsDefault)
                 .ThenBy(u => u.ConversionFactor)

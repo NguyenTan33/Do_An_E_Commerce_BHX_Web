@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Do_An_E_Commerce_BHX.Areas.Admin.Controllers;
 using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Microsoft.AspNet.Identity;

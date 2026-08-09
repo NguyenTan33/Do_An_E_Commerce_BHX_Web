@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
@@ -84,5 +84,38 @@ namespace Do_An_E_Commerce_BHX.Models
     {
         public string SelectedProvider { get; set; }
         public ICollection<System.Web.Mvc.SelectListItem> Providers { get; set; }
+    }
+
+    public class UserViewModel
+    {
+        public string Id { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public string FullName { get; set; }
+        public string PhoneNumber { get; set; }
+        public int LoyaltyPoints { get; set; }
+        public List<string> Roles { get; set; }
+        public bool IsLocked { get; set; }
+        public System.DateTime? LastActivityDate { get; set; }
+
+        public UserPresence Presence => new UserPresence(LastActivityDate);
+    }
+
+    public class CreateUserViewModel
+    {
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Password { get; set; }
+        public string RoleName { get; set; }
+    }
+
+    public class EditUserViewModel
+    {
+        public string Id { get; set; }
+        public string Email { get; set; }
+        public string FullName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string SelectedRole { get; set; }
     }
 }

@@ -16,10 +16,8 @@ using Microsoft.AspNet.Identity.Owin;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class ManageUserController : Controller
+    public class ManageUserController : AdminBaseController
     {
-        private ApplicationDbContext _db = new ApplicationDbContext();
         private ApplicationUserManager _userManager;
         private RoleManager<IdentityRole> _roleManager;
         private IUserService _userService;
@@ -28,7 +26,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
         }
 
-        public ManageUserController(ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager, IUserService userService = null)
+        public ManageUserController(ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager, IUserService userService = null, ApplicationDbContext dbContext = null)
+            : base(dbContext)
         {
             UserManager = userManager;
             RoleManager = roleManager;
@@ -43,25 +42,24 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
         public RoleManager<IdentityRole> RoleManager
         {
-            get => _roleManager ?? new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(_db));
+            get => _roleManager ?? new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(DbContext));
             private set => _roleManager = value;
         }
 
-        private IUserService UserService
+        public IUserService UserService
         {
-            get => _userService ?? new UserService(_db, UserManager, RoleManager);
+            get => _userService ?? new UserService(DbContext, UserManager, RoleManager);
+            private set => _userService = value;
         }
 
         // GET: Admin/ManageUser
-        public async Task<ActionResult> Index(string tuKhoa, string roleFilter)
+        public async Task<ActionResult> Index(string searchString, string roleFilter)
         {
-            var currentUserId = User.Identity.GetUserId();
-            var currentUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId); 
-            ViewBag.FullName = currentUser?.FullName;
+            var userViewModels = await UserService.GetUserViewModelsAsync(searchString, roleFilter);
 
-            var userViewModels = await UserService.GetUserViewModelsAsync(tuKhoa, roleFilter);
-
-            ViewBag.RolesList = new SelectList(await _db.Roles.AsNoTracking().Select(r => r.Name).ToListAsync());
+            ViewBag.CurrentSearch = searchString;
+            ViewBag.CurrentRole = roleFilter;
+            ViewBag.RolesList = new SelectList(await DbContext.Roles.AsNoTracking().Select(r => r.Name).ToListAsync());
             return View(userViewModels);
         }
 
@@ -69,7 +67,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> ThemUser()
         {
-            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name");
+            ViewBag.Roles = new SelectList(await DbContext.Roles.AsNoTracking().ToListAsync(), "Name", "Name");
             return View();
         }
 
@@ -92,7 +90,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
             }
 
-            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.RoleName);
+            ViewBag.Roles = new SelectList(await DbContext.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.RoleName);
             return View(model);
         }
 
@@ -106,7 +104,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             if (user == null) return HttpNotFound();
 
             var userRoles = await UserManager.GetRolesAsync(user.Id);
-
             var model = new EditUserViewModel
             {
                 Id = user.Id,
@@ -116,7 +113,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 SelectedRole = userRoles.FirstOrDefault()
             };
 
-            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
+            ViewBag.Roles = new SelectList(await DbContext.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
             return View(model);
         }
 
@@ -139,69 +136,63 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
             }
 
-            ViewBag.Roles = new SelectList(await _db.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
+            ViewBag.Roles = new SelectList(await DbContext.Roles.AsNoTracking().ToListAsync(), "Name", "Name", model.SelectedRole);
             return View(model);
         }
 
         // POST: Admin/ManageUser/ResetPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ResetPassword(string userId, string newPassword)
+        public async Task<ActionResult> ResetPassword(string userId, string newPassword, string id = null)
         {
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(newPassword))
+            string targetId = !string.IsNullOrEmpty(userId) ? userId : id;
+            if (string.IsNullOrEmpty(targetId) || string.IsNullOrEmpty(newPassword))
             {
                 return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
             }
 
-            var user = await UserManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "Không tìm thấy người dùng!" });
-            }
-
-            // Xóa password cũ và đặt password mới trực tiếp từ Admin
-            var token = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
-            var result = await UserManager.ResetPasswordAsync(user.Id, token, newPassword);
-
+            var result = await UserService.ResetPasswordAsync(targetId, newPassword);
             if (result.Succeeded)
             {
-                return Json(new { success = true, message = "Reset mật khẩu thành công!" });
+                var user = await UserManager.FindByIdAsync(targetId);
+                string userEmail = user != null ? user.Email : "";
+                return Json(new { success = true, message = $"Đã đổi mật khẩu thành công cho tài khoản {userEmail}!" });
             }
 
             return Json(new { success = false, message = string.Join(", ", result.Errors) });
         }
 
-        // POST: Admin/ManageUser/ToggleLock
+        // POST: Admin/ManageUser/ToggleLockout
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ToggleLock(string id)
+        public async Task<ActionResult> ToggleLockout(string id)
         {
-            var user = await UserManager.FindByIdAsync(id);
-            if (user == null) return HttpNotFound();
+            bool success = await UserService.ToggleLockoutAsync(id);
+            if (!success) return HttpNotFound();
 
-            // Nếu đang bị khóa -> Mở khóa. Ngược lại -> Khóa 100 năm
-            if (user.LockoutEndDateUtc.HasValue && user.LockoutEndDateUtc.Value > DateTime.UtcNow)
+            var user = await UserManager.FindByIdAsync(id);
+            string userEmail = user != null ? user.Email : "";
+
+            if (user != null && user.LockoutEndDateUtc.HasValue && user.LockoutEndDateUtc.Value > DateTime.UtcNow)
             {
-                await UserManager.SetLockoutEndDateAsync(user.Id, DateTimeOffset.MinValue);
+                TempData["Success"] = $"Đã khóa tài khoản {userEmail}!";
             }
             else
             {
-                await UserManager.SetLockoutEnabledAsync(user.Id, true);
-                await UserManager.SetLockoutEndDateAsync(user.Id, DateTimeOffset.UtcNow.AddYears(100));
+                TempData["Success"] = $"Đã mở khóa tài khoản {userEmail}!";
             }
 
             return RedirectToAction("Index");
         }
 
-        // POST: Admin/ManageUser/XoaUser
+        // POST: Admin/ManageUser/DeleteUser
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> XoaUser(string id)
+        public async Task<ActionResult> DeleteUser(string id)
         {
             var user = await UserManager.FindByIdAsync(id);
             if (user != null)
             {
-                // Không cho phép Admin tự xóa chính mình
                 if (user.Id == User.Identity.GetUserId())
                 {
                     TempData["Error"] = "Bạn không thể xóa tài khoản Admin đang đăng nhập!";
@@ -209,56 +200,43 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 }
 
                 await UserManager.DeleteAsync(user);
+                TempData["Success"] = $"Đã xóa thành công người dùng {user.Email}!";
             }
-
             return RedirectToAction("Index");
         }
 
-        // GET: Admin/ManageUser/OrderHistory?userId=XXX&statusFilter=all
-        public async Task<ActionResult> OrderHistory(string userId, string statusFilter = "all")
+        // GET: Admin/ManageUser/OrderHistory?userId=xxx (Trang Xem lịch sử mua hàng của khách hàng)
+        public async Task<ActionResult> OrderHistory(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            if (string.IsNullOrEmpty(userId))
             {
                 return HttpNotFound("Không tìm thấy mã khách hàng!");
             }
 
-            var customer = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var customer = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (customer == null)
             {
                 return HttpNotFound("Khách hàng không tồn tại!");
             }
 
-            var ordersQuery = _db.Order
+            var ordersQuery = DbContext.Order
                 .Include("OrderDetails.Product")
                 .Where(o => o.UserId == userId);
 
-            // Thống kê số lượng đơn hàng theo từng trạng thái
-            int totalCount = await _db.Order.CountAsync(o => o.UserId == userId);
-            int processingCount = await _db.Order.CountAsync(o => o.UserId == userId && (o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2));
-            int completedCount = await _db.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 3);
-            int cancelledCount = await _db.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 4);
+            int totalCount = await DbContext.Order.CountAsync(o => o.UserId == userId);
+            int processingCount = await DbContext.Order.CountAsync(o => o.UserId == userId && (o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2));
+            int completedCount = await DbContext.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 3);
+            int cancelledCount = await DbContext.Order.CountAsync(o => o.UserId == userId && o.OrderStatus == 4);
 
             ViewBag.TotalCount = totalCount;
             ViewBag.ProcessingCount = processingCount;
             ViewBag.CompletedCount = completedCount;
             ViewBag.CancelledCount = cancelledCount;
 
-            statusFilter = (statusFilter ?? "all").ToLower();
-            ViewBag.StatusFilter = statusFilter;
             ViewBag.Customer = customer;
-
-            if (statusFilter == "processing")
-            {
-                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2);
-            }
-            else if (statusFilter == "completed")
-            {
-                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 3);
-            }
-            else if (statusFilter == "cancelled")
-            {
-                ordersQuery = ordersQuery.Where(o => o.OrderStatus == 4);
-            }
+            ViewBag.CustomerName = !string.IsNullOrEmpty(customer.FullName) ? customer.FullName : customer.UserName;
+            ViewBag.CustomerPhone = customer.PhoneNumber ?? "Chưa cập nhật";
+            ViewBag.CustomerEmail = customer.Email;
 
             var orders = await ordersQuery.OrderByDescending(o => o.OrderDate).ToListAsync();
             return View(orders);
@@ -268,46 +246,10 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         {
             if (disposing)
             {
-                _db?.Dispose();
                 _userManager?.Dispose();
                 _roleManager?.Dispose();
             }
             base.Dispose(disposing);
         }
     }
-
-    #region ViewModels hỗ trợ
-    public class UserViewModel
-    {
-        public string Id { get; set; }
-        public string UserName { get; set; }
-        public string Email { get; set; }
-        public string FullName { get; set; }
-        public string PhoneNumber { get; set; }
-        public int LoyaltyPoints { get; set; }
-        public List<string> Roles { get; set; }
-        public bool IsLocked { get; set; }
-        public DateTime? LastActivityDate { get; set; }
-
-        public UserPresence Presence => new UserPresence(LastActivityDate);
-    }
-
-    public class CreateUserViewModel
-    {
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string PhoneNumber { get; set; }
-        public string Password { get; set; }
-        public string RoleName { get; set; }
-    }
-
-    public class EditUserViewModel
-    {
-        public string Id { get; set; }
-        public string Email { get; set; }
-        public string FullName { get; set; }
-        public string PhoneNumber { get; set; }
-        public string SelectedRole { get; set; }
-    }
-    #endregion
 }

@@ -5,27 +5,33 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Do_An_E_Commerce_BHX.Models;
+using Do_An_E_Commerce_BHX.Services.Implementations;
+using Do_An_E_Commerce_BHX.Services.Interfaces;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
-using Do_An_E_Commerce_BHX.Models;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
     [Authorize]
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+        private readonly IAccountAuthService _accountAuthService;
 
         public AccountController()
         {
+            _accountAuthService = new AccountAuthService(DbContext);
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager, IAccountAuthService accountAuthService = null, ApplicationDbContext dbContext = null)
+            : base(dbContext)
         {
             UserManager = userManager;
             SignInManager = signInManager;
+            _accountAuthService = accountAuthService ?? new AccountAuthService(DbContext);
         }
 
         public ApplicationSignInManager SignInManager
@@ -52,7 +58,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
-        //
         // GET: /Account/Login
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
@@ -61,7 +66,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // POST: /Account/Login
         [HttpPost]
         [AllowAnonymous]
@@ -73,22 +77,15 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return View(model);
             }
 
-            // This doesn't count login failures towards account lockout
-            // To enable password failures to trigger account lockout, change to shouldLockout: true
             var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
             switch (result)
             {
                 case SignInStatus.Success:
+                    await _accountAuthService.RecordLastActivityAsync(UserManager, model.Email);
                     var user = await UserManager.FindByEmailAsync(model.Email) ?? await UserManager.FindByNameAsync(model.Email);
-                    if (user != null)
+                    if (user != null && await UserManager.IsInRoleAsync(user.Id, "Admin"))
                     {
-                        user.LastActivityDate = DateTime.Now;
-                        await UserManager.UpdateAsync(user);
-
-                        if (await UserManager.IsInRoleAsync(user.Id, "Admin"))
-                        {
-                            return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
-                        }
+                        return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
                     }
                     return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:
@@ -102,12 +99,10 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
-        //
         // GET: /Account/VerifyCode
         [AllowAnonymous]
         public async Task<ActionResult> VerifyCode(string provider, string returnUrl, bool rememberMe)
         {
-            // Require that the user has already logged in via username/password or external login
             if (!await SignInManager.HasBeenVerifiedAsync())
             {
                 return View("Error");
@@ -115,7 +110,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View(new VerifyCodeViewModel { Provider = provider, ReturnUrl = returnUrl, RememberMe = rememberMe });
         }
 
-        //
         // POST: /Account/VerifyCode
         [HttpPost]
         [AllowAnonymous]
@@ -127,10 +121,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return View(model);
             }
 
-            // The following code protects for brute force attacks against the two factor codes. 
-            // If a user enters incorrect codes for a specified amount of time then the user account 
-            // will be locked out for a specified amount of time. 
-            // You can configure the account lockout settings in IdentityConfig
             var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
             switch (result)
             {
@@ -145,7 +135,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
-        //
         // GET: /Account/Register
         [AllowAnonymous]
         public ActionResult Register()
@@ -153,7 +142,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
@@ -166,9 +154,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // Tự động đảm bảo Role "User" tồn tại & gán cho tài khoản mới
-                    await EnsureDefaultUserRoleAssignedAsync(user.Id);
-
+                    await _accountAuthService.EnsureDefaultUserRoleAssignedAsync(UserManager, user.Id);
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
                     
                     return RedirectToAction("Index", "Home");
@@ -176,11 +162,9 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 AddErrors(result);
             }
 
-            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
-        //
         // GET: /Account/ConfirmEmail
         [AllowAnonymous]
         public async Task<ActionResult> ConfirmEmail(string userId, string code)
@@ -193,7 +177,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
         }
 
-        //
         // GET: /Account/ForgotPassword
         [AllowAnonymous]
         public ActionResult ForgotPassword()
@@ -201,7 +184,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // POST: /Account/ForgotPassword
         [HttpPost]
         [AllowAnonymous]
@@ -213,23 +195,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 var user = await UserManager.FindByNameAsync(model.Email);
                 if (user == null || !(await UserManager.IsEmailConfirmedAsync(user.Id)))
                 {
-                    // Don't reveal that the user does not exist or is not confirmed
                     return View("ForgotPasswordConfirmation");
                 }
-
-                // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
-                // Send an email with this link
-                // string code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
-                // var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);		
-                // await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>");
-                // return RedirectToAction("ForgotPasswordConfirmation", "Account");
             }
 
-            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
-        //
         // GET: /Account/ForgotPasswordConfirmation
         [AllowAnonymous]
         public ActionResult ForgotPasswordConfirmation()
@@ -237,7 +209,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // GET: /Account/ResetPassword
         [AllowAnonymous]
         public ActionResult ResetPassword(string code)
@@ -245,7 +216,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return code == null ? View("Error") : View();
         }
 
-        //
         // POST: /Account/ResetPassword
         [HttpPost]
         [AllowAnonymous]
@@ -259,7 +229,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             var user = await UserManager.FindByNameAsync(model.Email);
             if (user == null)
             {
-                // Don't reveal that the user does not exist
                 return RedirectToAction("ResetPasswordConfirmation", "Account");
             }
             var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);
@@ -271,7 +240,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // GET: /Account/ResetPasswordConfirmation
         [AllowAnonymous]
         public ActionResult ResetPasswordConfirmation()
@@ -279,18 +247,15 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View();
         }
 
-        //
         // POST: /Account/ExternalLogin
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public ActionResult ExternalLogin(string provider, string returnUrl)
         {
-            // Request a redirect to the external login provider
             return new ChallengeResult(provider, Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl }));
         }
 
-        //
         // GET: /Account/SendCode
         [AllowAnonymous]
         public async Task<ActionResult> SendCode(string returnUrl, bool rememberMe)
@@ -305,7 +270,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View(new SendCodeViewModel { Providers = factorOptions, ReturnUrl = returnUrl, RememberMe = rememberMe });
         }
 
-        //
         // POST: /Account/SendCode
         [HttpPost]
         [AllowAnonymous]
@@ -317,7 +281,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return View();
             }
 
-            // Generate the token and send it
             if (!await SignInManager.SendTwoFactorCodeAsync(model.SelectedProvider))
             {
                 return View("Error");
@@ -325,7 +288,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return RedirectToAction("VerifyCode", new { Provider = model.SelectedProvider, ReturnUrl = model.ReturnUrl, RememberMe = model.RememberMe });
         }
 
-        //
         // GET: /Account/ExternalLoginCallback
         [AllowAnonymous]
         public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
@@ -336,7 +298,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return RedirectToAction("Login");
             }
 
-            // Sign in the user with this external login provider if the user already has a login
             var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
             switch (result)
             {
@@ -348,14 +309,12 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
                 case SignInStatus.Failure:
                 default:
-                    // If the user does not have an account, then prompt the user to create an account
                     ViewBag.ReturnUrl = returnUrl;
                     ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
                     return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
             }
         }
 
-        //
         // POST: /Account/ExternalLoginConfirmation
         [HttpPost]
         [AllowAnonymous]
@@ -369,7 +328,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             if (ModelState.IsValid)
             {
-                // Get the information about the user from the external login provider
                 var info = await AuthenticationManager.GetExternalLoginInfoAsync();
                 if (info == null)
                 {
@@ -382,7 +340,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     result = await UserManager.AddLoginAsync(user.Id, info.Login);
                     if (result.Succeeded)
                     {
-                        await EnsureDefaultUserRoleAssignedAsync(user.Id);
+                        await _accountAuthService.EnsureDefaultUserRoleAssignedAsync(UserManager, user.Id);
                         await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
                         return RedirectToLocal(returnUrl);
                     }
@@ -394,32 +352,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return View(model);
         }
 
-        // Helper private method: Tự động tạo Role "User" nếu chưa có và gán cho tài khoản mới đăng ký
-        private async Task EnsureDefaultUserRoleAssignedAsync(string userId)
-        {
-            try
-            {
-                using (var db = new ApplicationDbContext())
-                {
-                    var roleStore = new Microsoft.AspNet.Identity.EntityFramework.RoleStore<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>(db);
-                    var roleManager = new RoleManager<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>(roleStore);
-
-                    if (!await roleManager.RoleExistsAsync("User"))
-                    {
-                        await roleManager.CreateAsync(new Microsoft.AspNet.Identity.EntityFramework.IdentityRole("User"));
-                    }
-                }
-
-                var roles = await UserManager.GetRolesAsync(userId);
-                if (!roles.Contains("User"))
-                {
-                    await UserManager.AddToRoleAsync(userId, "User");
-                }
-            }
-            catch { }
-        }
-
-        //
         // POST: /Account/LogOff
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -429,7 +361,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //
         // GET: /Account/ExternalLoginFailure
         [AllowAnonymous]
         public ActionResult ExternalLoginFailure()
@@ -458,7 +389,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
         }
 
         #region Helpers
-        // Used for XSRF protection when adding external logins
         private const string XsrfKey = "XsrfId";
 
         private IAuthenticationManager AuthenticationManager

@@ -9,19 +9,18 @@ using Do_An_E_Commerce_BHX.Services.Interfaces;
 namespace Do_An_E_Commerce_BHX.Controllers
 {
     [Authorize]
-    public class WalletController : Controller
+    public class WalletController : BaseController
     {
-        private readonly ApplicationDbContext _db = new ApplicationDbContext();
         private readonly IWalletService _walletService;
 
         public WalletController()
         {
-            _walletService = new WalletService(_db);
+            _walletService = new WalletService(DbContext);
         }
 
-        public WalletController(IWalletService walletService)
+        public WalletController(IWalletService walletService, ApplicationDbContext dbContext) : base(dbContext)
         {
-            _walletService = walletService;
+            _walletService = walletService ?? new WalletService(DbContext);
         }
 
         // GET: /Wallet/Index
@@ -62,12 +61,6 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
 
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _db.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

@@ -1,33 +1,35 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations;
+using Do_An_E_Commerce_BHX.Areas.Admin.Services.Interfaces;
+using Do_An_E_Commerce_BHX.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
-using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Models.Entities;
-using Do_An_E_Commerce_BHX.Services.Implementations;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    //[Authorize]
-    public class ManageController : Controller
+    public class ManageController : AdminBaseController
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+        private readonly IAdminUserManagementService _userManagementService;
 
         public ManageController()
         {
+            _userManagementService = new AdminUserManagementService(DbContext);
         }
 
-        public ManageController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
+        public ManageController(ApplicationUserManager userManager, ApplicationSignInManager signInManager, IAdminUserManagementService userManagementService = null, ApplicationDbContext dbContext = null)
+            : base(dbContext)
         {
             UserManager = userManager;
             SignInManager = signInManager;
+            _userManagementService = userManagementService ?? new AdminUserManagementService(DbContext);
         }
 
         public ApplicationSignInManager SignInManager
@@ -150,57 +152,18 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var user = await UserManager.FindByIdAsync(currentUserId);
-            using (var db = new ApplicationDbContext())
-            {
-                var ordersQuery = db.Order
-                    .Include("OrderDetails.Product")
-                    .Where(o => o.UserId == currentUserId);
+            var (orders, user, totalCount, processingCount, completedCount, cancelledCount, reviewedProductIds) =
+                await _userManagementService.GetUserOrdersDataAsync(currentUserId, statusFilter);
 
-                // Thống kê số lượng đơn hàng của chính User này
-                int totalCount = await db.Order.CountAsync(o => o.UserId == currentUserId);
-                int processingCount = await db.Order.CountAsync(o => o.UserId == currentUserId && (o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2 || o.OrderStatus == 3));
-                int completedCount = await db.Order.CountAsync(o => o.UserId == currentUserId && o.OrderStatus == 4);
-                int cancelledCount = await db.Order.CountAsync(o => o.UserId == currentUserId && o.OrderStatus == 5);
+            ViewBag.TotalCount = totalCount;
+            ViewBag.ProcessingCount = processingCount;
+            ViewBag.CompletedCount = completedCount;
+            ViewBag.CancelledCount = cancelledCount;
+            ViewBag.StatusFilter = (statusFilter ?? "all").ToLower();
+            ViewBag.UserInfo = user;
+            ViewBag.ReviewedProductIds = reviewedProductIds;
 
-                ViewBag.TotalCount = totalCount;
-                ViewBag.ProcessingCount = processingCount;
-                ViewBag.CompletedCount = completedCount;
-                ViewBag.CancelledCount = cancelledCount;
-
-                statusFilter = (statusFilter ?? "all").ToLower();
-                ViewBag.StatusFilter = statusFilter;
-                ViewBag.UserInfo = user;
-
-                if (statusFilter == "processing")
-                {
-                    ordersQuery = ordersQuery.Where(o => o.OrderStatus == 0 || o.OrderStatus == 1 || o.OrderStatus == 2 || o.OrderStatus == 3);
-                }
-                else if (statusFilter == "completed")
-                {
-                    ordersQuery = ordersQuery.Where(o => o.OrderStatus == 4);
-                }
-                else if (statusFilter == "cancelled")
-                {
-                    ordersQuery = ordersQuery.Where(o => o.OrderStatus == 5);
-                }
-
-                var reviewedProductIds = new List<int>();
-                try
-                {
-                    var allReviews = await db.Review.AsNoTracking().ToListAsync();
-                    reviewedProductIds = allReviews
-                        .Where(r => r != null && r.UserId == currentUserId)
-                        .Select(r => r.ProductId)
-                        .Distinct()
-                        .ToList();
-                }
-                catch { }
-                ViewBag.ReviewedProductIds = reviewedProductIds;
-
-                var orders = await ordersQuery.OrderByDescending(o => o.OrderDate).ToListAsync();
-                return View(orders);
-            }
+            return View(orders);
         }
 
         // POST: /Manage/CancelOrder (Khách hàng tự hủy đơn hàng Chờ duyệt OrderStatus == 0)
@@ -209,28 +172,17 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         public async Task<ActionResult> CancelOrder(int orderId)
         {
             string currentUserId = User.Identity.GetUserId();
-            using (var db = new ApplicationDbContext())
+            var (success, message) = await _userManagementService.CancelUserOrderAsync(currentUserId, orderId);
+
+            if (success)
             {
-                var order = await db.Order.FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == currentUserId);
-                if (order != null && order.OrderStatus == 0)
-                {
-                    order.OrderStatus = 5; // 5 = Đã hủy
-                    await db.SaveChangesAsync();
-
-                    try
-                    {
-                        var walletSvc = new WalletService(db);
-                        await walletSvc.RefundOrderToWalletAsync(order.Id, "Khách hàng tự hủy đơn hàng");
-                    }
-                    catch { }
-
-                    TempData["Message"] = $"Đã hủy thành công đơn hàng #{orderId}.";
-                }
-                else
-                {
-                    TempData["Error"] = "Không thể hủy đơn hàng này!";
-                }
+                TempData["Message"] = message;
             }
+            else
+            {
+                TempData["Error"] = message;
+            }
+
             return RedirectToAction("MyOrders");
         }
 
@@ -243,33 +195,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var user = await UserManager.FindByIdAsync(currentUserId);
-            using (var db = new ApplicationDbContext())
-            {
-                var voucherService = new VoucherService(db);
-                voucherService.SeedSampleVouchersIfEmpty();
+            var (userVouchers, user, availableToSave) = await _userManagementService.GetUserVouchersDataAsync(currentUserId);
 
-                var userVouchers = await db.UserPromotion
-                    .Include(up => up.Promotion)
-                    .Include("Promotion.Category")
-                    .Where(up => up.UserId == currentUserId)
-                    .OrderByDescending(up => up.SavedDate)
-                    .ToListAsync();
-
-                // Lấy tất cả mã khả dụng trên hệ thống để gợi ý khách bấm "Lưu vào Ví"
-                var now = DateTime.Now;
-                var allActivePromotions = await db.Promotion
-                    .Include(p => p.Category)
-                    .Where(p => p.IsActive && p.EffectiveDate <= now && p.ExpiryDate >= now)
-                    .ToListAsync();
-
-                var savedIds = userVouchers.Select(uv => uv.PromotionId).ToList();
-                var availableToSave = allActivePromotions.Where(p => !savedIds.Contains(p.Id)).ToList();
-
-                ViewBag.UserInfo = user;
-                ViewBag.AvailableToSave = availableToSave;
-                return View(userVouchers);
-            }
+            ViewBag.UserInfo = user;
+            ViewBag.AvailableToSave = availableToSave;
+            return View(userVouchers);
         }
 
         // POST: /Manage/SaveVoucher (Lưu mã giảm giá vào Ví cá nhân)
@@ -283,41 +213,14 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            if (string.IsNullOrWhiteSpace(code))
+            var (success, message) = await _userManagementService.SaveVoucherForUserAsync(currentUserId, code);
+            if (success)
             {
-                TempData["Error"] = "Vui lòng nhập mã giảm giá!";
-                return RedirectToAction("MyVouchers");
+                TempData["Message"] = message;
             }
-
-            using (var db = new ApplicationDbContext())
+            else
             {
-                var codeUpper = code.Trim().ToUpper();
-                var now = DateTime.Now;
-                var promo = await db.Promotion.FirstOrDefaultAsync(p => p.Code.ToUpper() == codeUpper && p.IsActive && p.EffectiveDate <= now && p.ExpiryDate >= now);
-
-                if (promo == null)
-                {
-                    TempData["Error"] = $"Mã giảm giá '{code}' không tồn tại hoặc đã hết hạn!";
-                    return RedirectToAction("MyVouchers");
-                }
-
-                bool alreadySaved = await db.UserPromotion.AnyAsync(up => up.UserId == currentUserId && up.PromotionId == promo.Id);
-                if (alreadySaved)
-                {
-                    TempData["Error"] = $"Bạn đã lưu mã '{promo.Code}' vào Ví mã giảm giá trước đó rồi!";
-                    return RedirectToAction("MyVouchers");
-                }
-
-                db.UserPromotion.Add(new UserPromotion
-                {
-                    UserId = currentUserId,
-                    PromotionId = promo.Id,
-                    IsUsed = false,
-                    SavedDate = DateTime.Now
-                });
-
-                await db.SaveChangesAsync();
-                TempData["Message"] = $"🎉 Đã lưu mã '{promo.Code}' vào Ví mã giảm giá cá nhân thành công!";
+                TempData["Error"] = message;
             }
 
             return RedirectToAction("MyVouchers");
@@ -344,6 +247,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             }
             return RedirectToAction("VerifyPhoneNumber", new { PhoneNumber = model.Number });
         }
+
         // POST: /Admin/Manage/UpdatePhone
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -364,7 +268,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
                 if (result.Succeeded)
                 {
-                    // Cập nhật lại Identity Cookie để đồng bộ dữ liệu người dùng
                     await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
                     return RedirectToAction("Index", new { Message = ManageMessageId.AddPhoneSuccess });
                 }
@@ -372,6 +275,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             return RedirectToAction("Index", new { Message = ManageMessageId.Error });
         }
+
         // POST: /Manage/EnableTwoFactorAuthentication
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -609,7 +513,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             Error
         }
 
-        // Helper class required for LinkLogin
         private class ChallengeResult : HttpUnauthorizedResult
         {
             public ChallengeResult(string provider, string redirectUri, string userId)
