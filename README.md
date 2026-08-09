@@ -35,9 +35,7 @@ Dự án được tái cấu trúc hoàn toàn (Refactored) theo nguyên lý **L
 
 ---
 
-## 🌟 Điểm sáng Kỹ thuật & Architecture (CV Highlights)
-
-Dự án này là minh chứng rõ ràng cho năng lực thiết kế phần mềm, tư duy kiến trúc và tích hợp hệ thống:
+## 🌟 Điểm sáng Kỹ thuật & Architecture
 
 1. **Kiến trúc Thin Controller & Service Layer Pattern (OOP)**:
    - Toàn bộ Business Logic phức tạp (tính tiền, khấu trừ kho, thuật toán xét điều kiện Voucher, gạch nợ tự động) được đóng gói trong **Tầng Service (`Services/Implementations`)** thông qua các **Interface (`Services/Interfaces`)**.
@@ -161,7 +159,8 @@ Do_An_E_Commerce_BHX/
 
 ## 👤 Liên hệ & Tác giả
 
-- **Họ và tên**: Nguyễn Tấn
+- **Họ và tên**: Nguyễn Minh Tân
+- **Họ và tên tác giả 2**: Từ Quyết Thắng
 - **GitHub**: [NguyenTan33](https://github.com/NguyenTan33)
 - **Dự án Repository**: [Do_An_E_Commerce_BHX_Web](https://github.com/NguyenTan33/Do_An_E_Commerce_BHX_Web)
 
