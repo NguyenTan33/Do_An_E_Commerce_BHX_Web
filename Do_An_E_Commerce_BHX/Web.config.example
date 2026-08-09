@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Example Web.config for Bách Hóa Xanh E-Commerce Platform
+  Copy this file to Web.config and fill in your actual settings locally.
+  DO NOT COMMIT Web.config WITH REAL API KEYS TO GITHUB!
+-->
+<configuration>
+  <configSections>
+    <section name="entityFramework" type="System.Data.Entity.Internal.ConfigFile.EntityFrameworkSection, EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+  </configSections>
+  <connectionStrings>
+    <add name="DefaultConnection" connectionString="Data Source=YOUR_SERVER_NAME;Initial Catalog=Do_An_E_Commerce_BHX;Integrated Security=True" providerName="System.Data.SqlClient" />
+  </connectionStrings>
+  <appSettings>
+    <add key="webpages:Version" value="3.0.0.0" />
+    <add key="webpages:Enabled" value="false" />
+    <add key="ClientValidationEnabled" value="true" />
+    <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+    <!-- CẤU HÌNH GỬI MAIL SMTP GMAIL -->
+    <add key="SmtpHost" value="smtp.gmail.com" />
+    <add key="SmtpPort" value="587" />
+    <add key="SmtpUser" value="YOUR_EMAIL@gmail.com" />
+    <add key="SmtpPass" value="YOUR_GMAIL_APP_PASSWORD" />
+    <add key="FromEmail" value="YOUR_EMAIL@gmail.com" />
+    <!-- CẤU HÌNH THANH TOÁN SEPAY VIETINBANK -->
+    <add key="SePay_Bank" value="VietinBank" />
+    <add key="SePay_AccountNumber" value="YOUR_ACCOUNT_NUMBER" />
+    <add key="SePay_AccountName" value="YOUR_ACCOUNT_NAME" />
+    <add key="SePay_ApiKey" value="YOUR_SEPAY_API_KEY" />
+  </appSettings>
+  <system.web>
+    <customErrors mode="Off" />
+    <globalization requestEncoding="utf-8" responseEncoding="utf-8" fileEncoding="utf-8" culture="vi-VN" uiCulture="vi-VN" />
+    <authentication mode="None" />
+    <compilation debug="true" targetFramework="4.7.2" />
+    <httpRuntime targetFramework="4.7.2" />
+  </system.web>
+  <system.webServer>
+    <modules>
+      <remove name="FormsAuthentication" />
+    </modules>
+  </system.webServer>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Owin.Security" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-4.2.2.0" newVersion="4.2.2.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Owin.Security.OAuth" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-4.2.2.0" newVersion="4.2.2.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Owin.Security.Cookies" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-4.2.2.0" newVersion="4.2.2.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Owin" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-4.2.2.0" newVersion="4.2.2.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json" culture="neutral" publicKeyToken="30ad4fe6b2a6aeed" />
+        <bindingRedirect oldVersion="0.0.0.0-13.0.0.0" newVersion="13.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="WebGrease" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-1.6.5135.21930" newVersion="1.6.5135.21930" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+  <entityFramework>
+    <defaultConnectionFactory type="System.Data.Entity.Infrastructure.LocalDbConnectionFactory, EntityFramework">
+      <parameters>
+        <parameter value="mssqllocaldb" />
+      </parameters>
+    </defaultConnectionFactory>
+    <providers>
+      <provider invariantName="System.Data.SqlClient" type="System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer" />
+    </providers>
+  </entityFramework>
+</configuration>
