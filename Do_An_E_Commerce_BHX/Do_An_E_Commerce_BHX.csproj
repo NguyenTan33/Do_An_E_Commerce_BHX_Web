@@ -207,6 +207,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\CurrencyHelper.cs" />
+    <Compile Include="Helpers\ManagerSensitiveInfoConfig.cs" />
     <Compile Include="Helpers\StatusEnum.cs" />
     <Compile Include="Migrations\202607261355340_FreshStart.cs" />
     <Compile Include="Migrations\202607261355340_FreshStart.Designer.cs">

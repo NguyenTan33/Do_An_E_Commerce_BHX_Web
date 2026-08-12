@@ -60,6 +60,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             ViewBag.CurrentSearch = searchString;
             ViewBag.CurrentRole = roleFilter;
             ViewBag.RolesList = new SelectList(await DbContext.Roles.AsNoTracking().Select(r => r.Name).ToListAsync());
+            ViewBag.AllowManagerViewSensitiveInfo = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.AllowManagerViewSensitiveInfo;
             return View(userViewModels);
         }
 
@@ -319,6 +320,22 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             var orders = await ordersQuery.OrderByDescending(o => o.OrderDate).ToListAsync();
             return View(orders);
+        }
+
+        // POST: Admin/ManageUser/ToggleManagerSensitiveInfo
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public ActionResult ToggleManagerSensitiveInfo(bool enable)
+        {
+            Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.AllowManagerViewSensitiveInfo = enable;
+            return Json(new
+            {
+                success = true,
+                isAllowed = enable,
+                message = enable
+                    ? "Đã CHO PHÉP tài khoản Manager xem SĐT & Email đầy đủ!"
+                    : "Đã BẬT BẢO MẬT: Tự động che SĐT & Email với tài khoản Manager!"
+            });
         }
 
         protected override void Dispose(bool disposing)

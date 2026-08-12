@@ -5,11 +5,11 @@
 @{
     var customer = ViewBag.Customer as ApplicationUser;
 
-    bool isAdmin = User.IsInRole("Admin");
+    bool shouldMask = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.ShouldMaskForUser(User);
 
     Func<string, string> maskEmail = email =>
     {
-        if (isAdmin || string.IsNullOrEmpty(email) || !email.Contains("@")) return email;
+        if (!shouldMask || string.IsNullOrEmpty(email) || !email.Contains("@")) return email;
         var parts = email.Split('@');
         string name = parts[0];
         string maskedName = name.Length <= 2 ? name[0] + "***" : name.Substring(0, 2) + "*****";
@@ -18,9 +18,18 @@
 
     Func<string, string> maskPhone = phone =>
     {
-        if (isAdmin || string.IsNullOrEmpty(phone)) return phone;
+        if (!shouldMask || string.IsNullOrEmpty(phone)) return phone;
         if (phone.Length < 6) return "*****";
         return phone.Substring(0, 3) + "****" + phone.Substring(phone.Length - 3);
+    };
+
+    Func<string, string> maskAddress = addr =>
+    {
+        if (!shouldMask || string.IsNullOrEmpty(addr)) return addr;
+        if (addr.Length <= 10) return "****** (Đã che địa chỉ)";
+        int commaIdx = addr.LastIndexOf(',');
+        if (commaIdx > 5) return addr.Substring(0, 4) + "******" + addr.Substring(commaIdx);
+        return addr.Substring(0, 5) + "****** (Đã che địa chỉ)";
     };
 
     string custDisplayName = !string.IsNullOrEmpty(customer?.FullName) ? customer.FullName : maskEmail(customer?.UserName);
@@ -331,8 +340,8 @@
                                 <td>
                                     <div class="fw-bold text-info mb-1"><i class="fa-regular fa-user me-1"></i>@order.ReceiverName</div>
                                     <div class="small text-danger fw-bold mb-1"><i class="fa-solid fa-phone me-1"></i>@maskPhone(order.ReceiverPhone)</div>
-                                    <div class="small text-muted text-truncate" style="max-width: 240px;" title="@order.ShippingAddress">
-                                        <i class="fa-solid fa-location-dot text-warning me-1"></i>@order.ShippingAddress
+                                    <div class="small text-muted text-truncate" style="max-width: 240px;" title="@maskAddress(order.ShippingAddress)">
+                                        <i class="fa-solid fa-location-dot text-warning me-1"></i>@maskAddress(order.ShippingAddress)
                                     </div>
                                 </td>
                                 <td>

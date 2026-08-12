@@ -5,11 +5,11 @@
     ViewData["Subtitle"] = "Danh sách tài khoản và phân quyền hệ thống";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 
-    bool isAdmin = User.IsInRole("Admin");
+    bool shouldMask = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.ShouldMaskForUser(User);
 
     Func<string, string> maskEmail = email =>
     {
-        if (isAdmin || string.IsNullOrEmpty(email)) return email;
+        if (!shouldMask || string.IsNullOrEmpty(email)) return email;
         int atIndex = email.IndexOf('@');
         if (atIndex <= 0) return "*****";
         string name = email.Substring(0, atIndex);
@@ -20,7 +20,7 @@
 
     Func<string, string> maskPhone = phone =>
     {
-        if (isAdmin || string.IsNullOrEmpty(phone)) return phone;
+        if (!shouldMask || string.IsNullOrEmpty(phone)) return phone;
         if (phone.Length < 6) return "*****";
         return phone.Substring(0, 3) + "****" + phone.Substring(phone.Length - 3);
     };
@@ -53,6 +53,37 @@
             }
         </div>
     </div>
+
+    @if (User.IsInRole("Admin"))
+    {
+        bool isManagerAllowed = ViewBag.AllowManagerViewSensitiveInfo == true;
+        <div class="p-3 mb-4 rounded-3 border @(isManagerAllowed ? "border-success bg-success" : "border-warning bg-warning") bg-opacity-10 shadow-sm" id="sensitiveSettingCard">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2 rounded-circle @(isManagerAllowed ? "bg-success" : "bg-warning") text-dark fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                        <i class="fa-solid @(isManagerAllowed ? "fa-eye" : "fa-user-shield")"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-white">Quyền Xem Thông Tin Nhạy Cảm Của Manager (SĐT & Email)</h6>
+                        <p class="mb-0 text-muted small">
+                            @(isManagerAllowed 
+                                ? "Tài khoản Manager ĐANG ĐƯỢC PHÉP xem đầy đủ SĐT & Email khách hàng trên hệ thống." 
+                                : "Tài khoản Manager ĐANG BỊ ẨN / CHE SĐT & Email (Mặc định bảo mật).")
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3 ms-auto ms-md-0">
+                    <span class="badge @(isManagerAllowed ? "bg-success text-white" : "bg-warning text-dark") fw-bold px-3 py-2 fs-6">
+                        <i class="fa-solid @(isManagerAllowed ? "fa-unlock" : "fa-lock") me-1"></i>
+                        @(isManagerAllowed ? "ĐÃ MỞ (Manager xem đầy đủ)" : "ĐÃ CHE (Bảo mật cho Manager)")
+                    </span>
+                    <div class="form-check form-switch m-0" style="font-size: 1.35rem;">
+                        <input class="form-check-input" type="checkbox" id="toggleManagerSensitiveSwitch" @(isManagerAllowed ? "checked" : "") style="cursor: pointer;" title="Bật/Tắt quyền xem SĐT & Email của Manager" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     @{
         int onlineUsersCount = Model != null ? Model.Count(u => u.Presence.IsOnline) : 0;
@@ -436,5 +467,34 @@
                 msgBox.textContent = 'Đã xảy ra lỗi kết nối!';
             });
         }
+
+        $(document).ready(function () {
+            $('#toggleManagerSensitiveSwitch').on('change', function () {
+                var isChecked = $(this).is(':checked');
+                var switchEl = $(this);
+                switchEl.prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("ToggleManagerSensitiveInfo", "ManageUser")',
+                    type: 'POST',
+                    data: { enable: isChecked },
+                    success: function (res) {
+                        switchEl.prop('disabled', false);
+                        if (res.success) {
+                            alert(res.message);
+                            location.reload();
+                        } else {
+                            alert(res.message || "Lỗi khi cập nhật cấu hình!");
+                            switchEl.prop('checked', !isChecked);
+                        }
+                    },
+                    error: function () {
+                        switchEl.prop('disabled', false);
+                        alert("Lỗi kết nối máy chủ khi đổi cấu hình!");
+                        switchEl.prop('checked', !isChecked);
+                    }
+                });
+            });
+        });
     </script>
 }

@@ -269,7 +269,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
             return (listOrders, totalSuccessRevenue, totalCount, successCount, failedCount);
         }
 
-        public async Task<object> GetOrderDetailJsonDataAsync(int id, bool isAdmin = true)
+        public async Task<object> GetOrderDetailJsonDataAsync(int id, bool shouldMask = false)
         {
             var order = await _dbContext.Order
                 .Include(o => o.User)
@@ -279,6 +279,17 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
             if (order == null) return null;
 
             Func<string, string> maskPhone = p => (string.IsNullOrEmpty(p) || p.Length < 6) ? "*****" : p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+            Func<string, string> maskAddress = addr =>
+            {
+                if (string.IsNullOrEmpty(addr)) return addr;
+                if (addr.Length <= 10) return "****** (Đã che địa chỉ)";
+                int commaIndex = addr.LastIndexOf(',');
+                if (commaIndex > 5)
+                {
+                    return addr.Substring(0, 4) + "******" + addr.Substring(commaIndex);
+                }
+                return addr.Substring(0, 5) + "****** (Đã che địa chỉ)";
+            };
 
             var items = order.OrderDetails.Select(od => new
             {
@@ -331,8 +342,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
                 id = order.Id,
                 orderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
                 receiverName = order.ReceiverName,
-                receiverPhone = isAdmin ? order.ReceiverPhone : maskPhone(order.ReceiverPhone),
-                shippingAddress = order.ShippingAddress,
+                receiverPhone = shouldMask ? maskPhone(order.ReceiverPhone) : order.ReceiverPhone,
+                shippingAddress = shouldMask ? maskAddress(order.ShippingAddress) : order.ShippingAddress,
                 note = noteStr,
                 packedBy = packedBy,
                 deliveredBy = deliveredBy,

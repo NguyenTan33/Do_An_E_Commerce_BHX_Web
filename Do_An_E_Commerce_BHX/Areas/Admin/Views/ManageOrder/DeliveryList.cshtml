@@ -5,6 +5,17 @@
     ViewData["Subtitle"] = "Phân công Shipper, xác nhận Giao thành công hoặc Giao thất bại hoàn tồn kho";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
     string currentSearch = ViewBag.CurrentSearch as string ?? "";
+
+    bool shouldMask = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.ShouldMaskForUser(User);
+    Func<string, string> maskPhone = p => (!shouldMask || string.IsNullOrEmpty(p) || p.Length < 6) ? p : p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+    Func<string, string> maskAddress = addr =>
+    {
+        if (!shouldMask || string.IsNullOrEmpty(addr)) return addr;
+        if (addr.Length <= 10) return "****** (Đã che địa chỉ)";
+        int commaIdx = addr.LastIndexOf(',');
+        if (commaIdx > 5) return addr.Substring(0, 4) + "******" + addr.Substring(commaIdx);
+        return addr.Substring(0, 5) + "****** (Đã che địa chỉ)";
+    };
 }
 
 <div class="dash-page">
@@ -87,11 +98,11 @@
                                 </td>
                                 <td>
                                     <div style="font-weight: 600; color: var(--adm-blue);"><i class="fa-regular fa-circle-user me-1"></i>@item.ReceiverName</div>
-                                    <div style="font-size: 12.5px; color: var(--adm-red); font-weight: 600;" class="my-1"><i class="fa-solid fa-phone me-1"></i>@(User.IsInRole("Admin") ? item.ReceiverPhone : (string.IsNullOrEmpty(item.ReceiverPhone) || item.ReceiverPhone.Length < 6 ? "*****" : item.ReceiverPhone.Substring(0, 3) + "****" + item.ReceiverPhone.Substring(item.ReceiverPhone.Length - 3)))</div>
+                                    <div style="font-size: 12.5px; color: var(--adm-red); font-weight: 600;" class="my-1"><i class="fa-solid fa-phone me-1"></i>@maskPhone(item.ReceiverPhone)</div>
                                 </td>
                                 <td>
-                                    <div style="font-size: 12px; color: var(--adm-text-2); max-width: 250px;" class="text-truncate" title="@item.ShippingAddress">
-                                        <i class="fa-solid fa-location-dot me-1"></i>@item.ShippingAddress
+                                    <div style="font-size: 12px; color: var(--adm-text-2); max-width: 250px;" class="text-truncate" title="@maskAddress(item.ShippingAddress)">
+                                        <i class="fa-solid fa-location-dot me-1"></i>@maskAddress(item.ShippingAddress)
                                     </div>
                                     @if (!string.IsNullOrEmpty(item.Note))
                                     {

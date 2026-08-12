@@ -239,8 +239,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> GetOrderDetailJson(int id)
         {
-            bool isAdmin = User.IsInRole("Admin");
-            var data = await _orderService.GetOrderDetailJsonDataAsync(id, isAdmin);
+            bool shouldMask = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.ShouldMaskForUser(User);
+            var data = await _orderService.GetOrderDetailJsonDataAsync(id, shouldMask: shouldMask);
             if (data == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);

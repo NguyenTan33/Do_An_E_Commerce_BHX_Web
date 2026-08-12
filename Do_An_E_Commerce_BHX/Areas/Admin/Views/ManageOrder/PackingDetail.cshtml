@@ -5,6 +5,17 @@
     ViewData["Subtitle"] = "Tích chọn từng sản phẩm đã lấy từ kệ hàng kho";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
     int totalItems = Model.OrderDetails != null ? Model.OrderDetails.Count : 0;
+
+    bool shouldMask = Do_An_E_Commerce_BHX.Helpers.ManagerSensitiveInfoConfig.ShouldMaskForUser(User);
+    Func<string, string> maskPhone = p => (!shouldMask || string.IsNullOrEmpty(p) || p.Length < 6) ? p : p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+    Func<string, string> maskAddress = addr =>
+    {
+        if (!shouldMask || string.IsNullOrEmpty(addr)) return addr;
+        if (addr.Length <= 10) return "****** (Đã che địa chỉ)";
+        int commaIdx = addr.LastIndexOf(',');
+        if (commaIdx > 5) return addr.Substring(0, 4) + "******" + addr.Substring(commaIdx);
+        return addr.Substring(0, 5) + "****** (Đã che địa chỉ)";
+    };
 }
 
 <div class="dash-page">
@@ -28,12 +39,12 @@
             <div class="col-md-4 border-end border-secondary">
                 <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--adm-text-2);">Người nhận</span>
                 <div style="font-weight: 700; font-size: 16px; color: var(--adm-text);" class="mt-1"><i class="fa-regular fa-circle-user me-2 text-primary"></i>@Model.ReceiverName</div>
-                <div style="color: var(--adm-red); font-weight: 700;" class="mt-1"><i class="fa-solid fa-phone me-2"></i>@(User.IsInRole("Admin") ? Model.ReceiverPhone : (string.IsNullOrEmpty(Model.ReceiverPhone) || Model.ReceiverPhone.Length < 6 ? "*****" : Model.ReceiverPhone.Substring(0, 3) + "****" + Model.ReceiverPhone.Substring(Model.ReceiverPhone.Length - 3)))</div>
+                <div style="color: var(--adm-red); font-weight: 700;" class="mt-1"><i class="fa-solid fa-phone me-2"></i>@maskPhone(Model.ReceiverPhone)</div>
             </div>
             <div class="col-md-5 border-end border-secondary">
                 <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--adm-text-2);">Địa chỉ giao hàng & Nhân viên soạn</span>
                 <div style="font-weight: 600; color: var(--adm-text);" class="mt-1 pe-3">
-                    <i class="fa-solid fa-location-dot me-2 text-danger"></i>@Model.ShippingAddress
+                    <i class="fa-solid fa-location-dot me-2 text-danger"></i>@maskAddress(Model.ShippingAddress)
                 </div>
                 <div class="mt-2 text-primary fw-bold small">
                     <i class="fa-solid fa-user-gear me-1"></i>Nhân viên thực hiện soạn đơn: <span class="badge bg-primary text-white fs-6">@User.Identity.Name</span>
