@@ -1023,8 +1023,9 @@
                     <!-- Ô nhập câu hỏi / bình luận của khách -->
                     <div class="mb-4">
                         <input type="hidden" id="pmd-current-id" value="0" />
-                        <textarea id="pmd-question-input" rows="3" class="form-control rounded-3 p-3 border-2" placeholder="Mời bạn bình luận hoặc đặt câu hỏi"></textarea>
-                        <div class="d-flex justify-content-end mt-2">
+                        <textarea id="pmd-question-input" rows="3" maxlength="200" class="form-control rounded-3 p-3 border-2" placeholder="Mời bạn bình luận hoặc đặt câu hỏi (tối đa 200 ký tự)..."></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted"><span id="pmd-question-count">0</span>/200 ký tự</small>
                             <button type="button" id="btnPostQuestion" class="btn btn-primary px-4 fw-bold shadow-sm rounded-3">
                                 <i class="fa-solid fa-paper-plane me-1"></i> Gửi bình luận
                             </button>
@@ -1338,6 +1339,16 @@
             });
         }
 
+        // Đếm số ký tự ô đặt câu hỏi
+        $(document).on('input', '#pmd-question-input', function () {
+            var len = $(this).val().length;
+            if (len > 200) {
+                $(this).val($(this).val().substring(0, 200));
+                len = 200;
+            }
+            $('#pmd-question-count').text(len);
+        });
+
         // Gửi bình luận mới của khách
         $(document).on('click', '#btnPostQuestion', function () {
             var productId = $('#pmd-current-id').val();
@@ -1348,10 +1359,16 @@
                 return;
             }
 
+            if (content.length > 200) {
+                alert("Nội dung câu hỏi/bình luận tối đa 200 ký tự!");
+                return;
+            }
+
             $.post('@Url.Action("PostQuestion", "Product")', { productId: productId, content: content }, function (res) {
                 alert(res.message);
                 if (res.success) {
                     $('#pmd-question-input').val('');
+                    $('#pmd-question-count').text('0');
                     loadProductDetailModal(productId);
                 }
             });

@@ -122,8 +122,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập nội dung bình luận!" });
                 }
 
+                string trimmedContent = content.Trim();
+                if (trimmedContent.Length > 200)
+                {
+                    return Json(new { success = false, message = "Nội dung bình luận/câu hỏi không được vượt quá 200 ký tự!" });
+                }
+
                 string userId = GetCurrentUserId();
-                _customerSupportService.AddQuestion(productId, userId, content.Trim());
+                _customerSupportService.AddQuestion(productId, userId, trimmedContent);
 
                 return Json(new { success = true, message = "Đã gửi bình luận/câu hỏi thành công! QTV sẽ phản hồi sớm nhất." });
             }

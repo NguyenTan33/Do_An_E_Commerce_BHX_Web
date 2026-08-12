@@ -54,6 +54,11 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             var product = dbContext.Product.FirstOrDefault(p => p.Id == productId);
             if (product == null) return;
 
+            if (!string.IsNullOrEmpty(content) && content.Length > 200)
+            {
+                content = content.Substring(0, 200);
+            }
+
             int intUserId = 0;
             if (!string.IsNullOrEmpty(userId) && !userId.StartsWith("GUEST_"))
             {
