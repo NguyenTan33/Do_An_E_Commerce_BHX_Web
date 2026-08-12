@@ -7,6 +7,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ManageRoleController : AdminBaseController
     {
         private readonly IAdminRoleService _roleService;

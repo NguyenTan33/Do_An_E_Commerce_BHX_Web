@@ -88,12 +88,15 @@
                     Quản lý người dùng
                 </a>
             </li>
-            <li>
-                <a href="@Url.Action("Index", "ManageRole")" class="@ActiveClass("ManageRole")">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-                    Roles & Quyền hạn
-                </a>
-            </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <li>
+                    <a href="@Url.Action("Index", "ManageRole")" class="@ActiveClass("ManageRole")">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+                        Roles & Quyền hạn
+                    </a>
+                </li>
+            }
             <li>
                 <a href="@Url.Action("Index", "AdminDashboard")" class="@ActiveClass("AdminDashboard")">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
@@ -180,7 +183,7 @@
                 <div class="avatar">@initial</div>
                 <div style="overflow: hidden;">
                     <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="@adminName">@adminName</div>
-                    <small>Quản trị viên (Admin)</small>
+                    <small>@(User.IsInRole("Admin") ? "Quản trị viên (Admin)" : (User.IsInRole("Manager") ? "Quản lý (Manager)" : "Quản trị viên"))</small>
                 </div>
             </div>
         </div>

@@ -67,6 +67,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> ThemUser()
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             ViewBag.Roles = new SelectList(await DbContext.Roles.AsNoTracking().ToListAsync(), "Name", "Name");
             return View();
         }
@@ -76,6 +82,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ThemUser(CreateUserViewModel model)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 var result = await UserService.CreateUserAsync(model);
@@ -98,6 +110,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> SuaUser(string id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (string.IsNullOrEmpty(id)) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
             var user = await UserManager.FindByIdAsync(id);
@@ -122,6 +140,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> SuaUser(EditUserViewModel model)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 var result = await UserService.EditUserAsync(model);
@@ -145,6 +169,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ResetPassword(string userId, string newPassword, string id = null)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             string targetId = !string.IsNullOrEmpty(userId) ? userId : id;
             if (string.IsNullOrEmpty(targetId) || string.IsNullOrEmpty(newPassword))
             {
@@ -168,6 +197,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ActionName("ToggleLockout")]
         public async Task<ActionResult> ToggleLockout(string id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             bool success = await UserService.ToggleLockoutAsync(id);
             if (!success) return HttpNotFound();
 
@@ -201,6 +236,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ActionName("DeleteUser")]
         public async Task<ActionResult> DeleteUser(string id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var user = await UserManager.FindByIdAsync(id);
             if (user != null)
             {

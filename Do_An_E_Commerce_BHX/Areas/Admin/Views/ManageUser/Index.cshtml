@@ -19,9 +19,18 @@
             <p class="mb-0" style="font-size: 13.5px; color: var(--adm-text-2);">Danh sách tài khoản, điểm thưởng, phân quyền và trạng thái trực tuyến</p>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <a href="@Url.Action("ThemUser", "ManageUser")" class="btn btn-success fw-bold">
-                <i class="fa-solid fa-user-plus"></i> Thêm tài khoản
-            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a href="@Url.Action("ThemUser", "ManageUser")" class="btn btn-success fw-bold">
+                    <i class="fa-solid fa-user-plus"></i> Thêm tài khoản
+                </a>
+            }
+            else
+            {
+                <button type="button" class="btn btn-success fw-bold" onclick="alert('Bạn không có quyền thực hiện chức năng này!')">
+                    <i class="fa-solid fa-user-plus"></i> Thêm tài khoản
+                </button>
+            }
         </div>
     </div>
 
@@ -195,46 +204,64 @@
                                         <i class="fa-solid fa-cart-shopping"></i>
                                     </a>
 
-                                    <!-- Nút Reset Mật khẩu -->
-                                    <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Đặt lại mật khẩu"
-                                            onclick="openResetPassModal('@user.Id', '@user.Email')">
-                                        <i class="fa-solid fa-key"></i>
-                                    </button>
-
-                                    <!-- Nút Khóa / Mở Khóa -->
-                                    @using (Html.BeginForm("ToggleLockout", "ManageUser", FormMethod.Post, new { style = "display:inline-block;" }))
+                                    @if (User.IsInRole("Admin"))
                                     {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@user.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-1" title="@(user.IsLocked ? "Mở khóa tài khoản" : "Khóa tài khoản")"
-                                                onclick="return confirm('Bạn có chắc muốn @(user.IsLocked ? "MỞ KHÓA" : "KHÓA") tài khoản này không?');">
-                                            @if (user.IsLocked)
-                                            {
-                                                <i class="fa-solid fa-lock-open"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="fa-solid fa-lock"></i>
-                                            }
+                                        <!-- Nút Reset Mật khẩu -->
+                                        <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Đặt lại mật khẩu"
+                                                onclick="openResetPassModal('@user.Id', '@user.Email')">
+                                            <i class="fa-solid fa-key"></i>
                                         </button>
+
+                                        <!-- Nút Khóa / Mở Khóa -->
+                                        using (Html.BeginForm("ToggleLockout", "ManageUser", FormMethod.Post, new { style = "display:inline-block;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary ms-1" title="@(user.IsLocked ? "Mở khóa tài khoản" : "Khóa tài khoản")"
+                                                    onclick="return confirm('Bạn có chắc muốn @(user.IsLocked ? "MỞ KHÓA" : "KHÓA") tài khoản này không?');">
+                                                @if (user.IsLocked)
+                                                {
+                                                    <i class="fa-solid fa-lock-open"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-solid fa-lock"></i>
+                                                }
+                                            </button>
+                                        }
+
+                                        <!-- Nút Sửa -->
+                                        <a href="@Url.Action("SuaUser", "ManageUser", new { id = user.Id })" class="btn btn-sm btn-outline-primary ms-1" title="Sửa thông tin">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+
+                                        <!-- Nút Xóa (Mở Modal) -->
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Xóa tài khoản"
+                                                onclick="openDeleteModal('@user.Id', '@user.Email')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+
+                                        <!-- Form Ẩn Xóa -->
+                                        using (Html.BeginForm("DeleteUser", "ManageUser", FormMethod.Post, new { id = "formDelete_" + user.Id, style = "display:none;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                        }
                                     }
-
-                                    <!-- Nút Sửa -->
-                                    <a href="@Url.Action("SuaUser", "ManageUser", new { id = user.Id })" class="btn btn-sm btn-outline-primary ms-1" title="Sửa thông tin">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-
-                                    <!-- Nút Xóa (Mở Modal) -->
-                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Xóa tài khoản"
-                                            onclick="openDeleteModal('@user.Id', '@user.Email')">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-
-                                    <!-- Form Ẩn Xóa -->
-                                    @using (Html.BeginForm("DeleteUser", "ManageUser", FormMethod.Post, new { id = "formDelete_" + user.Id, style = "display:none;" }))
+                                    else
                                     {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Đặt lại mật khẩu" onclick="alert('Bạn không có quyền thực hiện chức năng này!')">
+                                            <i class="fa-solid fa-key"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="Khóa/Mở khóa" onclick="alert('Bạn không có quyền thực hiện chức năng này!')">
+                                            <i class="fa-solid fa-lock"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Sửa thông tin" onclick="alert('Bạn không có quyền thực hiện chức năng này!')">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Xóa tài khoản" onclick="alert('Bạn không có quyền thực hiện chức năng này!')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
                                     }
                                 </td>
                             </tr>

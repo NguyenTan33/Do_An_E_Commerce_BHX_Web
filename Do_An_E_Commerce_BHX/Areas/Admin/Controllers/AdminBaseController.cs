@@ -7,7 +7,7 @@ using Microsoft.AspNet.Identity;
 
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     public abstract class AdminBaseController : Controller
     {
         protected ApplicationDbContext DbContext { get; set; }
