@@ -117,16 +117,26 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
             return true;
         }
 
-        public async Task<bool> DeletePromotionAsync(int id)
+        public async Task<(bool Success, string Message)> DeletePromotionAsync(int id)
         {
             var promo = await _db.Promotion.FindAsync(id);
-            if (promo != null)
-            {
-                _db.Promotion.Remove(promo);
-                await _db.SaveChangesAsync();
-                return true;
-            }
-            return false;
+            if (promo == null) return (false, "Không tìm thấy mã khuyến mãi!");
+
+            // Không xóa mã khỏi CSDL để bảo toàn lịch sử đơn hàng, chuyển sang trạng thái Ẩn / Vô hiệu hóa
+            promo.IsActive = false;
+            await _db.SaveChangesAsync();
+            return (true, $"Mã giảm giá [{promo.Code}] đã được ẨN (vô hiệu hóa, giữ nguyên dữ liệu trong CSDL hệ thống).");
+        }
+
+        public async Task<(bool Success, string Message)> TogglePromotionStatusAsync(int id)
+        {
+            var promo = await _db.Promotion.FindAsync(id);
+            if (promo == null) return (false, "Không tìm thấy mã khuyến mãi!");
+
+            promo.IsActive = !promo.IsActive;
+            await _db.SaveChangesAsync();
+            string statusStr = promo.IsActive ? "KÍCH HOẠT lại" : "ẨN / VÔ HIỆU HÓA";
+            return (true, $"Đã chuyển mã giảm giá [{promo.Code}] sang trạng thái {statusStr} thành công!");
         }
     }
 }

@@ -26,6 +26,24 @@
         </div>
     </div>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4 d-flex align-items-center gap-2 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+            <div class="fw-bold">@TempData["ErrorMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4 d-flex align-items-center gap-2 shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-check fs-5"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <!-- ===== BỘ LỌC TÌM KIẾM ===== -->
     <div class="adm-filter-bar">
         <h5 class="mb-3" style="font-size: 14px; font-weight: 700; color: var(--adm-text); display: flex; align-items: center; gap: 8px;">
@@ -150,22 +168,35 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <!-- Nút Sửa -->
-                                    <a href="@Url.Action("SuaPromotion", "ManagePromotion", new { id = item.Id })" class="btn btn-sm btn-outline-primary" title="Sửa mã">
+                                    <a href="@Url.Action("SuaPromotion", "ManagePromotion", new { id = item.Id })" class="btn btn-sm btn-outline-primary" title="Sửa thông tin mã">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
 
-                                    <!-- Nút Xóa (Mở Modal) -->
-                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Xóa mã"
-                                            onclick="openDeleteModal(@item.Id, '@item.Code')">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-
-                                    <!-- Form Ẩn Xóa -->
-                                    @using (Html.BeginForm("XoaPromotion", "ManagePromotion", FormMethod.Post, new { id = "formDelete_" + item.Id, style = "display:none;" }))
+                                    @if (item.IsActive)
                                     {
+                                        <!-- Nút Ẩn mã (Mở Modal Ẩn mã) -->
+                                        <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Ẩn / Vô hiệu hóa mã (Không xóa CSDL)"
+                                                onclick="openDeleteModal(@item.Id, '@item.Code')">
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <!-- Nút Bật lại mã -->
+                                        <form action="@Url.Action("ToggleStatus", "ManagePromotion")" method="post" style="display:inline-block;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success ms-1" title="Kích hoạt lại mã">
+                                                <i class="fa-solid fa-eye"></i> Kích hoạt
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <!-- Form Ẩn Mã -->
+                                    <form action="@Url.Action("XoaPromotion", "ManagePromotion")" method="post" id="formDelete_@item.Id" style="display:none;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                    }
+                                    </form>
                                 </td>
                             </tr>
                         }
@@ -187,25 +218,30 @@
 </div>
 
 <!-- ============ MODALS (BOOTSTRAP 5 THÍCH ỨNG THEME DARK) ============ -->
-<!-- Modal Xác Nhận Xóa -->
+<!-- Modal Xác Nhận Ẩn Mã -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-danger shadow-lg">
-            <div class="modal-header" style="border-bottom-color: var(--adm-red-dim) !important;">
-                <h5 class="modal-title text-danger" id="deleteModalLabel" style="font-weight: 700; font-size: 15px;">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Xác nhận xóa
+        <div class="modal-content border-warning shadow-lg">
+            <div class="modal-header" style="border-bottom-color: rgba(255, 193, 7, 0.2) !important;">
+                <h5 class="modal-title text-warning" id="deleteModalLabel" style="font-weight: 700; font-size: 15px;">
+                    <i class="fa-solid fa-eye-slash me-2"></i>Xác nhận Ẩn mã khuyến mãi
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <p style="color: var(--adm-text-2); margin-bottom: 0;">
-                    Bạn có chắc chắn muốn xóa mã khuyến mãi <strong id="deletePromoCode" class="text-white" style="font-family: 'JetBrains Mono', monospace; font-size: 16px;"></strong>?<br />
-                    <span class="text-danger mt-2 d-inline-block" style="font-size: 12.5px;">* Cảnh báo: Việc này có thể ảnh hưởng đến các đơn hàng đang sử dụng mã này.</span>
+                    Bạn có chắc chắn muốn <strong class="text-warning">ẨN / VÔ HIỆU HÓA</strong> mã khuyến mãi <strong id="deletePromoCode" class="text-white font-monospace fs-6"></strong>?<br />
+                    <span class="text-warning mt-2 d-inline-block" style="font-size: 12.5px;">
+                        <i class="fa-solid fa-shield-halved me-1"></i>
+                        * Quy định hệ thống: Mã sẽ <strong>không bị xóa</strong> khỏi CSDL để bảo toàn lịch sử đơn hàng. Mã chỉ bị ngắt hiệu lực đối với người dùng mua sắm.
+                    </span>
                 </p>
             </div>
             <div class="modal-footer" style="border-top-color: var(--adm-border) !important;">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Xóa mã</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark fw-bold" onclick="confirmDelete()">
+                    <i class="fa-solid fa-eye-slash me-1"></i> Đồng ý Ẩn mã
+                </button>
             </div>
         </div>
     </div>

@@ -109,12 +109,37 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return View(model);
         }
 
-        // POST: Admin/ManagePromotion/XoaPromotion
+        // POST: Admin/ManagePromotion/XoaPromotion (Thực chất là Ẩn mã)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XoaPromotion(int id)
         {
-            await _promotionService.DeletePromotionAsync(id);
+            var (success, message) = await _promotionService.DeletePromotionAsync(id);
+            if (success)
+            {
+                TempData["SuccessMessage"] = message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = message;
+            }
+            return RedirectToAction("Index");
+        }
+
+        // POST: Admin/ManagePromotion/ToggleStatus (Ẩn / Bật lại mã giảm giá)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ToggleStatus(int id)
+        {
+            var (success, message) = await _promotionService.TogglePromotionStatusAsync(id);
+            if (success)
+            {
+                TempData["SuccessMessage"] = message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = message;
+            }
             return RedirectToAction("Index");
         }
     }

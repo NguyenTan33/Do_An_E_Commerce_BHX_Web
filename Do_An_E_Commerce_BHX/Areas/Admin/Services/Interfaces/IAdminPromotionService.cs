@@ -13,6 +13,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Interfaces
         Task<bool> IsCodeExistsAsync(string code, int? excludeId = null);
         Task<bool> CreatePromotionAsync(Promotion model, string discountType);
         Task<bool> UpdatePromotionAsync(Promotion model, string discountType);
-        Task<bool> DeletePromotionAsync(int id);
+        Task<(bool Success, string Message)> DeletePromotionAsync(int id);
+        Task<(bool Success, string Message)> TogglePromotionStatusAsync(int id);
     }
 }
