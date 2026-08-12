@@ -29,6 +29,6 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Interfaces
         Task<(List<Order> Orders, double TotalSuccessRevenue, int TotalCount, int SuccessCount, int FailedCount)> GetOrderHistoryAsync(
             string search, int? status, decimal? minPrice, decimal? maxPrice, DateTime? fromDate, DateTime? toDate);
 
-        Task<object> GetOrderDetailJsonDataAsync(int id);
+        Task<object> GetOrderDetailJsonDataAsync(int id, bool isAdmin = true);
     }
 }

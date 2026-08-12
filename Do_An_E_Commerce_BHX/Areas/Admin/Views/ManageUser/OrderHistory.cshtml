@@ -4,8 +4,29 @@
 
 @{
     var customer = ViewBag.Customer as ApplicationUser;
+
+    bool isAdmin = User.IsInRole("Admin");
+
+    Func<string, string> maskEmail = email =>
+    {
+        if (isAdmin || string.IsNullOrEmpty(email) || !email.Contains("@")) return email;
+        var parts = email.Split('@');
+        string name = parts[0];
+        string maskedName = name.Length <= 2 ? name[0] + "***" : name.Substring(0, 2) + "*****";
+        return maskedName + "@" + parts[1];
+    };
+
+    Func<string, string> maskPhone = phone =>
+    {
+        if (isAdmin || string.IsNullOrEmpty(phone)) return phone;
+        if (phone.Length < 6) return "*****";
+        return phone.Substring(0, 3) + "****" + phone.Substring(phone.Length - 3);
+    };
+
+    string custDisplayName = !string.IsNullOrEmpty(customer?.FullName) ? customer.FullName : maskEmail(customer?.UserName);
+
     ViewData["Title"] = "Lịch Sử Đơn Hàng Khách Hàng";
-    ViewData["Subtitle"] = "Chi tiết tất cả đơn hàng của " + (customer?.FullName ?? customer?.UserName);
+    ViewData["Subtitle"] = "Chi tiết tất cả đơn hàng của " + custDisplayName;
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 
     string statusFilter = ViewBag.StatusFilter as string ?? "all";
@@ -228,10 +249,10 @@
                     <i class="fa-solid fa-user-check"></i>
                 </div>
                 <div style="z-index: 1;">
-                    <h4 class="m-0 fw-bold text-white mb-1">@(customer?.FullName ?? customer?.UserName)</h4>
+                    <h4 class="m-0 fw-bold text-white mb-1">@custDisplayName</h4>
                     <div class="small d-flex flex-wrap gap-3" style="color: var(--adm-text-2);">
-                        <span><i class="fa-solid fa-envelope me-1 text-info"></i> @(customer?.Email ?? "Chưa cập nhật")</span>
-                        <span><i class="fa-solid fa-phone me-1 text-danger"></i> @(customer?.PhoneNumber ?? "Chưa cập nhật")</span>
+                        <span><i class="fa-solid fa-envelope me-1 text-info"></i> @(string.IsNullOrEmpty(customer?.Email) ? "Chưa cập nhật" : maskEmail(customer.Email))</span>
+                        <span><i class="fa-solid fa-phone me-1 text-danger"></i> @(string.IsNullOrEmpty(customer?.PhoneNumber) ? "Chưa cập nhật" : maskPhone(customer.PhoneNumber))</span>
                     </div>
                 </div>
             </div>
@@ -309,7 +330,7 @@
                                 </td>
                                 <td>
                                     <div class="fw-bold text-info mb-1"><i class="fa-regular fa-user me-1"></i>@order.ReceiverName</div>
-                                    <div class="small text-danger fw-bold mb-1"><i class="fa-solid fa-phone me-1"></i>@order.ReceiverPhone</div>
+                                    <div class="small text-danger fw-bold mb-1"><i class="fa-solid fa-phone me-1"></i>@maskPhone(order.ReceiverPhone)</div>
                                     <div class="small text-muted text-truncate" style="max-width: 240px;" title="@order.ShippingAddress">
                                         <i class="fa-solid fa-location-dot text-warning me-1"></i>@order.ShippingAddress
                                     </div>

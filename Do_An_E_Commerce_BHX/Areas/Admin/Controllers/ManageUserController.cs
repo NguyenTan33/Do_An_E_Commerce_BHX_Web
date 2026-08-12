@@ -296,8 +296,26 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 
             ViewBag.Customer = customer;
             ViewBag.CustomerName = !string.IsNullOrEmpty(customer.FullName) ? customer.FullName : customer.UserName;
-            ViewBag.CustomerPhone = customer.PhoneNumber ?? "Chưa cập nhật";
-            ViewBag.CustomerEmail = customer.Email;
+
+            if (!User.IsInRole("Admin"))
+            {
+                Func<string, string> maskPhone = p => (string.IsNullOrEmpty(p) || p.Length < 6) ? "*****" : p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+                Func<string, string> maskEmail = e => {
+                    if (string.IsNullOrEmpty(e) || !e.Contains("@")) return "*****";
+                    var parts = e.Split('@');
+                    string name = parts[0];
+                    string maskedName = name.Length <= 2 ? name[0] + "***" : name.Substring(0, 2) + "*****";
+                    return maskedName + "@" + parts[1];
+                };
+
+                ViewBag.CustomerPhone = maskPhone(customer.PhoneNumber ?? "");
+                ViewBag.CustomerEmail = maskEmail(customer.Email ?? "");
+            }
+            else
+            {
+                ViewBag.CustomerPhone = customer.PhoneNumber ?? "Chưa cập nhật";
+                ViewBag.CustomerEmail = customer.Email;
+            }
 
             var orders = await ordersQuery.OrderByDescending(o => o.OrderDate).ToListAsync();
             return View(orders);

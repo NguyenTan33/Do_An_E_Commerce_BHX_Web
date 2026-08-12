@@ -4,6 +4,26 @@
     ViewData["Title"] = "Quản lý người dùng";
     ViewData["Subtitle"] = "Danh sách tài khoản và phân quyền hệ thống";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    bool isAdmin = User.IsInRole("Admin");
+
+    Func<string, string> maskEmail = email =>
+    {
+        if (isAdmin || string.IsNullOrEmpty(email)) return email;
+        int atIndex = email.IndexOf('@');
+        if (atIndex <= 0) return "*****";
+        string name = email.Substring(0, atIndex);
+        string domain = email.Substring(atIndex);
+        string maskedName = name.Length <= 2 ? name[0] + "***" : name.Substring(0, 2) + "*****";
+        return maskedName + domain;
+    };
+
+    Func<string, string> maskPhone = phone =>
+    {
+        if (isAdmin || string.IsNullOrEmpty(phone)) return phone;
+        if (phone.Length < 6) return "*****";
+        return phone.Substring(0, 3) + "****" + phone.Substring(phone.Length - 3);
+    };
 }
 
 
@@ -148,11 +168,11 @@
                             <tr>
                                 <td class="ps-4">
                                     <div style="font-weight: 600; font-size: 14.5px; color: var(--adm-text);">@user.FullName</div>
-                                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--adm-text-2);">@user.Email</div>
+                                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--adm-text-2);">@maskEmail(user.Email)</div>
                                 </td>
                                 <td>
                                     <span style="font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--adm-text-2);">
-                                        @(string.IsNullOrEmpty(user.PhoneNumber) ? "N/A" : user.PhoneNumber)
+                                        @(string.IsNullOrEmpty(user.PhoneNumber) ? "N/A" : maskPhone(user.PhoneNumber))
                                     </span>
                                 </td>
                                 <td>

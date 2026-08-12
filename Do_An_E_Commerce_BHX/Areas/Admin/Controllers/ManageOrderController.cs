@@ -239,7 +239,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> GetOrderDetailJson(int id)
         {
-            var data = await _orderService.GetOrderDetailJsonDataAsync(id);
+            bool isAdmin = User.IsInRole("Admin");
+            var data = await _orderService.GetOrderDetailJsonDataAsync(id, isAdmin);
             if (data == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);

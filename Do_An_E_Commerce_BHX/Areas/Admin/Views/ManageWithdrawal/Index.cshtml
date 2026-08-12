@@ -106,8 +106,11 @@
             {
                 foreach (var req in Model)
                 {
-                    string customerName = req.User != null ? (!string.IsNullOrWhiteSpace(req.User.FullName) ? req.User.FullName : req.User.UserName) : "Khách hàng";
-                    string customerPhone = req.User != null ? req.User.PhoneNumber : "N/A";
+                    bool isAdminRole = User.IsInRole("Admin");
+                    string rawName = req.User != null ? (!string.IsNullOrWhiteSpace(req.User.FullName) ? req.User.FullName : (req.User.UserName != null && req.User.UserName.Contains("@") && !isAdminRole ? req.User.UserName.Substring(0, 2) + "*****@" + req.User.UserName.Split('@')[1] : req.User.UserName)) : "Khách hàng";
+                    string customerName = rawName;
+                    string rawPhone = req.User != null ? req.User.PhoneNumber : "N/A";
+                    string customerPhone = (isAdminRole || string.IsNullOrEmpty(rawPhone) || rawPhone == "N/A" || rawPhone.Length < 6) ? rawPhone : (rawPhone.Substring(0, 3) + "****" + rawPhone.Substring(rawPhone.Length - 3));
 
                     <tr>
                         <td class="fw-bold text-warning">#@req.Id</td>

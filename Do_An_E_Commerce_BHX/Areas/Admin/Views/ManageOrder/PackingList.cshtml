@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
+@model IEnumerable<Do_An_E_Commerce_BHX.Models.Entities.Order>
 
 @{
     ViewData["Title"] = "Danh sách đơn cần soạn";
@@ -87,7 +87,7 @@
                                 </td>
                                 <td>
                                     <div style="font-weight: 600; color: var(--adm-blue);"><i class="fa-regular fa-circle-user me-1"></i>@item.ReceiverName</div>
-                                    <div style="font-size: 12.5px; color: var(--adm-red); font-weight: 600;" class="my-1"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</div>
+                                    <div style="font-size: 12.5px; color: var(--adm-red); font-weight: 600;" class="my-1"><i class="fa-solid fa-phone me-1"></i>@(User.IsInRole("Admin") ? item.ReceiverPhone : (string.IsNullOrEmpty(item.ReceiverPhone) || item.ReceiverPhone.Length < 6 ? "*****" : item.ReceiverPhone.Substring(0, 3) + "****" + item.ReceiverPhone.Substring(item.ReceiverPhone.Length - 3)))</div>
                                 </td>
                                 <td>
                                     <div style="font-size: 12px; color: var(--adm-text-2); max-width: 250px;" class="text-truncate" title="@item.ShippingAddress">

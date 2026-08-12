@@ -927,7 +927,7 @@
                                     </td>
                                     <td>
                                         <div class="fw-bold text-info"><i class="fa-regular fa-user me-1"></i>@item.ReceiverName</div>
-                                        <small class="text-danger fw-bold"><i class="fa-solid fa-phone me-1"></i>@item.ReceiverPhone</small>
+                                        <small class="text-danger fw-bold"><i class="fa-solid fa-phone me-1"></i>@(User.IsInRole("Admin") ? item.ReceiverPhone : (string.IsNullOrEmpty(item.ReceiverPhone) || item.ReceiverPhone.Length < 6 ? "*****" : item.ReceiverPhone.Substring(0, 3) + "****" + item.ReceiverPhone.Substring(item.ReceiverPhone.Length - 3)))</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-dark border border-secondary text-light">@payMethodName</span>

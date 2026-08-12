@@ -269,7 +269,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
             return (listOrders, totalSuccessRevenue, totalCount, successCount, failedCount);
         }
 
-        public async Task<object> GetOrderDetailJsonDataAsync(int id)
+        public async Task<object> GetOrderDetailJsonDataAsync(int id, bool isAdmin = true)
         {
             var order = await _dbContext.Order
                 .Include(o => o.User)
@@ -277,6 +277,8 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null) return null;
+
+            Func<string, string> maskPhone = p => (string.IsNullOrEmpty(p) || p.Length < 6) ? "*****" : p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
 
             var items = order.OrderDetails.Select(od => new
             {
@@ -329,7 +331,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
                 id = order.Id,
                 orderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
                 receiverName = order.ReceiverName,
-                receiverPhone = order.ReceiverPhone,
+                receiverPhone = isAdmin ? order.ReceiverPhone : maskPhone(order.ReceiverPhone),
                 shippingAddress = order.ShippingAddress,
                 note = noteStr,
                 packedBy = packedBy,
