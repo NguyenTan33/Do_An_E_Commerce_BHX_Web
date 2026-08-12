@@ -21,48 +21,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Services.Implementations
 
         public void EnsureProductUnitColumnsExist()
         {
-            try
-            {
-                string sql = @"
-                    IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Products')
-                    BEGIN
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Unit')
-                            ALTER TABLE [dbo].[Products] ADD [Unit] NVARCHAR(50) DEFAULT N'Cái' NOT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'UnitMultiplier')
-                            ALTER TABLE [dbo].[Products] ADD [UnitMultiplier] INT DEFAULT 1 NOT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'ParentProductId')
-                            ALTER TABLE [dbo].[Products] ADD [ParentProductId] INT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'PackagingTag')
-                            ALTER TABLE [dbo].[Products] ADD [PackagingTag] NVARCHAR(100) NULL;
-                    END
-
-                    IF EXISTS (SELECT * FROM sys.tables WHERE name = N'Product')
-                    BEGIN
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'Unit')
-                            ALTER TABLE [dbo].[Product] ADD [Unit] NVARCHAR(50) DEFAULT N'Cái' NOT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'UnitMultiplier')
-                            ALTER TABLE [dbo].[Product] ADD [UnitMultiplier] INT DEFAULT 1 NOT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'ParentProductId')
-                            ALTER TABLE [dbo].[Product] ADD [ParentProductId] INT NULL;
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Product]') AND name = 'PackagingTag')
-                            ALTER TABLE [dbo].[Product] ADD [PackagingTag] NVARCHAR(100) NULL;
-                    END
-
-                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'ProductUnit')
-                    BEGIN
-                        CREATE TABLE [dbo].[ProductUnit] (
-                            [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-                            [ProductId] INT NOT NULL,
-                            [UnitName] NVARCHAR(100) NOT NULL,
-                            [Price] DECIMAL(18,2) NOT NULL,
-                            [ConversionFactor] INT DEFAULT 1 NOT NULL,
-                            [IsDefault] BIT DEFAULT 0 NOT NULL
-                        );
-                    END
-                ";
-                _db.Database.ExecuteSqlCommand(sql);
-            }
-            catch { }
+            ApplicationDbContext.EnsureProductColumnsExist(_db);
         }
 
         public async Task<List<Product>> GetFilteredProductsAsync(
