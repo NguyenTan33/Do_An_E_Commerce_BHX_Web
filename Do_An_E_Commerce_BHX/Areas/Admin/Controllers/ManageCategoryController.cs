@@ -96,5 +96,13 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             TempData["SuccessMessage"] = "Xóa danh mục thành công!";
             return RedirectToAction("Index");
         }
+
+        // Alias POST: Admin/ManageCategory/XoaDm/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> XoaDm(int id)
+        {
+            return await XoaDanhMuc(id);
+        }
     }
 }
