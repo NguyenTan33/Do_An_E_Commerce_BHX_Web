@@ -11,9 +11,12 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 
+using Do_An_E_Commerce_BHX.Controllers;
+
 namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
 {
-    public class ManageController : AdminBaseController
+    [Authorize]
+    public class ManageController : BaseController
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;

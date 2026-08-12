@@ -84,7 +84,7 @@
             function renderOrderList(orders, container) {
                 container.empty();
                 var html = '<div class="d-flex justify-content-between align-items-center mb-3">' +
-                    '<h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing text-success me-2"></i>Tìm thấy (' + orders.length + ') đơn hàng phù hợp:</h5>' +
+                    '<h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing text-success me-2"></i>Kết quả tra cứu trạng thái (' + orders.length + ' đơn hàng):</h5>' +
                     '</div>';
 
                 $.each(orders, function (i, o) {
@@ -99,80 +99,57 @@
                     html += '<div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">' +
                         '<div class="card-header bg-light py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">' +
                         '<div>' +
-                        '<span class="fw-bold text-dark fs-5">Đơn hàng #' + o.id + '</span> &bull; ' +
-                        '<small class="text-muted"><i class="fa-regular fa-clock me-1"></i>' + o.orderDate + '</small>' +
+                        '<span class="fw-bold text-dark fs-5">Mã đơn: #' + o.id + '</span> &bull; ' +
+                        '<small class="text-muted"><i class="fa-regular fa-clock me-1"></i>Ngày đặt: ' + o.orderDate + '</small>' +
                         '</div>' +
                         '<div>' + statusBadge + '</div>' +
                         '</div>' +
-                        '<div class="card-body p-4">' +
-                        '<div class="row g-3 mb-3">' +
-                        '<div class="col-md-6">' +
-                        '<div class="p-3 bg-light rounded-3 border-start border-4 border-success">' +
-                        '<div class="fw-bold text-dark mb-1"><i class="fa-solid fa-user me-1 text-success"></i>Người nhận: ' + (o.receiverName || 'Khách hàng') + '</div>' +
-                        '<div class="text-muted small"><i class="fa-solid fa-phone me-1"></i>SĐT: <strong>' + o.receiverPhone + '</strong></div>' +
-                        '<div class="text-muted small mt-1"><i class="fa-solid fa-location-dot me-1"></i>Địa chỉ: ' + (o.shippingAddress || 'Theo thỏa thuận') + '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="col-md-6">' +
-                        '<div class="p-3 bg-light rounded-3 border-start border-4 border-primary">' +
-                        '<div class="fw-bold text-dark mb-1"><i class="fa-solid fa-credit-card me-1 text-primary"></i>Thanh toán: ' + o.paymentMethod + '</div>' +
-                        '<div class="text-muted small"><i class="fa-solid fa-receipt me-1"></i>Trạng thái tiền: <strong class="' + (o.paymentStatus === 'Đã thanh toán' ? 'text-success' : 'text-danger') + '">' + o.paymentStatus + '</strong></div>' +
-                        '<div class="text-dark fw-bold fs-5 mt-1">Tổng tiền: <span class="text-danger">' + o.totalAmount.toLocaleString('vi-VN') + ' VNĐ</span></div>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>';
+                        '<div class="card-body p-4">';
 
-                    // SẢN PHẨM MUA
-                    if (o.items && o.items.length > 0) {
-                        html += '<div class="border rounded-3 p-3 bg-white mb-3">' +
-                            '<div class="fw-bold text-dark mb-2"><i class="fa-solid fa-basket-shopping text-warning me-1"></i>Danh sách sản phẩm trong đơn (' + o.items.length + '):</div>' +
-                            '<div class="table-responsive"><table class="table align-middle m-0 mb-0"><tbody>';
+                    if (o.orderStatus === 5) {
+                        html += '<div class="alert alert-danger d-flex align-items-center rounded-3 mb-0">' +
+                            '<i class="fa-solid fa-circle-xmark fs-4 me-3"></i>' +
+                            '<div><strong>Đơn hàng này đã bị hủy.</strong> Vui lòng liên hệ hotline bộ phận hỗ trợ nếu cần trợ giúp.</div>' +
+                            '</div>';
+                    } else {
+                        var steps = [
+                            { title: 'Tiếp nhận', icon: 'fa-file-invoice' },
+                            { title: 'Đã duyệt', icon: 'fa-clipboard-check' },
+                            { title: 'Đóng gói', icon: 'fa-box' },
+                            { title: 'Đang giao', icon: 'fa-truck-fast' },
+                            { title: 'Thành công', icon: 'fa-circle-check' }
+                        ];
 
-                        $.each(o.items, function (j, item) {
-                            html += '<tr>' +
-                                '<td style="width: 55px;"><img src="' + item.productImage + '" style="width: 48px; height: 48px; object-fit: contain;" class="rounded border p-1" onerror="this.src=\'/Content/images/no-image.png\';"/></td>' +
-                                '<td><div class="fw-bold text-dark">' + item.productName + '</div><small class="text-muted">Đơn giá: ' + item.price.toLocaleString('vi-VN') + 'đ</small></td>' +
-                                '<td class="text-center font-weight-bold">x' + item.quantity + '</td>' +
-                                '<td class="text-end font-weight-bold text-danger">' + item.total.toLocaleString('vi-VN') + ' VNĐ</td>' +
-                                '</tr>';
+                        html += '<div class="row g-2 text-center my-2 position-relative">' +
+                            '<div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">';
+
+                        $.each(steps, function (idx, step) {
+                            var isPassed = idx <= o.orderStatus;
+                            var isCurrent = idx === o.orderStatus;
+                            var stepBg = isCurrent ? 'bg-success text-white shadow' : (isPassed ? 'bg-success bg-opacity-25 text-success' : 'bg-light text-muted border');
+                            var titleClass = isCurrent ? 'fw-bold text-success' : (isPassed ? 'fw-semibold text-dark' : 'text-muted');
+
+                            html += '<div class="flex-fill p-2 rounded-3 text-center ' + (isCurrent ? 'border border-success bg-success bg-opacity-10' : '') + '">' +
+                                '<div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-1 ' + stepBg + '" style="width: 42px; height: 42px; font-size: 18px;">' +
+                                '<i class="fa-solid ' + step.icon + '"></i>' +
+                                '</div>' +
+                                '<div class="small ' + titleClass + '">' + step.title + '</div>' +
+                                '</div>';
                         });
 
-                        html += '</tbody></table></div></div>';
+                        html += '</div></div>';
                     }
 
-                    if (o.isExpired && o.rawOrderStatus === 5) {
-                        html += '<div class="pt-2 border-top"><span class="text-danger small fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đơn hàng tự động hủy do quá 10 phút chưa thanh toán.</span></div>';
-                    }
+                    html += '<div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top text-muted small flex-wrap gap-2">' +
+                        '<div><i class="fa-solid fa-phone me-1"></i>SĐT nhận hàng: <strong>' + o.maskedPhone + '</strong></div>' +
+                        '<div><i class="fa-solid fa-shield-halved me-1 text-primary"></i>Trạng thái thanh toán: <strong class="' + (o.paymentStatus === 'Đã thanh toán' ? 'text-success' : 'text-danger') + '">' + o.paymentStatus + '</strong></div>' +
+                        '</div>';
 
                     html += '</div></div>';
                 });
 
                 container.html(html);
             }
-
-            // XỬ LÝ HỦY ĐƠN HÀNG
-            $(document).on('click', '.btn-cancel-order', function (e) {
-                e.preventDefault();
-                var orderId = $(this).data('id');
-                if (!confirm("Bạn có chắc chắn muốn hủy Đơn hàng #" + orderId + " này không?")) return;
-
-                var btn = $(this);
-                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang hủy...');
-
-                $.post('@Url.Action("CancelOrder", "Order")', { orderId: orderId }, function (res) {
-                    if (res.success) {
-                        alert("✅ " + res.message);
-                        var query = $('#track-query').val().trim();
-                        if (query) doTrackSearch(query);
-                    } else {
-                        alert("❌ " + res.message);
-                        btn.prop('disabled', false).html('<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng');
-                    }
-                }).fail(function () {
-                    alert("Lỗi kết nối khi hủy đơn!");
-                    btn.prop('disabled', false).html('<i class="fa-solid fa-xmark me-1"></i> Hủy Đơn Hàng');
-                });
-            });
         });
     </script>
 }

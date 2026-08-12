@@ -202,7 +202,7 @@
                                     </button>
 
                                     <!-- Nút Khóa / Mở Khóa -->
-                                    @using (Html.BeginForm("ToggleLock", "ManageUser", FormMethod.Post, new { style = "display:inline-block;" }))
+                                    @using (Html.BeginForm("ToggleLockout", "ManageUser", FormMethod.Post, new { style = "display:inline-block;" }))
                                     {
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@user.Id" />
@@ -231,7 +231,7 @@
                                     </button>
 
                                     <!-- Form Ẩn Xóa -->
-                                    @using (Html.BeginForm("XoaUser", "ManageUser", FormMethod.Post, new { id = "formDelete_" + user.Id, style = "display:none;" }))
+                                    @using (Html.BeginForm("DeleteUser", "ManageUser", FormMethod.Post, new { id = "formDelete_" + user.Id, style = "display:none;" }))
                                     {
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@user.Id" />

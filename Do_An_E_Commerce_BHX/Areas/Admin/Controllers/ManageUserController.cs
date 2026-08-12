@@ -165,6 +165,7 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         // POST: Admin/ManageUser/ToggleLockout
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [ActionName("ToggleLockout")]
         public async Task<ActionResult> ToggleLockout(string id)
         {
             bool success = await UserService.ToggleLockoutAsync(id);
@@ -185,9 +186,19 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        // POST: Admin/ManageUser/ToggleLock (Alias)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ToggleLock")]
+        public Task<ActionResult> ToggleLock(string id)
+        {
+            return ToggleLockout(id);
+        }
+
         // POST: Admin/ManageUser/DeleteUser
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [ActionName("DeleteUser")]
         public async Task<ActionResult> DeleteUser(string id)
         {
             var user = await UserManager.FindByIdAsync(id);
@@ -203,6 +214,15 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
                 TempData["Success"] = $"Đã xóa thành công người dùng {user.Email}!";
             }
             return RedirectToAction("Index");
+        }
+
+        // POST: Admin/ManageUser/XoaUser (Alias)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("XoaUser")]
+        public Task<ActionResult> XoaUser(string id)
+        {
+            return DeleteUser(id);
         }
 
         // GET: Admin/ManageUser/OrderHistory?userId=xxx (Trang Xem lịch sử mua hàng của khách hàng)

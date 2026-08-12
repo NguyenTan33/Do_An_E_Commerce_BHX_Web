@@ -281,6 +281,11 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
 
             string cleanQuery = query.Trim().Replace("#", "");
+            if (cleanQuery.Length < 2)
+            {
+                return Json(new { success = false, message = "Vui lòng nhập đầy đủ Số điện thoại nhận hàng hoặc Mã đơn hàng hợp lệ!" });
+            }
+
             var qOrders = DbContext.Order.AsQueryable();
 
             int parsedOrderId = 0;
@@ -288,15 +293,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             if (isNumericId && parsedOrderId > 0)
             {
-                qOrders = qOrders.Where(o => o.Id == parsedOrderId || (o.ReceiverPhone != null && o.ReceiverPhone.Contains(cleanQuery)));
+                qOrders = qOrders.Where(o => o.Id == parsedOrderId || o.ReceiverPhone == cleanQuery);
             }
             else
             {
-                qOrders = qOrders.Where(o => o.ReceiverPhone != null && o.ReceiverPhone.Contains(cleanQuery));
+                qOrders = qOrders.Where(o => o.ReceiverPhone == cleanQuery);
             }
 
             var orders = qOrders
-                .Include("OrderDetails.Product")
                 .OrderByDescending(o => o.OrderDate)
                 .ToList();
 
@@ -305,38 +309,24 @@ namespace Do_An_E_Commerce_BHX.Controllers
                 return Json(new { success = false, message = $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!" });
             }
 
+            Func<string, string> maskPhone = p =>
+            {
+                if (string.IsNullOrEmpty(p) || p.Length < 6) return "*****";
+                return p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+            };
+
             var orderList = orders.Select(o => new
             {
                 id = o.Id,
                 orderDate = o.OrderDate.ToString("dd/MM/yyyy HH:mm"),
-                rawOrderDate = o.OrderDate,
-                receiverName = o.ReceiverName,
-                receiverPhone = o.ReceiverPhone,
-                shippingAddress = o.ShippingAddress,
-                totalAmount = o.TotalAmount,
-                discountAmount = o.DiscountAmount,
-                shippingFee = o.ShippingFee,
                 orderStatus = o.OrderStatus,
                 orderStatusText = o.OrderStatus == 0 ? "Chờ duyệt" :
                                  o.OrderStatus == 1 ? "Đã duyệt" :
                                  o.OrderStatus == 2 ? "Đã đóng gói" :
                                  o.OrderStatus == 3 ? "Đang giao hàng" :
                                  o.OrderStatus == 4 ? "Giao thành công" : "Đã hủy",
-                paymentMethod = o.PaymentMethod == 0 ? "COD (Tiền mặt)" : "Chuyển khoản VietinBank",
                 paymentStatus = o.PaymentStatus == 1 ? "Đã thanh toán" : "Chưa thanh toán",
-                rawPaymentStatus = o.PaymentStatus,
-                rawOrderStatus = o.OrderStatus,
-                isExpired = o.PaymentStatus == 0 && o.PaymentMethod == 1 && (DateTime.Now - o.OrderDate).TotalMinutes >= 10,
-                paymentUrl = Url.Action("Payment", "Order", new { orderId = o.Id }),
-                items = o.OrderDetails != null ? o.OrderDetails.Select(d => new
-                {
-                    productId = d.ProductId,
-                    productName = d.Product != null ? d.Product.Name : "Sản phẩm #" + d.ProductId,
-                    productImage = d.Product != null && !string.IsNullOrEmpty(d.Product.URLImage) ? d.Product.URLImage : "/Content/images/no-image.png",
-                    quantity = d.Quantity,
-                    price = d.Price,
-                    total = d.Price * d.Quantity
-                }).ToList() : null
+                maskedPhone = maskPhone(o.ReceiverPhone)
             }).ToList();
 
             return Json(new { success = true, count = orderList.Count, orders = orderList });
