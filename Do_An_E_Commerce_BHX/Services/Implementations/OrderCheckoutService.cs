@@ -592,6 +592,108 @@ namespace Do_An_E_Commerce_BHX.Services.Implementations
             catch { }
         }
 
+        public (bool Success, string Message, object OrdersData) SearchOrdersForTracking(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return (false, "Vui lòng nhập Số điện thoại nhận hàng hoặc Mã đơn hàng!", null);
+            }
+
+            string cleanQuery = query.Trim().Replace("#", "");
+            if (cleanQuery.Length < 2)
+            {
+                return (false, "Vui lòng nhập đầy đủ Số điện thoại nhận hàng hoặc Mã đơn hàng hợp lệ!", null);
+            }
+
+            var qOrders = _dbContext.Order.AsQueryable();
+
+            int parsedOrderId = 0;
+            bool isNumericId = int.TryParse(cleanQuery, out parsedOrderId);
+
+            if (isNumericId && parsedOrderId > 0)
+            {
+                qOrders = qOrders.Where(o => o.Id == parsedOrderId || o.ReceiverPhone == cleanQuery);
+            }
+            else
+            {
+                qOrders = qOrders.Where(o => o.ReceiverPhone == cleanQuery);
+            }
+
+            var orders = qOrders
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            if (!orders.Any())
+            {
+                return (false, $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!", null);
+            }
+
+            Func<string, string> maskPhone = p =>
+            {
+                if (string.IsNullOrEmpty(p) || p.Length < 6) return "*****";
+                return p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
+            };
+
+            var orderList = orders.Select(o => new
+            {
+                id = o.Id,
+                orderDate = o.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                orderStatus = o.OrderStatus,
+                orderStatusText = o.OrderStatus == 0 ? "Chờ duyệt" :
+                                 o.OrderStatus == 1 ? "Đã duyệt" :
+                                 o.OrderStatus == 2 ? "Đã đóng gói" :
+                                 o.OrderStatus == 3 ? "Đang giao hàng" :
+                                 o.OrderStatus == 4 ? "Giao thành công" : "Đã hủy",
+                paymentStatus = o.PaymentStatus == 1 ? "Đã thanh toán" : "Chưa thanh toán",
+                maskedPhone = maskPhone(o.ReceiverPhone)
+            }).ToList();
+
+            return (true, null, orderList);
+        }
+
+        public (bool Success, string Message) CancelOrder(int orderId)
+        {
+            try
+            {
+                var order = _dbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
+                if (order == null)
+                {
+                    return (false, "Không tìm thấy đơn hàng!");
+                }
+
+                if (order.OrderStatus == 3 || order.OrderStatus == 4 || order.OrderStatus == 5)
+                {
+                    return (false, "Đơn hàng đang giao, đã giao thành công hoặc đã hủy trước đó, không thể hủy!");
+                }
+
+                if (order.PaymentStatus == 1)
+                {
+                    return (false, "Đơn hàng đã được thanh toán thành công, vui lòng liên hệ bộ phận hỗ trợ để hoàn tiền!");
+                }
+
+                order.OrderStatus = 5;
+
+                if (order.OrderDetails != null)
+                {
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        if (detail.Product != null)
+                        {
+                            detail.Product.Quantity += detail.Quantity;
+                        }
+                    }
+                }
+
+                _dbContext.SaveChanges();
+
+                return (true, $"Đã hủy thành công đơn hàng #{orderId}!");
+            }
+            catch (Exception ex)
+            {
+                return (false, "Lỗi khi hủy đơn hàng: " + ex.Message);
+            }
+        }
+
         public void LogSePay(string message)
         {
             try

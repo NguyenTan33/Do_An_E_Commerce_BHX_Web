@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Do_An_E_Commerce_BHX.Controllers;
+using Do_An_E_Commerce_BHX.Models;
 using Do_An_E_Commerce_BHX.Models.Entities;
 using Do_An_E_Commerce_BHX.Services.Implementations;
 
@@ -26,6 +26,10 @@ namespace Do_An_E_Commerce_BHX.Services.Interfaces
 
         (bool IsPaid, bool IsExpired, int PaymentStatus, int PaymentMethod, string Message)
             CheckPaymentStatus(string userId, int orderId, PendingCheckoutSession pendingSession, int? lastCreatedOrderId);
+
+        (bool Success, string Message, object OrdersData) SearchOrdersForTracking(string query);
+
+        (bool Success, string Message) CancelOrder(int orderId);
 
         void LogSePay(string message);
     }

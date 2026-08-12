@@ -1,31 +1,15 @@
 using System;
+using System.Collections;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Do_An_E_Commerce_BHX.Models;
-using Do_An_E_Commerce_BHX.Models.Entities;
 using Do_An_E_Commerce_BHX.Services.Implementations;
 using Do_An_E_Commerce_BHX.Services.Interfaces;
 
 namespace Do_An_E_Commerce_BHX.Controllers
 {
-    public class PendingCheckoutSession
-    {
-        public string PendingCode { get; set; }
-        public string ReceiverName { get; set; }
-        public string ReceiverPhone { get; set; }
-        public string ShippingAddress { get; set; }
-        public int PaymentMethod { get; set; }
-        public decimal ShippingFee { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public int UsedPoints { get; set; }
-        public string Note { get; set; }
-        public string SelectedIds { get; set; }
-        public string CouponCode { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-    }
-
     public class OrderController : BaseController
     {
         private readonly IOrderCheckoutService _checkoutService;
@@ -48,10 +32,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             var (cart, userAddresses, userFullName, userPhone, loyaltyPoints, suggestedVouchers, discountAmount, appliedCode, couponMessage) =
                 await _checkoutService.GetCheckoutDataAsync(userId, selectedIds, coupon);
 
-            if (cart == null)
-            {
-                return RedirectToAction("Index", "Cart");
-            }
+            if (cart == null) return RedirectToAction("Index", "Cart");
 
             ViewBag.IsAuthenticated = User.Identity.IsAuthenticated;
             ViewBag.UserAddresses = userAddresses;
@@ -71,23 +52,19 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpPost]
         public ActionResult Checkout(string receiverName, string receiverPhone, string shippingAddress, int paymentMethod = 0, decimal shippingFee = 0, decimal discountAmount = 0, int usedPoints = 0, string note = "", string selectedIds = "", string couponCode = "")
         {
-            string userId = GetCurrentUserId();
-
             try
             {
-                var (success, message, orderId, isPendingSession, pendingSession) = _checkoutService.CreatePendingCheckoutSession(
+                string userId = GetCurrentUserId();
+                var (success, message, _, _, pendingSession) = _checkoutService.CreatePendingCheckoutSession(
                     userId, receiverName, receiverPhone, shippingAddress, paymentMethod, shippingFee, discountAmount, usedPoints, note, selectedIds, couponCode);
 
-                if (!success)
-                {
-                    return Json(new { success = false, message = message });
-                }
+                if (!success) return Json(new { success = false, message });
 
                 Session["PendingCheckoutSession"] = pendingSession;
-
-                return Json(new {
+                return Json(new
+                {
                     success = true,
-                    message = message,
+                    message,
                     orderId = 0,
                     isPendingSession = true,
                     redirectUrl = Url.Action("Payment", "Order", new { isPending = 1 })
@@ -99,20 +76,14 @@ namespace Do_An_E_Commerce_BHX.Controllers
             }
         }
 
-        // GET: /Order/Payment?orderId=123 hoặc ?isPending=1 (Trang quét mã VietQR)
+        // GET: /Order/Payment (Trang quét mã VietQR)
         [HttpGet]
         public ActionResult Payment(int orderId = 0, int isPending = 0)
         {
             if (orderId > 0)
             {
-                var order = DbContext.Order
-                    .Include("OrderDetails.Product")
-                    .FirstOrDefault(o => o.Id == orderId);
-
-                if (order != null)
-                {
-                    return View(order);
-                }
+                var order = DbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
+                if (order != null) return View(order);
             }
 
             var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
@@ -120,10 +91,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 string userId = GetCurrentUserId();
                 var pendingOrderModel = _checkoutService.GetPendingOrderForPaymentView(pending, userId);
-                if (pendingOrderModel != null)
-                {
-                    return View(pendingOrderModel);
-                }
+                if (pendingOrderModel != null) return View(pendingOrderModel);
             }
 
             return RedirectToAction("Index", "Home");
@@ -137,19 +105,19 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 string userId = GetCurrentUserId();
                 var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-
                 var (success, message, createdOrderId) = _checkoutService.ProcessCODCheckout(userId, orderId, pending);
+
                 if (success)
                 {
                     if (pending != null) Session.Remove("PendingCheckoutSession");
-                    return Json(new {
+                    return Json(new
+                    {
                         success = true,
-                        message = message,
+                        message,
                         redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrderId, paymentMethod = 0 })
                     });
                 }
-
-                return Json(new { success = false, message = message });
+                return Json(new { success = false, message });
             }
             catch (Exception ex)
             {
@@ -165,8 +133,8 @@ namespace Do_An_E_Commerce_BHX.Controllers
             {
                 string userId = GetCurrentUserId();
                 var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-
                 var (success, isPaid, message, createdOrderId) = _checkoutService.ConfirmBankPayment(userId, orderId, paymentMethod, pending);
+
                 if (success)
                 {
                     if (pending != null)
@@ -175,16 +143,16 @@ namespace Do_An_E_Commerce_BHX.Controllers
                         Session["LastCreatedOrderId"] = createdOrderId;
                     }
 
-                    return Json(new {
+                    return Json(new
+                    {
                         isPaid = true,
                         success = true,
-                        message = message,
+                        message,
                         orderId = createdOrderId,
-                        redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrderId, paymentMethod = paymentMethod })
+                        redirectUrl = Url.Action("Success", "Order", new { orderId = createdOrderId, paymentMethod })
                     }, JsonRequestBehavior.AllowGet);
                 }
-
-                return Json(new { success = false, message = message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -201,16 +169,13 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             if (orderId > 0)
             {
-                var order = DbContext.Order
-                    .Include("OrderDetails.Product")
-                    .FirstOrDefault(o => o.Id == orderId);
-                ViewBag.Order = order;
+                ViewBag.Order = DbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
             }
 
             return View();
         }
 
-        // GET: /Order/CheckPaymentStatus?orderId=123 (Auto-Polling gọi trực tiếp SePay REST API)
+        // GET: /Order/CheckPaymentStatus (Auto-Polling SePay REST API)
         [HttpGet]
         public ActionResult CheckPaymentStatus(int orderId = 0)
         {
@@ -219,7 +184,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
 
             string userId = GetCurrentUserId();
             var pending = Session["PendingCheckoutSession"] as PendingCheckoutSession;
-            int? lastCreatedId = Session["LastCreatedOrderId"] != null ? (int?)Session["LastCreatedOrderId"] : null;
+            int? lastCreatedId = Session["LastCreatedOrderId"] as int?;
 
             var (isPaid, isExpired, paymentStatus, paymentMethod, message) =
                 _checkoutService.CheckPaymentStatus(userId, orderId, pending, lastCreatedId);
@@ -227,12 +192,7 @@ namespace Do_An_E_Commerce_BHX.Controllers
             if (isExpired)
             {
                 if (pending != null) Session.Remove("PendingCheckoutSession");
-                return Json(new {
-                    isPaid = false,
-                    isExpired = true,
-                    message = message,
-                    orderId = orderId
-                }, JsonRequestBehavior.AllowGet);
+                return Json(new { isPaid = false, isExpired = true, message, orderId }, JsonRequestBehavior.AllowGet);
             }
 
             if (isPaid)
@@ -243,25 +203,21 @@ namespace Do_An_E_Commerce_BHX.Controllers
                     return ConfirmBankPaymentApi(0, 1);
                 }
 
-                return Json(new {
+                return Json(new
+                {
                     isPaid = true,
                     paymentStatus = 1,
-                    paymentMethod = paymentMethod,
+                    paymentMethod,
                     orderId = targetOrderId,
-                    redirectUrl = Url.Action("Success", "Order", new { orderId = targetOrderId, paymentMethod = paymentMethod }),
-                    message = message
+                    redirectUrl = Url.Action("Success", "Order", new { orderId = targetOrderId, paymentMethod }),
+                    message
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            return Json(new {
-                isPaid = false,
-                paymentStatus = paymentStatus,
-                paymentMethod = paymentMethod,
-                orderId = orderId
-            }, JsonRequestBehavior.AllowGet);
+            return Json(new { isPaid = false, paymentStatus, paymentMethod, orderId }, JsonRequestBehavior.AllowGet);
         }
 
-        // GET: /Order/Track (Trang Tra cứu đơn hàng bằng SĐT hoặc Mã đơn)
+        // GET: /Order/Track (Trang Tra cứu đơn hàng)
         [AllowAnonymous]
         [HttpGet]
         public ActionResult Track(string query = "")
@@ -275,107 +231,29 @@ namespace Do_An_E_Commerce_BHX.Controllers
         [HttpPost]
         public ActionResult SearchOrderJson(string query)
         {
-            if (string.IsNullOrWhiteSpace(query))
+            var (success, message, ordersData) = _checkoutService.SearchOrdersForTracking(query);
+            if (!success)
             {
-                return Json(new { success = false, message = "Vui lòng nhập Số điện thoại nhận hàng hoặc Mã đơn hàng!" });
+                return Json(new { success = false, message });
             }
 
-            string cleanQuery = query.Trim().Replace("#", "");
-            if (cleanQuery.Length < 2)
+            int count = 0;
+            var ordersList = ordersData as IEnumerable;
+            if (ordersList != null)
             {
-                return Json(new { success = false, message = "Vui lòng nhập đầy đủ Số điện thoại nhận hàng hoặc Mã đơn hàng hợp lệ!" });
+                foreach (var item in ordersList) count++;
             }
 
-            var qOrders = DbContext.Order.AsQueryable();
-
-            int parsedOrderId = 0;
-            bool isNumericId = int.TryParse(cleanQuery, out parsedOrderId);
-
-            if (isNumericId && parsedOrderId > 0)
-            {
-                qOrders = qOrders.Where(o => o.Id == parsedOrderId || o.ReceiverPhone == cleanQuery);
-            }
-            else
-            {
-                qOrders = qOrders.Where(o => o.ReceiverPhone == cleanQuery);
-            }
-
-            var orders = qOrders
-                .OrderByDescending(o => o.OrderDate)
-                .ToList();
-
-            if (!orders.Any())
-            {
-                return Json(new { success = false, message = $"Không tìm thấy đơn hàng nào phù hợp với từ khóa '{query}'!" });
-            }
-
-            Func<string, string> maskPhone = p =>
-            {
-                if (string.IsNullOrEmpty(p) || p.Length < 6) return "*****";
-                return p.Substring(0, 3) + "****" + p.Substring(p.Length - 3);
-            };
-
-            var orderList = orders.Select(o => new
-            {
-                id = o.Id,
-                orderDate = o.OrderDate.ToString("dd/MM/yyyy HH:mm"),
-                orderStatus = o.OrderStatus,
-                orderStatusText = o.OrderStatus == 0 ? "Chờ duyệt" :
-                                 o.OrderStatus == 1 ? "Đã duyệt" :
-                                 o.OrderStatus == 2 ? "Đã đóng gói" :
-                                 o.OrderStatus == 3 ? "Đang giao hàng" :
-                                 o.OrderStatus == 4 ? "Giao thành công" : "Đã hủy",
-                paymentStatus = o.PaymentStatus == 1 ? "Đã thanh toán" : "Chưa thanh toán",
-                maskedPhone = maskPhone(o.ReceiverPhone)
-            }).ToList();
-
-            return Json(new { success = true, count = orderList.Count, orders = orderList });
+            return Json(new { success = true, count, orders = ordersData });
         }
 
-        // POST: /Order/CancelOrder (Hủy đơn hàng chưa nhận / chưa thanh toán)
+        // POST: /Order/CancelOrder (Hủy đơn hàng)
         [AllowAnonymous]
         [HttpPost]
         public ActionResult CancelOrder(int orderId)
         {
-            try
-            {
-                var order = DbContext.Order.Include("OrderDetails.Product").FirstOrDefault(o => o.Id == orderId);
-                if (order == null)
-                {
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
-                }
-
-                if (order.OrderStatus == 3 || order.OrderStatus == 4 || order.OrderStatus == 5)
-                {
-                    return Json(new { success = false, message = "Đơn hàng đang giao, đã giao thành công hoặc đã hủy trước đó, không thể hủy!" });
-                }
-
-                if (order.PaymentStatus == 1)
-                {
-                    return Json(new { success = false, message = "Đơn hàng đã được thanh toán thành công, vui lòng liên hệ bộ phận hỗ trợ để hoàn tiền!" });
-                }
-
-                order.OrderStatus = 5;
-
-                if (order.OrderDetails != null)
-                {
-                    foreach (var detail in order.OrderDetails)
-                    {
-                        if (detail.Product != null)
-                        {
-                            detail.Product.Quantity += detail.Quantity;
-                        }
-                    }
-                }
-
-                DbContext.SaveChanges();
-
-                return Json(new { success = true, message = $"Đã hủy thành công đơn hàng #{orderId}!" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi khi hủy đơn hàng: " + ex.Message });
-            }
+            var (success, message) = _checkoutService.CancelOrder(orderId);
+            return Json(new { success, message });
         }
     }
 }
