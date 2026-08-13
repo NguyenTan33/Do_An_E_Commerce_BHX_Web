@@ -217,6 +217,25 @@
         </div>
 
         <div class="content">
+            @if (TempData["Error"] != null || TempData["ErrorMessage"] != null)
+            {
+                var errMsg = TempData["Error"] ?? TempData["ErrorMessage"];
+                <div class="alert alert-danger alert-dismissible fade show mb-4 d-flex align-items-center gap-2 shadow-sm" role="alert">
+                    <i class="fa-solid fa-shield-halved fs-5"></i>
+                    <div class="fw-bold">@errMsg</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Success"] != null || TempData["SuccessMessage"] != null)
+            {
+                var succMsg = TempData["Success"] ?? TempData["SuccessMessage"];
+                <div class="alert alert-success alert-dismissible fade show mb-4 d-flex align-items-center gap-2 shadow-sm" role="alert">
+                    <i class="fa-solid fa-circle-check fs-5"></i>
+                    <div class="fw-bold">@succMsg</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
         </div>
     </div>
@@ -243,6 +262,35 @@
             }
         });
     </script>
+
+    @if (User.IsInRole("Manager") && !User.IsInRole("Admin"))
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                function notifyNoPermission(e) {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    alert("Bạn không có quyền thực hiện chức năng này!");
+                    return false;
+                }
+
+                document.querySelectorAll(
+                    'a[href*="Them"], a[href*="Sua"], a[href*="Xoa"], a[href*="Create"], a[href*="Edit"], a[href*="Delete"], ' +
+                    'button[onclick*="Delete"], button[onclick*="Lock"], button[onclick*="ResetPass"], ' +
+                    'button[onclick*="Reject"], ' +
+                    'form[action*="Them"] button[type="submit"], form[action*="Sua"] button[type="submit"], ' +
+                    'form[action*="Xoa"] button[type="submit"], form[action*="Delete"] button[type="submit"], ' +
+                    'form[action*="Lock"] button[type="submit"], form[action*="Toggle"] button[type="submit"], ' +
+                    'form[action*="Reject"] button[type="submit"]'
+                ).forEach(function (el) {
+                    el.addEventListener("click", notifyNoPermission, true);
+                });
+            });
+        </script>
+    }
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>

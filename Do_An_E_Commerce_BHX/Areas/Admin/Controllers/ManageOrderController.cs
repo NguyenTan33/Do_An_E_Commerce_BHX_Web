@@ -71,10 +71,15 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return Json(new { success = true, message = $"Đã hủy đơn hàng #{id} và hoàn trả lại tồn kho!" });
         }
 
-        // 4. POST: /Admin/ManageOrder/Delete (Xóa đơn lẻ)
+        // 4. POST: /Admin/ManageOrder/Delete (Xóa đơn lẻ - Chỉ dành riêng cho Admin)
         [HttpPost]
         public async Task<ActionResult> Delete(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng xóa đơn hàng!" });
+            }
+
             bool success = await _orderService.DeleteOrderAsync(id);
             if (!success)
             {
@@ -110,10 +115,15 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
             return Json(new { success = true, message = $"Đã hủy {count} đơn hàng và cộng trả lại tồn kho!" });
         }
 
-        // 7. POST: /Admin/ManageOrder/BulkDelete (Xóa tất cả các đơn đã chọn)
+        // 7. POST: /Admin/ManageOrder/BulkDelete (Xóa tất cả các đơn đã chọn - Chỉ dành riêng cho Admin)
         [HttpPost]
         public async Task<ActionResult> BulkDelete(int[] ids)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng xóa đơn hàng!" });
+            }
+
             if (ids == null || ids.Length == 0)
             {
                 return Json(new { success = false, message = "Vui lòng chọn ít nhất 1 đơn hàng để xóa!" });

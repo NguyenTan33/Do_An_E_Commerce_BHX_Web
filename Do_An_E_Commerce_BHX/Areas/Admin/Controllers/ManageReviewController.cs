@@ -48,6 +48,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> Delete(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             bool success = await _reviewService.DeleteReviewAsync(id);
             if (!success)
             {

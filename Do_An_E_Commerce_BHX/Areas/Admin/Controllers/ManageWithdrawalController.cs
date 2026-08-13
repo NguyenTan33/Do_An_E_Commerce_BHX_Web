@@ -83,6 +83,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> Approve(int id, string adminNote)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             var result = await _walletService.ProcessWithdrawalRequestAsync(id, isApproved: true, adminNote: adminNote);
             return Json(new { success = result.Success, message = result.Message });
         }
@@ -91,6 +96,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> Reject(int id, string adminNote)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             var result = await _walletService.ProcessWithdrawalRequestAsync(id, isApproved: false, adminNote: adminNote);
             return Json(new { success = result.Success, message = result.Message });
         }

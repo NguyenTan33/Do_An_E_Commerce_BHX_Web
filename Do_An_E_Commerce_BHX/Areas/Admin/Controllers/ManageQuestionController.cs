@@ -45,6 +45,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> Reply(int questionId, string answer)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             if (string.IsNullOrWhiteSpace(answer))
             {
                 return Json(new { success = false, message = "Vui lòng nhập nội dung câu trả lời QTV!" });
@@ -63,6 +68,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> Delete(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             bool success = await _questionService.DeleteQuestionAsync(id);
             if (!success)
             {

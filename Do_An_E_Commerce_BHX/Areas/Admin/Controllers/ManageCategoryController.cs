@@ -33,6 +33,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public ActionResult ThemDanhMuc()
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
             return View();
         }
 
@@ -41,6 +46,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ThemDanhMuc(Category themDmMoi)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 await _categoryService.CreateCategoryAsync(themDmMoi);
@@ -54,6 +65,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> SuaDanhMuc(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var danhmuc = await _categoryService.GetCategoryByIdAsync(id);
             if (danhmuc == null)
             {
@@ -68,6 +85,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> SuaDanhMuc(Category danhMucMoi)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 await _categoryService.UpdateCategoryAsync(danhMucMoi);
@@ -82,6 +105,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XoaDanhMuc(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var (success, errorMessage) = await _categoryService.DeleteCategoryAsync(id);
             if (!success)
             {

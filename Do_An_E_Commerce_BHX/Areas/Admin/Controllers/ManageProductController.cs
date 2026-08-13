@@ -65,6 +65,11 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public ActionResult UploadProductImage(HttpPostedFileBase imageFile)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện chức năng này!" });
+            }
+
             try
             {
                 if (imageFile != null && imageFile.ContentLength > 0)
@@ -102,6 +107,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> ThemSP()
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             await PopulateProductDropdownsAsync();
             return View();
         }
@@ -109,6 +120,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> ThemSP(Product ThemSpMoi, string extraUnitsJson)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 await _productService.CreateProductAsync(ThemSpMoi, extraUnitsJson);
@@ -121,6 +138,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> XoaSP(int Id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             await _productService.DeleteProductAsync(Id);
             return RedirectToAction("Index");
         }
@@ -128,6 +151,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> SuaSP(int Id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var sanpham = await _productService.GetProductWithUnitsByIdAsync(Id);
             if (sanpham == null)
             {
@@ -140,6 +169,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpPost]
         public async Task<ActionResult> SuaSP(Product SanPhamMoi, string extraUnitsJson)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 bool success = await _productService.UpdateProductAsync(SanPhamMoi, extraUnitsJson);

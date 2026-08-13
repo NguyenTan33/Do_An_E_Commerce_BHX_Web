@@ -40,6 +40,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> ThemPromotion()
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             await PopulateCategoriesDropdownAsync();
             var model = new Promotion
             {
@@ -56,6 +62,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ThemPromotion(Promotion model, string DiscountType)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 if (await _promotionService.IsCodeExistsAsync(model.Code))
@@ -76,6 +88,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ActionResult> SuaPromotion(int? id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
             var promo = await _promotionService.GetPromotionByIdAsync(id.Value);
@@ -90,6 +108,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> SuaPromotion(Promotion model, string DiscountType)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 if (await _promotionService.IsCodeExistsAsync(model.Code, model.Id))
@@ -114,6 +138,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XoaPromotion(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var (success, message) = await _promotionService.DeletePromotionAsync(id);
             if (success)
             {
@@ -131,6 +161,12 @@ namespace Do_An_E_Commerce_BHX.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ToggleStatus(int id)
         {
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện chức năng này!";
+                return RedirectToAction("Index");
+            }
+
             var (success, message) = await _promotionService.TogglePromotionStatusAsync(id);
             if (success)
             {
